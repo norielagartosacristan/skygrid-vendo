@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  fullName     String
+  email        String   @unique
+  password     String
+
+  role         UserRole @default(VENDOR)
+
+  vendorId     String?
+  vendor       Vendor?  @relation(fields: [vendorId], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  VENDOR
+  STAFF
+}
+
+model Vendor {
+  id            String    @id @default(cuid())
+
+  name          String
+  companyName   String?
+  phone         String?
+  address       String?
+
+  users         User[]
+
+  machines      Machine[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Machine {
+
+  id            String   @id @default(cuid())
+
+  vendorId      String
+
+  vendor         Vendor @relation(fields:[vendorId], references:[id])
+
+  name          String
+
+  ipAddress     String
+
+  macAddress    String
+
+  location      String?
+
+  status        MachineStatus @default(OFFLINE)
+
+  sessions      Session[]
+
+  transactions  Transaction[]
+
+  createdAt     DateTime @default(now())
+
+  updatedAt     DateTime @updatedAt
+
+}
+
+enum MachineStatus{
+
+ONLINE
+
+OFFLINE
+
+MAINTENANCE
+
+}
+
+model Package {
+
+id String @id @default(cuid())
+
+name String
+
+price Decimal @db.Decimal(10,2)
+
+duration Int
+
+downloadSpeed Int
+
+uploadSpeed Int
+
+isActive Boolean @default(true)
+
+sessions Session[]
+
+createdAt DateTime @default(now())
+
+updatedAt DateTime @updatedAt
+
+}
+
+model Session {
+
+id String @id @default(cuid())
+
+machineId String
+
+packageId String
+
+machine Machine @relation(fields:[machineId], references:[id])
+
+package Package @relation(fields:[packageId], references:[id])
+
+clientMac String
+
+ipAddress String
+
+startedAt DateTime
+
+expiresAt DateTime
+
+isActive Boolean @default(true)
+
+createdAt DateTime @default(now())
+
+}
+
+model Transaction {
+
+id String @id @default(cuid())
+
+machineId String
+
+machine Machine @relation(fields:[machineId], references:[id])
+
+amount Decimal @db.Decimal(10,2)
+
+paymentMethod PaymentMethod
+
+reference String?
+
+createdAt DateTime @default(now())
+
+}
+
+enum PaymentMethod{
+
+COIN
+
+GCASH
+
+MAYA
+
+VOUCHER
+
+MANUAL
+
+}

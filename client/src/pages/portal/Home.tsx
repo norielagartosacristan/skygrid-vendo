@@ -1,55 +1,163 @@
+import PortalLayout from "../../layouts/PortalLayout";
+import Header from "../../components/portal/Header";
+import Clock from "../../components/portal/Clock";
+import HeroCarousel from "../../components/portal/HeroCarousel";
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+    <PortalLayout>
+      <Header />
 
-        <h1 className="text-3xl font-bold text-center text-blue-600">
-          SkyGrid Vendo
-        </h1>
+      {/* HERO SECTION - FULL WIDTH */}
+      <section className="relative w-full h-[280px] lg:h-[520px] overflow-hidden">
+       
+        <HeroCarousel />
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/40 to-transparent" />
 
-        <p className="text-center text-gray-500 mt-2">
-          Welcome
-        </p>
+        {/* Hero Content */}
+        <div className="absolute inset-0 flex items-center">
+          <div className="max-w-7xl mx-auto w-full px-6">
 
-        <div className="mt-8 space-y-4">
+            <div className="max-w-2xl text-white">
 
-          <div className="bg-slate-100 rounded-xl p-4">
+              <h4 className="text-sky-400 text-xl lg:text-2xl font-semibold mb-2">
+                Welcome to
+              </h4>
 
-            <div className="flex justify-between">
-              <span>₱5</span>
-              <span>1 Hour</span>
+              <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight">
+                SkyGrid Vendo
+              </h1>
+
+              <p className="mt-6 text-lg lg:text-2xl text-gray-200">
+                High-Speed Internet Access
+              </p>
+
+              <p className="mt-3 text-gray-300">
+                Fast • Secure • Reliable
+              </p>
+
+              <button className="mt-8 bg-sky-600 hover:bg-sky-700 px-8 py-4 rounded-2xl text-lg font-semibold transition">
+                Connect Now
+              </button>
+
             </div>
 
-            <div className="flex justify-between mt-2">
-              <span>₱10</span>
-              <span>3 Hours</span>
+          </div>
+        </div>
+      </section>
+
+      {/* MAIN CONTENT */}
+      <section className="bg-slate-100 py-10">
+
+        <div className="max-w-7xl mx-auto px-4">
+
+          <Clock />
+
+          {/* STATUS CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+
+            <div className="bg-white rounded-3xl shadow-lg p-6">
+              <p className="text-gray-500">Balance</p>
+              <h2 className="text-5xl font-bold text-green-600 mt-3">
+                ₱0.00
+              </h2>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-lg p-6">
+              <p className="text-gray-500">Remaining Time</p>
+              <h2 className="text-5xl font-bold mt-3">
+                00:00:00
+              </h2>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-lg p-6">
+              <p className="text-gray-500">Connection Status</p>
+              <h2 className="text-4xl font-bold text-green-600 mt-3">
+                Connected
+              </h2>
             </div>
 
           </div>
 
-          <div className="bg-blue-50 rounded-xl p-4">
+          {/* CONTENT */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
 
-            <div className="flex justify-between">
-              <span>Balance</span>
-              <span>₱0.00</span>
+            {/* LEFT */}
+            <div className="lg:col-span-8">
+
+              <div className="bg-white rounded-3xl shadow-lg p-6">
+
+                <h2 className="text-2xl font-bold mb-6">
+                  Internet Packages
+                </h2>
+
+                <div className="space-y-4">
+
+                  {[
+                    { price: "₱5", time: "1 Hour" },
+                    { price: "₱10", time: "3 Hours" },
+                    { price: "₱20", time: "1 Day" },
+                  ].map((pkg) => (
+
+                    <div
+                      key={pkg.price}
+                      className="flex justify-between items-center bg-slate-100 rounded-2xl p-5 hover:bg-sky-50 transition"
+                    >
+
+                      <span className="text-2xl font-bold text-sky-600">
+                        {pkg.price}
+                      </span>
+
+                      <span className="text-lg font-medium">
+                        {pkg.time}
+                      </span>
+
+                    </div>
+
+                  ))}
+
+                </div>
+
+              </div>
+
             </div>
 
-            <div className="flex justify-between mt-2">
-              <span>Remaining</span>
-              <span>00:00:00</span>
+            {/* RIGHT */}
+            <div className="lg:col-span-4 space-y-6">
+
+              <button className="w-full bg-sky-600 hover:bg-sky-700 text-white rounded-3xl py-6 text-2xl font-bold shadow-xl transition">
+                🪙 INSERT COIN
+              </button>
+
+              <div className="bg-white rounded-3xl shadow-lg p-6">
+
+                <h2 className="text-xl font-bold mb-4">
+                  Announcement
+                </h2>
+
+                <p className="text-gray-600">
+                  Welcome to SkyGrid Vendo.
+                </p>
+
+                <p className="text-gray-600 mt-2">
+                  Enjoy fast and reliable internet.
+                </p>
+
+                <p className="text-gray-600 mt-2">
+                  Thank you for choosing SkyGrid Tech Solutions.
+                </p>
+
+              </div>
+
             </div>
 
           </div>
-
-          <button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-lg"
-          >
-            Insert Coin
-          </button>
 
         </div>
 
-      </div>
-    </div>
+      </section>
+
+    </PortalLayout>
   );
 }
