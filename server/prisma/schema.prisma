@@ -169,3 +169,82 @@ VOUCHER
 MANUAL
 
 }
+
+
+model NetworkInterface {
+  id          String   @id @default(cuid())
+
+  name        String
+  description String?
+
+  type        String
+  role        String
+
+  mode        String
+
+  enabled     Boolean @default(true)
+
+  ipAddress   String?
+  subnetMask  String?
+  gateway     String?
+
+  dns1        String?
+  dns2        String?
+
+  mtu         Int? @default(1500)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model NetworkVlan {
+
+  id String @id @default(cuid())
+
+  vlanId Int
+
+  name String
+
+  parentInterface String
+
+  ipAddress String?
+
+  subnetMask String?
+
+  gateway String?
+
+  enabled Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+}
+
+model ClientControl {
+
+  id String @id @default(cuid())
+
+  defaultDownload Int
+
+  defaultUpload Int
+
+  burstDownload Int?
+
+  burstUpload Int?
+
+  burstTime Int?
+
+}
+
+model GlobalBandwidth {
+
+  id String @id @default(cuid())
+
+  download Int
+
+  upload Int
+
+  reserveBandwidth Int
+
+}

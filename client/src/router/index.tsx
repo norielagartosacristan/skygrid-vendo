@@ -8,6 +8,7 @@ import AdminLayout from "../layouts/AdminLayout";
 
 // Auth
 import LoginPage from "../features/auth/pages/LoginPage";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 // Dashboard
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
@@ -36,63 +37,64 @@ import SettingsPage from "../features/settings/pages/SettingsPage";
 export default function Router() {
   return (
     <BrowserRouter>
-  <Routes>
+      <Routes>
 
-    {/* Portal */}
-    <Route path="/" element={<Home />} />
+        {/* Portal */}
+        <Route path="/" element={<Home />} />
 
-    {/* Login */}
-    <Route
-      path="/admin"
-      element={<LoginPage />}
-    />
+        {/* Login */}
+        <Route path="/admin" element={<LoginPage />} />
 
-    {/* Protected Admin */}
-    <Route path="/admin" element={<AdminLayout />}>
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
 
-      <Route
-        path="dashboard"
-        element={<DashboardPage />}
-      />
+          <Route path="/admin" element={<AdminLayout />}>
 
-      <Route
-        path="packages"
-        element={<PackagesPage />}
-      />
+            <Route
+              path="dashboard"
+              element={<DashboardPage />}
+            />
 
-      <Route
-        path="machines"
-        element={<MachinesPage />}
-      />
+            <Route
+              path="packages"
+              element={<PackagesPage />}
+            />
 
-      <Route
-        path="vendors"
-        element={<VendorsPage />}
-      />
+            <Route
+              path="machines"
+              element={<MachinesPage />}
+            />
 
-      <Route
-        path="reports"
-        element={<ReportsPage />}
-      />
+            <Route
+              path="vendors"
+              element={<VendorsPage />}
+            />
 
-      <Route
-        path="payments"
-        element={<PaymentsPage />}
-      />
+            <Route
+              path="reports"
+              element={<ReportsPage />}
+            />
 
-      <Route
-        path="vouchers"
-        element={<VouchersPage />}
-      />
+            <Route
+              path="payments"
+              element={<PaymentsPage />}
+            />
 
-      <Route
-        path="settings"
-        element={<SettingsPage />}
-      />
+            <Route
+              path="vouchers"
+              element={<VouchersPage />}
+            />
 
-    </Route>
+            <Route
+              path="settings"
+              element={<SettingsPage />}
+            />
 
-  </Routes>
-</BrowserRouter>
+          </Route>
+
+        </Route>
+
+      </Routes>
+    </BrowserRouter>
   );
 }

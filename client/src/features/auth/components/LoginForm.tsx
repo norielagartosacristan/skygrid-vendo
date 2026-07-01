@@ -1,33 +1,54 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Mail, Lock, LogIn } from "lucide-react";
 import api from "../../../services/api";
 
 export default function LoginForm() {
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
-
   const [password, setPassword] = useState("");
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  try {
-    const response = await api.post("/auth/login", {
-      email,
-      password,
-    });
+      console.log("Login button clicked");
 
-    console.log(response.data);
 
-  } catch (error) {
-    console.error(error);
-  }
-};
+    try {
+        console.log(email, password);
+      const response = await api.post("/auth/login", {
+        email,
+        password,
+      });
+      console.log("SUCCESS", response.data);
+
+      console.log(response.data);
+
+      // Save JWT token
+      localStorage.setItem("token", response.data.token);
+
+      // Save logged-in user
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.data.user)
+      );
+
+      // Redirect to Admin Dashboard
+      navigate("/admin/dashboard");
+
+    } catch (error: any) {
+      console.error(error);
+
+      alert(
+        error.response?.data?.message ||
+        "Invalid email or password."
+      );
+    }
+  };
 
   return (
-
     <div className="w-full">
-
       <h2 className="text-4xl font-bold text-gray-800">
         Welcome Back
       </h2>
@@ -40,17 +61,13 @@ const handleSubmit = async (e: React.FormEvent) => {
         onSubmit={handleSubmit}
         className="mt-8 space-y-5"
       >
-
         {/* Email */}
-
         <div>
-
           <label className="block text-sm font-semibold mb-2">
             Email
           </label>
 
           <div className="flex items-center border rounded-xl px-4">
-
             <Mail size={20} className="text-gray-400" />
 
             <input
@@ -58,26 +75,19 @@ const handleSubmit = async (e: React.FormEvent) => {
               required
               placeholder="admin@skygrid.com"
               value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full p-4 outline-none"
             />
-
           </div>
-
         </div>
 
         {/* Password */}
-
         <div>
-
           <label className="block text-sm font-semibold mb-2">
             Password
           </label>
 
           <div className="flex items-center border rounded-xl px-4">
-
             <Lock size={20} className="text-gray-400" />
 
             <input
@@ -85,30 +95,20 @@ const handleSubmit = async (e: React.FormEvent) => {
               required
               placeholder="••••••••"
               value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full p-4 outline-none"
             />
-
           </div>
-
         </div>
 
-        <button type="submit"
+        <button
+          type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-4 font-bold flex justify-center items-center gap-2 transition"
         >
-
           <LogIn size={20} />
-
           Login
-
         </button>
-
       </form>
-
     </div>
-
   );
-
 }
