@@ -14,10 +14,15 @@ bool setupWiFi()
 
     wm.setConfigPortalTimeout(180);
 
-    bool connected = wm.autoConnect(
-        "SkyGrid-Setup",
-        "skygrid123"
-    );
+    String mac = WiFi.macAddress();
+    mac.replace(":", "");
+
+    String apName = "SkyGrid-";
+
+    apName += WiFi.macAddress();
+    apName.replace(":", "");
+
+    bool connected = wm.autoConnect(apName.c_str());
 
     if (!connected)
     {
