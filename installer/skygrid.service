@@ -1,19 +1,20 @@
 [Unit]
-Description=SkyGrid API
-After=network.target
+Description=SkyGrid Backend Server
+After=network.target postgresql.service
 
 [Service]
 Type=simple
 
+User=root
 WorkingDirectory=/opt/skygrid/server
 
 ExecStart=/usr/bin/node dist/server.js
 
 Restart=always
-
 RestartSec=5
 
-User=root
+Environment=NODE_ENV=production
+Environment=PORT=5000
 
 [Install]
 WantedBy=multi-user.target
