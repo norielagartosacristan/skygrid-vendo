@@ -33,18 +33,49 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const AuthService = __importStar(require("../services/auth.service"));
-async function login(req, res) {
-    console.log("BODY:", req.body); // ← ilagay dito
+exports.register = register;
+exports.pending = pending;
+exports.configure = configure;
+const SubVendoService = __importStar(require("../services/subVendo.service"));
+async function register(req, res) {
     try {
-        const { email, password } = req.body;
-        const result = await AuthService.login(email, password);
-        res.json(result);
+        const device = await SubVendoService.registerDevice(req.body);
+        res.json({
+            message: "Device registered successfully.",
+            data: device,
+        });
     }
     catch (err) {
-        res.status(401).json({
-            message: err.message,
+        console.error(err);
+        res.status(500).json({
+            message: "Unable to register device.",
+        });
+    }
+}
+async function pending(req, res) {
+    try {
+        const devices = await SubVendoService.getPendingDevices();
+        res.json(devices);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({
+            message: "Unable to load devices.",
+        });
+    }
+}
+async function configure(req, res) {
+    try {
+        const device = await SubVendoService.configureDevice(req.params.id, req.body);
+        res.json({
+            message: "Device configured successfully.",
+            data: device,
+        });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({
+            message: "Unable to configure device.",
         });
     }
 }

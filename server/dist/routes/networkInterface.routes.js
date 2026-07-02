@@ -33,18 +33,17 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const AuthService = __importStar(require("../services/auth.service"));
-async function login(req, res) {
-    console.log("BODY:", req.body); // ← ilagay dito
-    try {
-        const { email, password } = req.body;
-        const result = await AuthService.login(email, password);
-        res.json(result);
-    }
-    catch (err) {
-        res.status(401).json({
-            message: err.message,
-        });
-    }
-}
+const express_1 = require("express");
+const NetworkInterfaceController = __importStar(require("../controllers/networkInterface.controller"));
+const router = (0, express_1.Router)();
+// Get all interfaces
+router.get("/", NetworkInterfaceController.getInterfaces);
+// Get single interface
+router.get("/:id", NetworkInterfaceController.getInterface);
+// Create interface
+router.post("/", NetworkInterfaceController.createInterface);
+// Update interface
+router.put("/:id", NetworkInterfaceController.updateInterface);
+// Delete interface
+router.delete("/:id", NetworkInterfaceController.deleteInterface);
+exports.default = router;

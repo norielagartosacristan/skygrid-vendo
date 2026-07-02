@@ -6,19 +6,31 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const package_routes_1 = __importDefault(require("./routes/package.routes"));
-const error_middleware_1 = require("./middleware/error.middleware");
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
+const error_middleware_1 = require("./middleware/error.middleware");
+const networkGeneral_routes_1 = __importDefault(require("./routes/networkGeneral.routes"));
+const globalBandwidth_routes_1 = __importDefault(require("./routes/globalBandwidth.routes"));
+const clientControl_routes_1 = __importDefault(require("./routes/clientControl.routes"));
+const networkInterface_routes_1 = __importDefault(require("./routes/networkInterface.routes"));
+const subVendo_routes_1 = __importDefault(require("./routes/subVendo.routes"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-app.use(error_middleware_1.errorHandler);
 app.use("/api/users", user_routes_1.default);
 app.use("/api/auth", auth_routes_1.default);
 app.use("/api/packages", package_routes_1.default);
+app.use("/api/network/interfaces", networkInterface_routes_1.default);
+app.use("/api/network/general", networkGeneral_routes_1.default);
+app.use("/api/network/bandwidth", globalBandwidth_routes_1.default);
+app.use("/api/client/control", clientControl_routes_1.default);
+app.use("/api/network/interfaces", networkInterface_routes_1.default);
+app.use("/api/sub-vendo", subVendo_routes_1.default);
 app.get("/", (_, res) => {
     res.json({
         message: "SkyGrid Vendo API Running 🚀",
     });
 });
+// LAGING HULI
+app.use(error_middleware_1.errorHandler);
 exports.default = app;

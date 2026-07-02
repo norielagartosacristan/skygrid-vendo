@@ -33,18 +33,15 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const AuthService = __importStar(require("../services/auth.service"));
-async function login(req, res) {
-    console.log("BODY:", req.body); // ← ilagay dito
-    try {
-        const { email, password } = req.body;
-        const result = await AuthService.login(email, password);
-        res.json(result);
-    }
-    catch (err) {
-        res.status(401).json({
-            message: err.message,
-        });
-    }
-}
+const express_1 = require("express");
+const SubVendoController = __importStar(require("../controllers/subVendo.controller"));
+const router = (0, express_1.Router)();
+// Register new device
+router.post("/register", SubVendoController.register);
+// Get all pending devices
+router.get("/pending", SubVendoController.pending);
+// Configure device
+router.put("/:id", SubVendoController.configure);
+// Get registered devices
+router.get("/registered", SubVendoController.registered);
+exports.default = router;

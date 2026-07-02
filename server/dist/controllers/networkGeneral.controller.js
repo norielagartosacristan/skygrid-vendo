@@ -33,18 +33,31 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const AuthService = __importStar(require("../services/auth.service"));
-async function login(req, res) {
-    console.log("BODY:", req.body); // ← ilagay dito
+exports.getSettings = getSettings;
+exports.saveSettings = saveSettings;
+const NetworkGeneralService = __importStar(require("../services/networkGeneral.service"));
+async function getSettings(req, res) {
     try {
-        const { email, password } = req.body;
-        const result = await AuthService.login(email, password);
-        res.json(result);
+        const settings = await NetworkGeneralService.getSettings();
+        res.status(200).json(settings);
     }
-    catch (err) {
-        res.status(401).json({
-            message: err.message,
+    catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+}
+async function saveSettings(req, res) {
+    try {
+        const settings = await NetworkGeneralService.saveSettings(req.body);
+        res.status(200).json({
+            message: "Network settings saved successfully.",
+            data: settings,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: error.message,
         });
     }
 }

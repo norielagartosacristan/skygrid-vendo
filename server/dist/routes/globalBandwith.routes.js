@@ -33,18 +33,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const AuthService = __importStar(require("../services/auth.service"));
-async function login(req, res) {
-    console.log("BODY:", req.body); // ← ilagay dito
-    try {
-        const { email, password } = req.body;
-        const result = await AuthService.login(email, password);
-        res.json(result);
-    }
-    catch (err) {
-        res.status(401).json({
-            message: err.message,
-        });
-    }
-}
+const express_1 = require("express");
+const GlobalBandwidthController = __importStar(require("../controllers/globalBandwidth.controller"));
+const router = (0, express_1.Router)();
+router.get("/", GlobalBandwidthController.getSettings);
+router.post("/", GlobalBandwidthController.saveSettings);
+exports.default = router;

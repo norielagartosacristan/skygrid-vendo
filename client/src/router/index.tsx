@@ -34,6 +34,15 @@ import VouchersPage from "../features/vouchers/pages/VouchersPage";
 // Settings
 import SettingsPage from "../features/settings/pages/SettingsPage";
 
+import NetworkLayout from "../features/network/layouts/NetworkLayout";
+import GeneralSettingsPage from "../features/network/pages/GeneralSettingsPage";
+import GlobalBandwidthPage from "../features/network/pages/GlobalBandwidthPage";
+import ClientControlPage from "../features/network/pages/ClientControlPage";
+import InterfacesPage from "../features/network/pages/InterfacesPage";
+import SubVendoPage from "../features/sub-vendo/pages/subVendoPage";
+//import VlansPage from "../features/network/pages/VlansPage";
+//import PPPoEPage from "../features/network/pages/PPPoEPage";
+
 export default function Router() {
   return (
     <BrowserRouter>
@@ -49,51 +58,26 @@ export default function Router() {
         <Route element={<ProtectedRoute />}>
 
           <Route path="/admin" element={<AdminLayout />}>
-
-            <Route
-              path="dashboard"
-              element={<DashboardPage />}
-            />
-
-            <Route
-              path="packages"
-              element={<PackagesPage />}
-            />
-
-            <Route
-              path="machines"
-              element={<MachinesPage />}
-            />
-
-            <Route
-              path="vendors"
-              element={<VendorsPage />}
-            />
-
-            <Route
-              path="reports"
-              element={<ReportsPage />}
-            />
-
-            <Route
-              path="payments"
-              element={<PaymentsPage />}
-            />
-
-            <Route
-              path="vouchers"
-              element={<VouchersPage />}
-            />
-
-            <Route
-              path="settings"
-              element={<SettingsPage />}
-            />
-
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="packages" element={<PackagesPage />} />
+                <Route path="machines"  element={<MachinesPage />} />
+                <Route  path="vendors"  element={<VendorsPage />} />
+                <Route path="reports" element={<ReportsPage />} />
+                <Route  path="payments" element={<PaymentsPage />} />
+                <Route path="vouchers" element={<VouchersPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="network/general" element={<GeneralSettingsPage />} />
+                <Route path="network/bandwidth" element={<GlobalBandwidthPage />} />
+                <Route path="network/client-control" element={<ClientControlPage />} />
+                <Route path="network/interfaces" element={<InterfacesPage />} />
+                <Route path="sub-vendo" element={<SubVendoPage />} />
+                <Route path="network" element={<NetworkLayout />}>
+                    <Route index element={<GeneralSettingsPage />} />
+                    <Route path="bandwidth" element={<GlobalBandwidthPage />} />
+                    <Route path="client-control" element={<ClientControlPage />} />
+                </Route>
           </Route>
-
-        </Route>
-
+        </Route> 
       </Routes>
     </BrowserRouter>
   );

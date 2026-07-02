@@ -33,18 +33,31 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const AuthService = __importStar(require("../services/auth.service"));
-async function login(req, res) {
-    console.log("BODY:", req.body); // ← ilagay dito
+exports.getSettings = getSettings;
+exports.saveSettings = saveSettings;
+const ClientControlService = __importStar(require("../services/clientControl"));
+async function getSettings(req, res) {
     try {
-        const { email, password } = req.body;
-        const result = await AuthService.login(email, password);
-        res.json(result);
+        const settings = await ClientControlService.getSettings();
+        res.json(settings);
     }
-    catch (err) {
-        res.status(401).json({
-            message: err.message,
+    catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+}
+async function saveSettings(req, res) {
+    try {
+        const settings = await ClientControlService.saveSettings(req.body);
+        res.json({
+            message: "Client Control saved successfully.",
+            data: settings,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: error.message,
         });
     }
 }
