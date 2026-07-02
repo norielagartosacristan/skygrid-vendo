@@ -1,13 +1,20 @@
 #pragma once
-
 #include <Arduino.h>
 
 struct DeviceConfig
 {
     String chipId;
 
-    String machineName;
+    // SkyGrid Controller
+    String serverIP;
+    uint16_t serverPort;
 
+    // WiFi
+    String ssid;
+    String password;
+
+    // Device
+    String machineName;
     String parentInterface;
 
     uint16_t vlanId;

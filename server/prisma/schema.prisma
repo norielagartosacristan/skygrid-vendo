@@ -254,14 +254,20 @@ model ClientControl {
 model NetworkInterface {
   id String @id @default(cuid())
 
-  name        String
+  name        String @unique
   displayName String
+
+  // Interface Role
+  role String @default("LAN")
+  // WAN, LAN, AP, VLAN, BRIDGE
 
   type String
 
   enabled Boolean @default(true)
 
-  ipMode String
+  // Network Configuration
+  ipMode String @default("STATIC")
+  // STATIC, DHCP, PPPoE, IPoE
 
   ipAddress  String?
   subnetMask String?
@@ -271,6 +277,24 @@ model NetworkInterface {
   dns2 String?
 
   mtu Int @default(1500)
+
+  // VLAN
+  vlanId Int?
+
+  // Parent Interface
+  parentInterface String?
+
+  // Access Point Settings
+  ssid String?
+  password String?
+  security String?
+  // OPEN, WPA2
+
+  // DHCP Server
+  dhcpEnabled Boolean @default(false)
+
+  dhcpStart String?
+  dhcpEnd String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

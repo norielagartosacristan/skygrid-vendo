@@ -122,9 +122,12 @@ export default function InterfacesPage() {
               <th className="text-left p-4">
                 Type
               </th>
+              <th className="text-left p-4">
+                Role
+              </th>
 
               <th className="text-left p-4">
-                IP Mode
+                IP Address
               </th>
 
               <th className="text-left p-4">
@@ -176,90 +179,69 @@ export default function InterfacesPage() {
 
               )}
 
-            {interfaces.map((item) => (
+           {interfaces.map((item) => (
+  <tr
+    key={item.id}
+    className="border-t hover:bg-gray-50"
+  >
+    <td className="p-4">
+      {item.displayName}
+    </td>
 
-              <tr
-                key={item.id}
-                className="border-t hover:bg-gray-50"
-              >
+    <td className="p-4">
+      {item.name}
+    </td>
 
-                <td className="p-4">
-                  {item.displayName}
-                </td>
+    <td className="p-4">
+      {item.role || "-"}
+    </td>
 
-                <td className="p-4">
-                  {item.name}
-                </td>
+    <td className="p-4">
+      {item.type}
+    </td>
 
-                <td className="p-4">
-                  {item.type}
-                </td>
+    <td className="p-4">
+      {item.ipAddress?.trim() || "-"}
+    </td>
 
-                <td className="p-4">
-                  {item.ipMode}
-                </td>
+    <td className="p-4">
+      {item.enabled ? (
+        <span className="inline-flex items-center gap-2 text-green-600">
+          <CheckCircle size={18} />
+          Enabled
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-2 text-red-600">
+          <XCircle size={18} />
+          Disabled
+        </span>
+      )}
+    </td>
 
-                <td className="p-4">
+    <td className="p-4">
+      <div className="flex justify-center gap-3">
 
-                  {item.enabled ? (
+        <button
+          onClick={() => {
+            setSelected(item);
+            setOpen(true);
+          }}
+          className="text-sky-600 hover:text-sky-800"
+        >
+          <Pencil size={18} />
+        </button>
 
-                    <span className="inline-flex items-center gap-2 text-green-600">
+        <button
+          onClick={() => handleDelete(item.id)}
+          className="text-red-600 hover:text-red-800"
+        >
+          <Trash2 size={18} />
+        </button>
 
-                      <CheckCircle size={18} />
-
-                      Enabled
-
-                    </span>
-
-                  ) : (
-
-                    <span className="inline-flex items-center gap-2 text-red-600">
-
-                      <XCircle size={18} />
-
-                      Disabled
-
-                    </span>
-
-                  )}
-
-                </td>
-
-                <td className="p-4">
-
-                  <div className="flex justify-center gap-3">
-
-                    <button
-                      onClick={() => {
-                        setSelected(item);
-                        setOpen(true);
-                      }}
-                      className="text-sky-600 hover:text-sky-800"
-                    >
-
-                      <Pencil size={18} />
-
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        handleDelete(item.id)
-                      }
-                      className="text-red-600 hover:text-red-800"
-                    >
-
-                      <Trash2 size={18} />
-
-                    </button>
-
-                  </div>
-
-                </td>
-
-              </tr>
-
-            ))}
-
+      </div>
+    </td>
+  </tr>
+))}
           </tbody>
 
         </table>
