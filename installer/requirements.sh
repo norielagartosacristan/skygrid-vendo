@@ -1,32 +1,32 @@
 #!/bin/bash
 
-echo "Installing required packages..."
+set -e
+
+echo "========================================"
+echo "Installing SkyGrid Requirements..."
+echo "========================================"
 
 sudo apt install -y \
 curl \
-git \
 wget \
+git \
 unzip \
+zip \
 build-essential \
-postgresql \
-postgresql-contrib \
-hostapd \
-dnsmasq \
-nftables \
-bridge-utils \
+software-properties-common \
+ca-certificates \
+gnupg \
+lsb-release \
+nano \
 net-tools \
-network-manager
+bridge-utils \
+network-manager \
+dnsmasq \
+hostapd \
+nftables \
+openssl
 
 echo ""
-echo "Installing Node.js..."
-
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-
-sudo apt install -y nodejs
-
-echo ""
-echo "Installed Versions"
-
-node -v
-
-npm -v
+echo "========================================"
+echo "Requirements Installed Successfully!"
+echo "========================================"
