@@ -14,6 +14,8 @@ import networkEngineRoutes from "./routes/networkEngine.routes";
 import networkStatusRoutes from "./routes/networkStatus.routes";
 import linuxRoutes from "./routes/linuxNetwork.routes";
 import networkRoutes from "./modules/network/routes/network.routes";
+import interfaceRoutes from "./modules/network/routes/interface.routes";
+
 
 
 
