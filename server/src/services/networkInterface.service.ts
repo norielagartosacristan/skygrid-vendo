@@ -1,4 +1,5 @@
 import prisma from "../config/prisma";
+import { execSync } from "child_process";
 
 export async function getInterfaces() {
   return prisma.networkInterface.findMany({
@@ -14,22 +15,38 @@ export async function getInterface(id: string) {
   });
 }
 
-export async function createInterface(data: {
-  name: string;
-  displayName: string;
-  type: string;
-  enabled: boolean;
-  ipMode: string;
-  ipAddress?: string;
-  subnetMask?: string;
-  gateway?: string;
-  dns1?: string;
-  dns2?: string;
-  mtu: number;
-}) {
-  return prisma.networkInterface.create({
+export async function createInterface(data: any) {
+
+  // 1. SAVE SA DATABASE MUNA
+  const networkInterface = await prisma.networkInterface.create({
     data,
   });
+
+  // 2. VLAN LOGIC (LINUX LEVEL)
+  if (data.type === "VLAN") {
+
+    const interfaceName =
+      `${data.parentInterface}.${data.vlanId}`;
+
+    try {
+      execSync(
+        `ip link add link ${data.parentInterface} name ${interfaceName} type vlan id ${data.vlanId}`
+      );
+
+      execSync(
+        `ip addr add ${data.ipAddress}/${data.subnetMask === "255.255.255.0" ? 24 : 24} dev ${interfaceName}`
+      );
+
+      execSync(
+        `ip link set ${interfaceName} up`
+      );
+
+    } catch (err) {
+      console.log("VLAN creation failed:", err);
+    }
+  }
+
+  return networkInterface;
 }
 
 export async function updateInterface(

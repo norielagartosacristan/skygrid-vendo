@@ -7,38 +7,43 @@ echo " SkyGrid Network Configuration"
 echo "========================================"
 
 echo ""
-echo "Detecting network interfaces..."
+echo "Detecting WAN interface..."
 
-INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | grep -v lo)
+WAN=$(ip route | awk '/default/ {print $5; exit}')
 
-echo ""
-echo "Available Interfaces:"
-echo "----------------------------"
-
-echo "$INTERFACES"
-
-echo "----------------------------"
-
-WAN=""
-
-for iface in $INTERFACES
-do
-    if [[ "$iface" != "lo" ]]; then
-        WAN=$iface
-        break
-    fi
-done
-
-echo ""
 echo "Selected WAN Interface: $WAN"
 
 echo ""
-echo "Default LAN Configuration"
+echo "Creating default Management VLAN..."
 
-echo "IP Address : 10.0.0.1"
-echo "Subnet     : 255.255.255.0"
-echo "DHCP Start : 10.0.0.100"
-echo "DHCP End   : 10.0.0.254"
+MGMT_VLAN=22
+MGMT_IF="${WAN}.${MGMT_VLAN}"
+
+# Create VLAN if not exists
+if ip link show "$MGMT_IF" >/dev/null 2>&1; then
+    echo "[WARN] VLAN already exists: $MGMT_IF"
+else
+    ip link add link "$WAN" name "$MGMT_IF" type vlan id "$MGMT_VLAN"
+fi
+
+ip link set "$MGMT_IF" up
+
+ip addr flush dev "$MGMT_IF" || true
+ip addr add 10.0.0.1/24 dev "$MGMT_IF"
 
 echo ""
-echo "Network configuration completed."
+echo "Management Interface Created"
+echo "----------------------------"
+echo "Interface : $MGMT_IF"
+echo "VLAN ID   : 22"
+echo "IP Address: 10.0.0.1/24"
+echo "----------------------------"
+
+echo ""
+echo "Enabling IPv4 Forwarding..."
+
+sysctl -w net.ipv4.ip_forward=1
+
+if ! grep -q "net.ipv4.ip_forward=1" /etc/sysctl.conf; then
+    echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+fi
