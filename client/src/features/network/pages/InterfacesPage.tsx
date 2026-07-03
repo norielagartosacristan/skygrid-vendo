@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useNetworkSocket from "../hooks/useNetworkSocket";
+
 import {
   Plus,
   Pencil,
@@ -15,7 +17,7 @@ import {
 import InterfaceModal from "../components/InterfaceModal";
 
 export default function InterfacesPage() {
-  const [interfaces, setInterfaces] = useState<any[]>([]);
+  //const [interfaces, setInterfaces] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
 
@@ -23,9 +25,9 @@ export default function InterfacesPage() {
 
   const [selected, setSelected] = useState<any>(null);
 
-  useEffect(() => {
-    loadInterfaces();
-  }, []);
+  const interfaces = useNetworkSocket();
+
+
 
   async function loadInterfaces() {
     try {
@@ -33,7 +35,7 @@ export default function InterfacesPage() {
 
       const res = await getInterfaces();
 
-      setInterfaces(res.data);
+      // setInterfaces(res.data);
 
     } catch (err) {
 
