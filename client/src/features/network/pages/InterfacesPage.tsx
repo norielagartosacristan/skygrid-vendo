@@ -129,6 +129,7 @@ export default function InterfacesPage() {
               <th className="text-left p-4">
                 IP Address
               </th>
+              <th className="text-left p-4">MAC Address</th>
 
               <th className="text-left p-4">
                 Status
@@ -204,18 +205,23 @@ export default function InterfacesPage() {
       {item.ipAddress?.trim() || "-"}
     </td>
 
+    <td className="p-4">{item.macAddress || "-"}</td>
+
     <td className="p-4">
-      {item.enabled ? (
-        <span className="inline-flex items-center gap-2 text-green-600">
+      <span
+        className={`inline-flex items-center gap-2 ${
+          item.status === "UP"
+            ? "text-green-600"
+            : "text-red-600"
+        }`}
+      >
+        {item.status === "UP" ? (
           <CheckCircle size={18} />
-          Enabled
-        </span>
-      ) : (
-        <span className="inline-flex items-center gap-2 text-red-600">
+        ) : (
           <XCircle size={18} />
-          Disabled
-        </span>
-      )}
+        )}
+        {item.status}
+      </span>
     </td>
 
     <td className="p-4">
