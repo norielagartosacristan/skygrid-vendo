@@ -7,8 +7,11 @@ exports.registerDevice = registerDevice;
 exports.getPendingDevices = getPendingDevices;
 exports.configureDevice = configureDevice;
 exports.getRegisteredDevices = getRegisteredDevices;
+exports.heartbeat = heartbeat;
+exports.getConfiguration = getConfiguration;
 const prisma_1 = __importDefault(require("../config/prisma"));
 async function registerDevice(data) {
+    console.log("SERVICE DATA:", data);
     const existing = await prisma_1.default.subVendo.findUnique({
         where: {
             macAddress: data.macAddress,
@@ -65,6 +68,47 @@ async function getRegisteredDevices() {
         },
         orderBy: {
             machineName: "asc",
+        },
+    });
+}
+async function heartbeat(chipId, data) {
+    return prisma_1.default.subVendo.update({
+        where: {
+            chipId,
+        },
+        data: {
+            online: true,
+            uptime: data.uptime,
+            connectedClients: data.connectedClients,
+            freeMemory: data.freeMemory,
+            wifiSignal: data.wifiSignal,
+            temperature: data.temperature,
+            lastSeen: new Date(),
+        },
+    });
+}
+async function getConfiguration(chipId) {
+    return prisma_1.default.subVendo.findUnique({
+        where: {
+            chipId,
+        },
+        select: {
+            chipId: true,
+            machineName: true,
+            parentInterface: true,
+            vlanId: true,
+            ipMode: true,
+            ipAddressStatic: true,
+            subnetMask: true,
+            gateway: true,
+            dns1: true,
+            dns2: true,
+            clientStartIp: true,
+            clientEndIp: true,
+            bandwidthProfile: true,
+            portal: true,
+            enabled: true,
+            status: true,
         },
     });
 }

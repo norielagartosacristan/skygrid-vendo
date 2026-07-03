@@ -34,17 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const SubVendoController = __importStar(require("../controllers/subVendo.controller"));
+const Controller = __importStar(require("../controllers/networkStatus.controller"));
 const router = (0, express_1.Router)();
-// Register new device
-router.post("/register", SubVendoController.register);
-// Get all pending devices
-router.get("/pending", SubVendoController.pending);
-// Configure device
-router.put("/:id", SubVendoController.configure);
-// Get registered devices
-router.get("/registered", SubVendoController.registered);
-router.post("/heartbeat", SubVendoController.heartbeat);
-router.get("/configuration/:chipId", SubVendoController.configuration);
-router.get("/config/:chipId", SubVendoController.configuration);
+router.get("/", Controller.status);
 exports.default = router;

@@ -52,7 +52,7 @@ async function getInterfaces(req, res) {
 }
 async function getInterface(req, res) {
     try {
-        const { id } = req.params;
+        const id = req.params.id;
         const networkInterface = await NetworkInterfaceService.getInterface(id);
         if (!networkInterface) {
             return res.status(404).json({
@@ -83,7 +83,7 @@ async function createInterface(req, res) {
 }
 async function updateInterface(req, res) {
     try {
-        const { id } = req.params;
+        const id = req.params.id;
         const networkInterface = await NetworkInterfaceService.updateInterface(id, req.body);
         res.json({
             message: "Interface updated successfully.",
@@ -98,7 +98,7 @@ async function updateInterface(req, res) {
 }
 async function deleteInterface(req, res) {
     try {
-        const { id } = req.params;
+        const id = req.params.id;
         await NetworkInterfaceService.deleteInterface(id);
         res.json({
             message: "Interface deleted successfully.",

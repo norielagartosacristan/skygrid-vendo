@@ -1,13 +1,12 @@
 import prisma from "../config/prisma";
 
-
 export async function getSettings() {
   return prisma.networkGeneral.findFirst();
 }
 
 export async function saveSettings(data: {
   systemName: string;
-  companyName?: string;
+  companyName: string;
 
   country: string;
   timezone: string;

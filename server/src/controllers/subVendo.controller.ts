@@ -38,7 +38,7 @@ export async function pending(req: Request, res: Response) {
 
 export async function configure(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!id) {
       return res.status(400).json({
@@ -125,7 +125,7 @@ export async function configuration(
 
     const config =
       await SubVendoService.getConfiguration(
-        req.params.chipId
+        req.params.chipId as string
       );
 
     if (!config) {
