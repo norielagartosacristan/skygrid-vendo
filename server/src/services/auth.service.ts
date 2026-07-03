@@ -1,5 +1,5 @@
 import prisma from "../config/prisma";
-import bcrypt from "bcrypt";
+import * as bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export async function login(
