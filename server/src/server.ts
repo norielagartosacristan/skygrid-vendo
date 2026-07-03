@@ -1,12 +1,47 @@
 import "dotenv/config";
-import { autoProvision } from "./services/networkProvision.service";
-
 import app from "./app";
 
-const PORT = process.env.PORT || 5000;
+import { autoProvision } from "./services/networkProvision.service";
+import { networkMonitor } from "./modules/network/services/networkMonitor.service";
+import http from "http";
+import { networkSocket } from "./modules/network/websocket/network.socket";
 
-app.listen(PORT, async () => {
+const PORT = process.env.PORT || 5000;
+const server = http.createServer(app);
+
+networkSocket.init(server);
+
+server.listen(PORT, async () => {
+
     console.log(`🚀 Server running on ${PORT}`);
 
-    await autoProvision();
+    try {
+
+        // Auto Provision
+        await autoProvision();
+
+        // First update immediately
+        await networkMonitor.update();
+
+        // Update every second
+        setInterval(async () => {
+
+            try {
+
+                await networkMonitor.update();
+
+            } catch (err) {
+
+                console.error("Network Monitor Error:", err);
+
+            }
+
+        }, 1000);
+
+    } catch (err) {
+
+        console.error("Startup Error:", err);
+
+    }
+
 });

@@ -205,24 +205,30 @@ export default function InterfacesPage() {
       {item.ipAddress?.trim() || "-"}
     </td>
 
-    <td className="p-4">{item.macAddress || "-"}</td>
-
     <td className="p-4">
-      <span
+    {item.macAddress}
+</td>
+
+<td className="p-4">
+
+    <span
         className={`inline-flex items-center gap-2 ${
-          item.status === "UP"
-            ? "text-green-600"
-            : "text-red-600"
+            item.status === "UP"
+                ? "text-green-600"
+                : "text-red-600"
         }`}
-      >
-        {item.status === "UP" ? (
-          <CheckCircle size={18} />
-        ) : (
-          <XCircle size={18} />
-        )}
+    >
+
+        {item.status === "UP"
+            ? <CheckCircle size={18}/>
+            : <XCircle size={18}/>
+        }
+
         {item.status}
-      </span>
-    </td>
+
+    </span>
+
+</td>
 
     <td className="p-4">
       <div className="flex justify-center gap-3">

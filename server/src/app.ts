@@ -40,6 +40,9 @@ app.use("/api/network-engine", networkEngineRoutes);
 app.use("/api/network-status", networkStatusRoutes);
 app.use("/api/linux", linuxRoutes);
 app.use("/api/network", networkRoutes);
+app.use("/api/network/interfaces", interfaceRoutes);
+
+
 
 app.get("/", (_, res) => {
   res.json({
