@@ -159,25 +159,28 @@ enum PaymentMethod {
 }
 
 model NetworkVlan {
-  id String @id @default(cuid())
+  id          String   @id @default(cuid())
+  name        String
 
-  vlanId Int
+  vlanId      Int      @unique
 
-  name String
+  interface   String
 
-  parentInterface String
+  gateway     String
 
-  ipAddress String?
+  subnet      String
 
-  subnetMask String?
+  dns         String
 
-  gateway String?
+  dhcpEnabled Boolean @default(true)
 
-  enabled Boolean @default(true)
+  internet    Boolean @default(true)
 
-  createdAt DateTime @default(now())
+  enabled     Boolean @default(true)
 
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  updatedAt   DateTime @updatedAt
 }
 
 model NetworkGeneral {

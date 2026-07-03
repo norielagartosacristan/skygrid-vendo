@@ -13,6 +13,8 @@ import subVendoRoutes from "./routes/subVendo.routes";
 import networkEngineRoutes from "./routes/networkEngine.routes";
 import networkStatusRoutes from "./routes/networkStatus.routes";
 import linuxRoutes from "./routes/linuxNetwork.routes";
+import networkRoutes from "./modules/network/routes/network.routes";
+
 
 
 
@@ -35,7 +37,7 @@ app.use("/api/sub-vendo", subVendoRoutes);
 app.use("/api/network-engine", networkEngineRoutes);
 app.use("/api/network-status", networkStatusRoutes);
 app.use("/api/linux", linuxRoutes);
-
+app.use("/api/network", networkRoutes);
 
 app.get("/", (_, res) => {
   res.json({
