@@ -16,20 +16,26 @@ echo "Selected WAN Interface: $WAN"
 echo ""
 echo "Creating default Management VLAN..."
 
+WAN="enp2s0"
+
 MGMT_VLAN=22
 MGMT_IF="${WAN}.${MGMT_VLAN}"
 
-# Create VLAN if not exists
-if ip link show "$MGMT_IF" >/dev/null 2>&1; then
-    echo "[WARN] VLAN already exists: $MGMT_IF"
-else
+# Create VLAN only if it doesn't exist
+if ! ip link show "$MGMT_IF" >/dev/null 2>&1; then
     ip link add link "$WAN" name "$MGMT_IF" type vlan id "$MGMT_VLAN"
 fi
 
+# Bring interface up
 ip link set "$MGMT_IF" up
 
+# Reset IP address
 ip addr flush dev "$MGMT_IF" || true
-ip addr add 10.0.0.1/24 dev "$MGMT_IF"
+
+# Assign management IP
+ip addr add 10.0.0.1/24 dev "$MGMT_IF" || true
+
+echo "Management Interface: $MGMT_IF"
 
 echo ""
 echo "Management Interface Created"
