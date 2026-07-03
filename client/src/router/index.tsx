@@ -40,6 +40,7 @@ import GlobalBandwidthPage from "../features/network/pages/GlobalBandwidthPage";
 import ClientControlPage from "../features/network/pages/ClientControlPage";
 import InterfacesPage from "../features/network/pages/InterfacesPage";
 import SubVendoPage from "../features/sub-vendo/pages/subVendoPage";
+import HardwareSettings from "../features/settings/hardware";
 //import VlansPage from "../features/network/pages/VlansPage";
 //import PPPoEPage from "../features/network/pages/PPPoEPage";
 
@@ -71,6 +72,10 @@ export default function Router() {
                 <Route path="network/client-control" element={<ClientControlPage />} />
                 <Route path="network/interfaces" element={<InterfacesPage />} />
                 <Route path="sub-vendo" element={<SubVendoPage />} />
+                <Route
+                    path="/admin/settings/hardware"
+                    element={<HardwareSettings />}
+                />
                 <Route path="network" element={<NetworkLayout />}>
                     <Route index element={<GeneralSettingsPage />} />
                     <Route path="bandwidth" element={<GlobalBandwidthPage />} />
