@@ -10,10 +10,10 @@ async function main() {
     where: { email: "admin@skygrid.com" },
     update: {},
     create: {
-      email: "admin@skygrid.com",
-      password: hashed,
-      role: "admin",
-    },
+  fullName: "System Administrator",
+  email: "admin@skygrid.com",
+  password: hashed,
+}
   });
 
   console.log("✅ Admin seeded");
