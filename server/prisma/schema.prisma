@@ -84,7 +84,6 @@ enum MachineStatus {
   MAINTENANCE
 }
 
-
 model Transaction {
   id String @id @default(cuid())
 
@@ -114,28 +113,28 @@ enum PaymentMethod {
 }
 
 model NetworkVlan {
-  id          String   @id @default(cuid())
-  name        String
+  id   String @id @default(cuid())
+  name String
 
-  vlanId      Int      @unique
+  vlanId Int @unique
 
-  interface   String
+  interface String
 
-  gateway     String
+  gateway String
 
-  subnet      String
+  subnet String
 
-  dns         String
+  dns String
 
   dhcpEnabled Boolean @default(true)
 
-  internet    Boolean @default(true)
+  internet Boolean @default(true)
 
-  enabled     Boolean @default(true)
+  enabled Boolean @default(true)
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  updatedAt   DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model NetworkGeneral {
@@ -243,7 +242,7 @@ model NetworkInterface {
   parentInterface String?
 
   // Access Point Settings
-  ssid String?
+  ssid     String?
   password String?
   security String?
   // OPEN, WPA2
@@ -252,7 +251,7 @@ model NetworkInterface {
   dhcpEnabled Boolean @default(false)
 
   dhcpStart String?
-  dhcpEnd String?
+  dhcpEnd   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -322,45 +321,44 @@ model SubVendo {
 }
 
 model Package {
-  id            String   @id @default(cuid())
-  name          String
-  description   String?
-  price         Decimal  @db.Decimal(10,2)
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal @db.Decimal(10, 2)
 
-  duration      Int
-  durationUnit  DurationUnit
+  duration     Int
+  durationUnit DurationUnit
 
-  downloadMbps  Int?
-  uploadMbps    Int?
-  dataLimitMB   Int?
+  downloadMbps Int?
+  uploadMbps   Int?
+  dataLimitMB  Int?
 
-  isActive      Boolean  @default(true)
+  isActive Boolean @default(true)
 
-  vouchers      Voucher[]
-  sessions       Session[]
+  vouchers Voucher[]
+  sessions Session[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Voucher {
-  id         String   @id @default(cuid())
-  code       String   @unique
+  id   String @id @default(cuid())
+  code String @unique
 
-  packageId  String
-  package    Package  @relation(fields: [packageId], references: [id])
+  packageId String
+  package   Package @relation(fields: [packageId], references: [id])
 
-  status     VoucherStatus @default(ACTIVE)
+  status VoucherStatus @default(ACTIVE)
 
-  sessionId String?
-  session Session? @relation(fields: [sessionId], references: [id])
+  sessionId String?  @unique
+  session   Session? @relation(fields: [sessionId], references: [id])
 
+  usedByIP String?
+  usedAt   DateTime?
 
-  usedByIP   String?
-  usedAt     DateTime?
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum VoucherStatus {
@@ -379,28 +377,26 @@ enum DurationUnit {
 }
 
 model Session {
+  id String @id @default(cuid())
 
-  id            String   @id @default(cuid())
+  machineId String
+  machine   Machine @relation(fields: [machineId], references: [id])
 
-  machineId     String
-  machine       Machine  @relation(fields: [machineId], references: [id])
+  packageId String
+  package   Package @relation(fields: [packageId], references: [id])
 
-  packageId     String
-  package       Package  @relation(fields: [packageId], references: [id])
+  clientMac String
 
-  clientMac     String
+  ipAddress String
 
-  ipAddress     String
+  startedAt DateTime @default(now())
 
-  startedAt     DateTime @default(now())
+  expiresAt DateTime
 
-  expiresAt     DateTime
+  isActive Boolean @default(true)
 
-  isActive      Boolean  @default(true)
+  voucher Voucher?
 
-  voucher       Voucher?
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

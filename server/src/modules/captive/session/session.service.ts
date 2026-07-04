@@ -19,7 +19,7 @@ class SessionService {
                 voucherId,
                 clientIP,
                 expiresAt,
-                active: true
+                active: false
 
             }
 

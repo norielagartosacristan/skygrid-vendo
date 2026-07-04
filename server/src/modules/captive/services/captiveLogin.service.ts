@@ -22,13 +22,13 @@ class CaptiveLoginService {
             voucherData.id,
             clientIP,
             convertToMinutes(
-                voucherData.voucher.duration,
-                voucherData.voucher.durationUnit
+                voucherData.duration,
+                voucherData.durationUnit
             )
         );
 
         // 4. Mark voucher as used
-        await prisma.voucher.update({
+        await prisma.package.update({
             where: {
                 id: voucherData.id
             },
