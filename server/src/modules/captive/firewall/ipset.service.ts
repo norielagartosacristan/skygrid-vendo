@@ -1,37 +1,53 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 
-const IPSET = "sudo /usr/sbin/ipset";
-
 const execAsync = promisify(exec);
+
+/**
+ * Full path to ipset using sudo (NOPASSWD configured)
+ */
+const IPSET = "sudo /usr/sbin/ipset";
 
 class IPSetService {
 
-    private async run(command: string) {
+    /**
+     * Execute shell command
+     */
+    private async run(command: string): Promise<string> {
 
-        const { stdout } = await execAsync(command);
+        try {
 
-        return stdout;
+            const { stdout } = await execAsync(command);
+
+            return stdout;
+
+        } catch (err: any) {
+
+            throw new Error(
+                err.stderr || err.message
+            );
+
+        }
 
     }
 
     /**
-     * Allow client
+     * Allow client Internet access
      */
-    async allow(ip: string) {
+    async allow(ip: string): Promise<void> {
 
         await this.run(
             `${IPSET} add skygrid_clients ${ip} -exist`
         );
 
-        console.log(`✅ Allowed ${ip}`);
+        console.log(`✅ Allowed Client: ${ip}`);
 
     }
 
     /**
-     * Block client
+     * Block client Internet access
      */
-    async block(ip: string) {
+    async block(ip: string): Promise<void> {
 
         try {
 
@@ -40,15 +56,15 @@ class IPSetService {
             );
 
         } catch {
-
+            // Ignore if IP is already removed
         }
 
-        console.log(`❌ Blocked ${ip}`);
+        console.log(`❌ Blocked Client: ${ip}`);
 
     }
 
     /**
-     * Check if client exists
+     * Check if client is already allowed
      */
     async exists(ip: string): Promise<boolean> {
 
@@ -69,9 +85,9 @@ class IPSetService {
     }
 
     /**
-     * List clients
+     * List all allowed clients
      */
-    async list() {
+    async list(): Promise<string> {
 
         return await this.run(
             `${IPSET} list skygrid_clients`
@@ -80,17 +96,18 @@ class IPSetService {
     }
 
     /**
-     * Clear all clients
+     * Remove all clients
      */
-    async clear() {
+    async clear(): Promise<void> {
 
         await this.run(
             `${IPSET} flush skygrid_clients`
         );
 
+        console.log("🧹 Cleared all captive clients");
+
     }
 
 }
 
-export const ipsetService =
-    new IPSetService();
+export const ipsetService = new IPSetService();
