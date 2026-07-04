@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import {
-  getInterfaces,
+  //getInterfaces,
   deleteInterface,
 } from "../services/networkInterface.api";
 
@@ -33,7 +33,7 @@ export default function InterfacesPage() {
     try {
       setLoading(true);
 
-      const res = await getInterfaces();
+      // const _res = await getInterfaces();
 
       // setInterfaces(res.data);
 

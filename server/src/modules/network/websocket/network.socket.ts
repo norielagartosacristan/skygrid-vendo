@@ -15,7 +15,7 @@ class NetworkSocket {
 
         });
 
-        this.wss.on("connection", (ws) => {
+        this.wss.on("connection", (ws: WebSocket) => {
 
             console.log("📡 Network Dashboard Connected");
 
@@ -35,7 +35,7 @@ class NetworkSocket {
 
         const json = JSON.stringify(data);
 
-        this.wss.clients.forEach((client) => {
+        this.wss.clients.forEach((client: WebSocket) => {
 
             if (client.readyState === WebSocket.OPEN) {
 
