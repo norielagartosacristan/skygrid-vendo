@@ -26,7 +26,7 @@ export default function Home() {
                 Welcome to
               </h4>
 
-              <h1 className="text-3xl lg:text-3xl font-extrabold leading-tight">
+              <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight">
                 SkyGrid Vendo
               </h1>
 
@@ -37,10 +37,6 @@ export default function Home() {
               <p className="mt-3 text-gray-300">
                 Fast • Secure • Reliable
               </p>
-
-              <button className="mt-8 bg-sky-600 hover:bg-sky-700 px-8 py-4 rounded-2xl text-lg font-semibold transition">
-                Connect Now
-              </button>
 
             </div>
 

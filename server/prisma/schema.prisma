@@ -365,3 +365,41 @@ model SubVendo {
 
   updatedAt DateTime @updatedAt
 }
+
+model Package {
+
+  id            String   @id @default(cuid())
+
+  name          String
+
+  description   String?
+
+  price         Decimal  @db.Decimal(10,2)
+
+  duration      Int
+
+  durationUnit  DurationUnit
+
+  downloadMbps  Int?
+
+  uploadMbps    Int?
+
+  dataLimitMB   Int?      // null = unlimited
+
+  isActive      Boolean   @default(true)
+
+  vouchers      Voucher[]
+
+  createdAt     DateTime  @default(now())
+
+  updatedAt     DateTime  @updatedAt
+}
+
+enum DurationUnit {
+  MINUTE
+  HOUR
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}

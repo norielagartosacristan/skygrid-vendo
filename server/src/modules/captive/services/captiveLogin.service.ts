@@ -1,4 +1,6 @@
+import { voucherService } from "../../voucher/services/voucher.service";
 import { ipsetService } from "../firewall/ipset.service";
+import prisma from "../../../lib/prisma";
 
 interface LoginRequest {
 
@@ -28,10 +30,10 @@ class CaptiveLoginService {
          * Check voucher database
          */
 
-        const validVoucher =
-            await this.validateVoucher(voucher);
+        const voucherData =
+    await voucherService.redeem(voucher);
 
-        if (!validVoucher) {
+        if (!voucherData) {
 
             return {
 
@@ -48,6 +50,26 @@ class CaptiveLoginService {
          */
 
         await ipsetService.allow(clientIP);
+
+        await prisma.voucher.update({
+
+    where: {
+
+        id: voucherData.id
+
+    },
+
+    data: {
+
+        status: "USED",
+
+        usedByIP: clientIP,
+
+        usedAt: new Date()
+
+    }
+
+});
 
         /**
          * TODO
@@ -86,21 +108,6 @@ class CaptiveLoginService {
 
     }
 
-    /**
-     * Temporary Voucher Validation
-     */
-
-    private async validateVoucher(
-        voucher: string
-    ): Promise<boolean> {
-
-        /**
-         * TEMP ONLY
-         */
-
-        return voucher === "SKYGRID123";
-
-    }
 
 }
 
