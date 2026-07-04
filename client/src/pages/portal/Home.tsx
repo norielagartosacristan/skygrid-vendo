@@ -26,7 +26,7 @@ export default function Home() {
                 Welcome to
               </h4>
 
-              <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight">
+              <h1 className="text-3xl lg:text-3xl font-extrabold leading-tight">
                 SkyGrid Vendo
               </h1>
 
