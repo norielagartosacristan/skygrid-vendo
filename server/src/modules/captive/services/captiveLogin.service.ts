@@ -1,6 +1,6 @@
 import { voucherService } from "../../voucher/services/voucher.service";
 import { ipsetService } from "../firewall/ipset.service";
-import prisma from "../../../lib/prisma";
+import prisma from "../../../config/prisma";
 
 interface LoginRequest {
 
