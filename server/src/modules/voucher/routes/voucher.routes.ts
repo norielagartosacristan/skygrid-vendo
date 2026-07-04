@@ -5,7 +5,7 @@ const router = Router();
 
 router.post(
     "/generate",
-    voucherController.generate
+    voucherController.generate.bind(voucherController)
 );
 
 export default router;

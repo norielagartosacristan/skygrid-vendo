@@ -7,20 +7,44 @@ class VoucherController {
 
         try {
 
-            const { packageId } = req.body;
+            const { packageId, quantity = 1 } = req.body;
 
-            const voucher = await voucherService.generate(packageId);
+            if (!packageId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "packageId is required"
+                });
+            }
 
-            res.json({
+            const vouchers = [];
+
+            for (let i = 0; i < quantity; i++) {
+
+                const voucher =
+                    await voucherService.generate(packageId);
+
+                vouchers.push(voucher);
+
+            }
+
+            return res.json({
+
                 success: true,
-                voucher
+
+                message: `${quantity} voucher(s) generated successfully`,
+
+                data: vouchers
+
             });
 
-        } catch (err: any) {
+        } catch (error: any) {
 
-            res.status(400).json({
+            return res.status(500).json({
+
                 success: false,
-                message: err.message
+
+                message: error.message
+
             });
 
         }
@@ -29,4 +53,5 @@ class VoucherController {
 
 }
 
-export const voucherController = new VoucherController();
+export const voucherController =
+    new VoucherController();

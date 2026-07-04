@@ -19,11 +19,6 @@ import captiveRoutes from "./modules/captive/routes/captive.routes";
 import voucherRoutes from "./modules/voucher/routes/voucher.routes";
 
 
-
-
-
-
-
 const app = express();
 
 app.use(cors());
