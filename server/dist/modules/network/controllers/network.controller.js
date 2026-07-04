@@ -32,35 +32,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const prisma_1 = __importDefault(require("../config/prisma"));
-const bcrypt = __importStar(require("bcryptjs"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-async function login(email, password) {
-    const user = await prisma_1.default.user.findUnique({
-        where: {
-            email,
-        },
-    });
-    if (!user) {
-        throw new Error("Invalid email or password");
-    }
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-        throw new Error("Invalid email or password");
-    }
-    const token = jsonwebtoken_1.default.sign({
-        id: user.id,
-        role: user.role,
-    }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
-    });
-    return {
-        token,
-        user,
-    };
+exports.getVlans = getVlans;
+exports.createVlan = createVlan;
+const NetworkService = __importStar(require("../services/network.service"));
+async function getVlans(req, res) {
+    const data = await NetworkService.getVlans();
+    res.json(data);
+}
+async function createVlan(req, res) {
+    const vlan = await NetworkService.createVlan(req.body);
+    res.json(vlan);
 }

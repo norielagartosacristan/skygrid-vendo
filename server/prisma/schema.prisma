@@ -84,51 +84,6 @@ enum MachineStatus {
   MAINTENANCE
 }
 
-model Package {
-  id String @id @default(cuid())
-
-  name String
-
-  price Decimal @db.Decimal(10, 2)
-
-  duration Int
-
-  downloadSpeed Int
-
-  uploadSpeed Int
-
-  isActive Boolean @default(true)
-
-  sessions Session[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-}
-
-model Session {
-  id String @id @default(cuid())
-
-  machineId String
-
-  packageId String
-
-  machine Machine @relation(fields: [machineId], references: [id])
-
-  package Package @relation(fields: [packageId], references: [id])
-
-  clientMac String
-
-  ipAddress String
-
-  startedAt DateTime
-
-  expiresAt DateTime
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-}
 
 model Transaction {
   id String @id @default(cuid())
@@ -367,32 +322,51 @@ model SubVendo {
 }
 
 model Package {
-
   id            String   @id @default(cuid())
-
   name          String
-
   description   String?
-
   price         Decimal  @db.Decimal(10,2)
 
   duration      Int
-
   durationUnit  DurationUnit
 
   downloadMbps  Int?
-
   uploadMbps    Int?
+  dataLimitMB   Int?
 
-  dataLimitMB   Int?      // null = unlimited
-
-  isActive      Boolean   @default(true)
+  isActive      Boolean  @default(true)
 
   vouchers      Voucher[]
+  sessions       Session[]
 
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
 
-  updatedAt     DateTime  @updatedAt
+model Voucher {
+  id         String   @id @default(cuid())
+  code       String   @unique
+
+  packageId  String
+  package    Package  @relation(fields: [packageId], references: [id])
+
+  status     VoucherStatus @default(ACTIVE)
+
+  sessionId String?
+  session Session? @relation(fields: [sessionId], references: [id])
+
+
+  usedByIP   String?
+  usedAt     DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum VoucherStatus {
+  ACTIVE
+  USED
+  EXPIRED
 }
 
 enum DurationUnit {
@@ -402,4 +376,31 @@ enum DurationUnit {
   WEEK
   MONTH
   YEAR
+}
+
+model Session {
+
+  id            String   @id @default(cuid())
+
+  machineId     String
+  machine       Machine  @relation(fields: [machineId], references: [id])
+
+  packageId     String
+  package       Package  @relation(fields: [packageId], references: [id])
+
+  clientMac     String
+
+  ipAddress     String
+
+  startedAt     DateTime @default(now())
+
+  expiresAt     DateTime
+
+  isActive      Boolean  @default(true)
+
+  voucher       Voucher?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
 }

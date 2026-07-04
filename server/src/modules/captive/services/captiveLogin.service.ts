@@ -1,114 +1,61 @@
 import { voucherService } from "../../voucher/services/voucher.service";
 import { ipsetService } from "../firewall/ipset.service";
 import prisma from "../../../config/prisma";
-
-interface LoginRequest {
-
-    voucher: string;
-
-    clientIP: string;
-
-}
+import { sessionService } from "../session/session.service";
+import { convertToMinutes } from "../../../utils/time";
 
 class CaptiveLoginService {
 
-    /**
-     * Login Client
-     */
-    async login(data: LoginRequest) {
+    async login(data: { voucher: string; clientIP: string }) {
 
-        const {
+        const { voucher, clientIP } = data;
 
-            voucher,
-
-            clientIP
-
-        } = data;
-
-        /**
-         * TODO
-         * Check voucher database
-         */
-
+        // 1. Validate voucher
         const voucherData =
-    await voucherService.redeem(voucher);
+            await voucherService.redeem(voucher);
 
-        if (!voucherData) {
-
-            return {
-
-                success: false,
-
-                message: "Invalid voucher"
-
-            };
-
-        }
-
-        /**
-         * Allow Internet
-         */
-
+        // 2. Allow internet
         await ipsetService.allow(clientIP);
 
+        // 3. Create session
+        await sessionService.createSession(
+            voucherData.id,
+            clientIP,
+            convertToMinutes(
+                voucherData.voucher.duration,
+                voucherData.voucher.durationUnit
+            )
+        );
+
+        // 4. Mark voucher as used
         await prisma.voucher.update({
-
-    where: {
-
-        id: voucherData.id
-
-    },
-
-    data: {
-
-        status: "USED",
-
-        usedByIP: clientIP,
-
-        usedAt: new Date()
-
-    }
-
-});
-
-        /**
-         * TODO
-         * Create Session
-         */
+            where: {
+                id: voucherData.id
+            },
+            data: {
+                status: "USED",
+                usedByIP: clientIP,
+                usedAt: new Date()
+            }
+        });
 
         return {
-
             success: true,
-
             message: "Login Successful",
-
             ip: clientIP,
-
             voucher
-
         };
-
     }
-
-    /**
-     * Logout Client
-     */
 
     async logout(clientIP: string) {
 
         await ipsetService.block(clientIP);
 
         return {
-
             success: true,
-
             message: "Logged Out"
-
         };
-
     }
-
-
 }
 
 export const captiveLoginService =

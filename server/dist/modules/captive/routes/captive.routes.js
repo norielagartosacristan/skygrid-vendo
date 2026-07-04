@@ -32,35 +32,23 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const prisma_1 = __importDefault(require("../config/prisma"));
-const bcrypt = __importStar(require("bcryptjs"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-async function login(email, password) {
-    const user = await prisma_1.default.user.findUnique({
-        where: {
-            email,
-        },
-    });
-    if (!user) {
-        throw new Error("Invalid email or password");
-    }
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-        throw new Error("Invalid email or password");
-    }
-    const token = jsonwebtoken_1.default.sign({
-        id: user.id,
-        role: user.role,
-    }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
-    });
-    return {
-        token,
-        user,
-    };
-}
+const express_1 = require("express");
+const CaptiveController = __importStar(require("../controllers/captive.controller"));
+const LoginController = __importStar(require("../controllers/login.controller"));
+const router = (0, express_1.Router)();
+router.post("/login", LoginController.login);
+/**
+ * Firewall
+ */
+router.post("/enable", CaptiveController.enable);
+router.post("/disable", CaptiveController.disable);
+router.get("/rules", CaptiveController.rules);
+/**
+ * Client Authentication
+ */
+router.post("/allow", CaptiveController.allow);
+router.post("/block", CaptiveController.block);
+router.get("/clients", CaptiveController.clients);
+router.delete("/clients", CaptiveController.clear);
+exports.default = router;

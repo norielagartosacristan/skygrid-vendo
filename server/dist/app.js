@@ -17,6 +17,9 @@ const subVendo_routes_1 = __importDefault(require("./routes/subVendo.routes"));
 const networkEngine_routes_1 = __importDefault(require("./routes/networkEngine.routes"));
 const networkStatus_routes_1 = __importDefault(require("./routes/networkStatus.routes"));
 const linuxNetwork_routes_1 = __importDefault(require("./routes/linuxNetwork.routes"));
+const network_routes_1 = __importDefault(require("./modules/network/routes/network.routes"));
+const interface_routes_1 = __importDefault(require("./modules/network/routes/interface.routes"));
+const captive_routes_1 = __importDefault(require("./modules/captive/routes/captive.routes"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -32,6 +35,9 @@ app.use("/api/sub-vendo", subVendo_routes_1.default);
 app.use("/api/network-engine", networkEngine_routes_1.default);
 app.use("/api/network-status", networkStatus_routes_1.default);
 app.use("/api/linux", linuxNetwork_routes_1.default);
+app.use("/api/network", network_routes_1.default);
+app.use("/api/network/interfaces", interface_routes_1.default);
+app.use("/api/captive", captive_routes_1.default);
 app.get("/", (_, res) => {
     res.json({
         message: "SkyGrid Vendo API Running 🚀",

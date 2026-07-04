@@ -32,35 +32,17 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = login;
-const prisma_1 = __importDefault(require("../config/prisma"));
-const bcrypt = __importStar(require("bcryptjs"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-async function login(email, password) {
-    const user = await prisma_1.default.user.findUnique({
-        where: {
-            email,
-        },
-    });
-    if (!user) {
-        throw new Error("Invalid email or password");
+exports.getInterfaces = getInterfaces;
+const InterfaceService = __importStar(require("../services/interface.service"));
+async function getInterfaces(req, res) {
+    try {
+        const data = await InterfaceService.getInterfaces();
+        res.json(data);
     }
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-        throw new Error("Invalid email or password");
+    catch (err) {
+        res.status(500).json({
+            message: err.message,
+        });
     }
-    const token = jsonwebtoken_1.default.sign({
-        id: user.id,
-        role: user.role,
-    }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
-    });
-    return {
-        token,
-        user,
-    };
 }
