@@ -1,6 +1,8 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 
+const IPSET = "sudo /usr/sbin/ipset";
+
 const execAsync = promisify(exec);
 
 class IPSetService {
@@ -19,7 +21,7 @@ class IPSetService {
     async allow(ip: string) {
 
         await this.run(
-            `ipset add skygrid_clients ${ip} -exist`
+            `${IPSET} add skygrid_clients ${ip} -exist`
         );
 
         console.log(`✅ Allowed ${ip}`);
@@ -34,7 +36,7 @@ class IPSetService {
         try {
 
             await this.run(
-                `ipset del skygrid_clients ${ip}`
+                `${IPSET} del skygrid_clients ${ip}`
             );
 
         } catch {
@@ -53,7 +55,7 @@ class IPSetService {
         try {
 
             await this.run(
-                `ipset test skygrid_clients ${ip}`
+                `${IPSET} test skygrid_clients ${ip}`
             );
 
             return true;
@@ -72,7 +74,7 @@ class IPSetService {
     async list() {
 
         return await this.run(
-            "ipset list skygrid_clients"
+            `${IPSET} list skygrid_clients`
         );
 
     }
@@ -83,7 +85,7 @@ class IPSetService {
     async clear() {
 
         await this.run(
-            "ipset flush skygrid_clients"
+            `${IPSET} flush skygrid_clients`
         );
 
     }
