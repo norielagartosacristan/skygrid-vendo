@@ -10,11 +10,9 @@ class VoucherService {
             const code = voucherGenerator.generate();
 
             const exists = await prisma.voucher.findUnique({
-
                 where: {
                     code
                 }
-
             });
 
             if (!exists) {
@@ -36,7 +34,9 @@ class VoucherService {
         });
 
         if (!pkg) {
+
             throw new Error("Package not found");
+
         }
 
         const code = await this.generateUniqueCode();
@@ -61,12 +61,9 @@ class VoucherService {
 
     }
 
-    /**
-     * Redeem Voucher
-     */
     async redeem(code: string) {
 
-        const voucher = await prisma.package.findUnique({
+        const voucher = await prisma.voucher.findUnique({
 
             where: {
                 code
@@ -96,5 +93,4 @@ class VoucherService {
 
 }
 
-export const voucherService =
-    new VoucherService();
+export const voucherService = new VoucherService();

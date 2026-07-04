@@ -40,11 +40,8 @@ class VoucherService {
             }
         });
     }
-    /**
-     * Redeem Voucher
-     */
     async redeem(code) {
-        const voucher = await prisma_1.default.package.findUnique({
+        const voucher = await prisma_1.default.voucher.findUnique({
             where: {
                 code
             },

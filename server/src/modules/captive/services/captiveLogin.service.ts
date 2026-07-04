@@ -19,16 +19,18 @@ class CaptiveLoginService {
 
         // 3. Create session
         await sessionService.createSession(
+            Math.random().toString(36).substr(2, 9),
             voucherData.id,
             clientIP,
+            clientIP,
             convertToMinutes(
-                voucherData.duration,
-                voucherData.durationUnit
-            )
-        );
+                voucherData.package.duration,
+                voucherData.package.durationUnit
+                )
+            );
 
         // 4. Mark voucher as used
-        await prisma.package.update({
+        await prisma.voucher.update({
             where: {
                 id: voucherData.id
             },
@@ -37,7 +39,7 @@ class CaptiveLoginService {
                 usedByIP: clientIP,
                 usedAt: new Date()
             }
-        });
+            });
 
         return {
             success: true,

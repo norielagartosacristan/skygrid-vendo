@@ -6,21 +6,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sessionService = void 0;
 const prisma_1 = __importDefault(require("../../../config/prisma"));
 class SessionService {
-    async createSession(voucherId, clientIP, durationMinutes) {
+    async createSession(machineId, packageId, clientMac, clientIP, durationMinutes) {
         const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
         return await prisma_1.default.session.create({
             data: {
-                voucherId,
-                clientIP,
+                machineId,
+                packageId,
+                clientMac,
+                ipAddress: clientIP,
                 expiresAt,
-                active: true
+                isActive: true
             }
         });
     }
     async expireSession(sessionId) {
         return await prisma_1.default.session.update({
-            where: { id: sessionId },
-            data: { active: false }
+            where: {
+                id: sessionId
+            },
+            data: {
+                isActive: false
+            }
         });
     }
 }

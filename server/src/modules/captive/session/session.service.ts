@@ -3,7 +3,9 @@ import prisma from "../../../config/prisma";
 class SessionService {
 
     async createSession(
-        voucherId: string,
+        machineId: string,
+        packageId: string,
+        clientMac: string,
         clientIP: string,
         durationMinutes: number
     ) {
@@ -16,10 +18,15 @@ class SessionService {
 
             data: {
 
-                voucherId,
-                clientIP,
+                machineId,
+                packageId,
+                clientMac,
+
+                ipAddress: clientIP,
+
                 expiresAt,
-                active: false
+
+                isActive: true
 
             }
 
@@ -31,9 +38,13 @@ class SessionService {
 
         return await prisma.session.update({
 
-            where: { id: sessionId },
+            where: {
+                id: sessionId
+            },
 
-            data: { active: false }
+            data: {
+                isActive: false
+            }
 
         });
 
