@@ -16,6 +16,7 @@ import linuxRoutes from "./routes/linuxNetwork.routes";
 import networkRoutes from "./modules/network/routes/network.routes";
 import interfaceRoutes from "./modules/network/routes/interface.routes";
 import captiveRoutes from "./modules/captive/routes/captive.routes";
+import voucherRoutes from "./modules/voucher/routes/voucher.routes";
 
 
 
@@ -43,6 +44,7 @@ app.use("/api/linux", linuxRoutes);
 app.use("/api/network", networkRoutes);
 app.use("/api/network/interfaces", interfaceRoutes);
 app.use("/api/captive", captiveRoutes);
+app.use("/api/vouchers", voucherRoutes);
 
 
 
