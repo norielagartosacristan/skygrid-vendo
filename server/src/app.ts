@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 
-//import packageRoutes from "./routes/package.routes";
+
 import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
 import { errorHandler } from "./middleware/error.middleware";
@@ -28,7 +28,6 @@ app.use(express.json());
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
-//app.use("/api/packages", packageRoutes);
 app.use("/api/network/interfaces", networkInterfaceRoutes);
 app.use("/api/network/general", networkGeneralRoutes);
 app.use("/api/network/bandwidth", globalBandwidthRoutes);
