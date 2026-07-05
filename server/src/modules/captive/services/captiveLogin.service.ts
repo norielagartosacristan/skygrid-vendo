@@ -19,16 +19,28 @@ class CaptiveLoginService {
         await ipsetService.allow(clientIP);
 
         // 3. Create session
-        await sessionService.createSession(
-            machineService.getMachineId(),
-            voucherData.id,
-            clientIP,
-            clientIP,
-            convertToMinutes(
-                voucherData.package.duration,
-                voucherData.package.durationUnit
-                )
-            );
+        const machineId = machineService.getMachineId();
+
+console.log("Machine ID:", machineId);
+
+const machine = await prisma.machine.findUnique({
+    where: {
+        id: machineId
+    }
+});
+
+console.log("Machine:", machine);
+
+await sessionService.createSession(
+    machineId,
+    voucherData.id,
+    clientIP,
+    clientIP,
+    convertToMinutes(
+        voucherData.package.duration,
+        voucherData.package.durationUnit
+    )
+);
 
         // 4. Mark voucher as used
         await prisma.voucher.update({
