@@ -12,7 +12,7 @@ export default function VouchersPage() {
 
         const res = await api.get("/packages");
 
-        setPackages(res.data);
+        setPackages(res.data.data);
 
     }
 
