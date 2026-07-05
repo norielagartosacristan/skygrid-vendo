@@ -6,6 +6,7 @@ import { networkMonitor } from "./modules/network/services/networkMonitor.servic
 import http from "http";
 import { networkSocket } from "./modules/network/websocket/network.socket";
 import { firewallRules } from "./modules/captive/firewall/firewallRules.service";
+import { machineService } from "./modules/machine/services/machine.service";
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
@@ -21,6 +22,10 @@ server.listen(PORT, async () => {
 
         // Auto Provision
         await autoProvision();
+        const machine = await machineService.register();
+
+        console.log("✅ Machine Registered:");
+        console.log(machine);
 
         // First update immediately
         await networkMonitor.update();
