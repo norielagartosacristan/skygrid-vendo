@@ -14,6 +14,11 @@ class SessionService {
             Date.now() + durationMinutes * 60 * 1000
         );
 
+            console.log("========== CREATE SESSION ==========");
+console.log("machineId:", machineId);
+console.log("packageId:", packageId);
+console.log("clientIP:", clientIP);
+console.log("clientMac:", clientMac);
         return await prisma.session.create({
 
             data: {
