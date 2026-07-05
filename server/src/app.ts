@@ -18,6 +18,7 @@ import interfaceRoutes from "./modules/network/routes/interface.routes";
 import captiveRoutes from "./modules/captive/routes/captive.routes";
 import voucherRoutes from "./modules/voucher/routes/voucher.routes";
 import packageRoutes from "./modules/package/routes/package.routes";
+import machineRoutes from "./modules/machine/routes/machine.routes";
 
 
 
@@ -43,6 +44,7 @@ app.use("/api/network/interfaces", interfaceRoutes);
 app.use("/api/captive", captiveRoutes);
 app.use("/api/vouchers", voucherRoutes);
 app.use("/api/packages", packageRoutes);
+app.use("/api/machine", machineRoutes);
 
 
 

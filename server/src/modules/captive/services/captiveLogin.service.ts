@@ -3,6 +3,7 @@ import { ipsetService } from "../firewall/ipset.service";
 import prisma from "../../../config/prisma";
 import { sessionService } from "../session/session.service";
 import { convertToMinutes } from "../../../utils/time";
+import { machineService } from "../../machine/services/machine.service";
 
 class CaptiveLoginService {
 
@@ -19,7 +20,7 @@ class CaptiveLoginService {
 
         // 3. Create session
         await sessionService.createSession(
-            Math.random().toString(36).substr(2, 9),
+            machineService.getMachineId(),
             voucherData.id,
             clientIP,
             clientIP,

@@ -54,7 +54,6 @@ model Machine {
   id String @id @default(cuid())
 
   vendorId String
-
   vendor Vendor @relation(fields: [vendorId], references: [id])
 
   name String
@@ -62,6 +61,10 @@ model Machine {
   ipAddress String
 
   macAddress String
+
+  fingerprint String @unique
+
+  hostname String?
 
   location String?
 

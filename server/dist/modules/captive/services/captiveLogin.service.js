@@ -9,6 +9,7 @@ const ipset_service_1 = require("../firewall/ipset.service");
 const prisma_1 = __importDefault(require("../../../config/prisma"));
 const session_service_1 = require("../session/session.service");
 const time_1 = require("../../../utils/time");
+const machine_service_1 = require("../../machine/services/machine.service");
 class CaptiveLoginService {
     async login(data) {
         const { voucher, clientIP } = data;
@@ -17,7 +18,7 @@ class CaptiveLoginService {
         // 2. Allow internet
         await ipset_service_1.ipsetService.allow(clientIP);
         // 3. Create session
-        await session_service_1.sessionService.createSession(Math.random().toString(36).substr(2, 9), voucherData.id, clientIP, clientIP, (0, time_1.convertToMinutes)(voucherData.package.duration, voucherData.package.durationUnit));
+        await session_service_1.sessionService.createSession(machine_service_1.machineService.getMachineId(), voucherData.id, clientIP, clientIP, (0, time_1.convertToMinutes)(voucherData.package.duration, voucherData.package.durationUnit));
         // 4. Mark voucher as used
         await prisma_1.default.voucher.update({
             where: {
