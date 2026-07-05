@@ -3,34 +3,45 @@ import { exec } from "child_process";
 
 const execAsync = promisify(exec);
 
+const IPTABLES = "sudo /usr/sbin/iptables";
+
 class FirewallService {
 
     /**
      * Execute shell command
      */
-    private async run(command: string) {
+    private async run(command: string): Promise<string> {
 
         console.log("[Firewall]", command);
 
-        const { stdout, stderr } = await execAsync(command);
+        try {
 
-        if (stderr) {
+            const { stdout, stderr } = await execAsync(command);
 
-            console.warn(stderr);
+            if (stderr) {
+                console.warn(stderr);
+            }
+
+            return stdout;
+
+        } catch (err: any) {
+
+            console.error("[Firewall Error]");
+            console.error(err.stderr || err.message);
+
+            throw err;
 
         }
-
-        return stdout;
 
     }
 
     /**
-     * Allow client internet access
+     * Allow a client Internet access
      */
-    async allowClient(ip: string) {
+    async allowClient(ip: string): Promise<void> {
 
         await this.run(
-            `sudo iptables -I FORWARD -s ${ip} -j ACCEPT`
+            `${IPTABLES} -I FORWARD -s ${ip} -j ACCEPT`
         );
 
         console.log(`✅ Client Allowed: ${ip}`);
@@ -38,14 +49,14 @@ class FirewallService {
     }
 
     /**
-     * Block client internet access
+     * Block a client Internet access
      */
-    async blockClient(ip: string) {
+    async blockClient(ip: string): Promise<void> {
 
         try {
 
             await this.run(
-                `sudo iptables -D FORWARD -s ${ip} -j ACCEPT`
+                `${IPTABLES} -D FORWARD -s ${ip} -j ACCEPT`
             );
 
         } catch {
@@ -59,12 +70,14 @@ class FirewallService {
     }
 
     /**
-     * Block all VLAN traffic to Internet
+     * Enable captive portal (block all unauthenticated traffic)
      */
-    async enableCaptivePortal(vlan: string = "enp2s0.22") {
+    async enableCaptivePortal(
+        vlan: string = "enp2s0.22"
+    ): Promise<void> {
 
         await this.run(
-            `sudo iptables -C FORWARD -i ${vlan} -j DROP || sudo iptables -A FORWARD -i ${vlan} -j DROP`
+            `${IPTABLES} -C FORWARD -i ${vlan} -j DROP || ${IPTABLES} -A FORWARD -i ${vlan} -j DROP`
         );
 
         console.log("🔒 Captive Portal Enabled");
@@ -74,17 +87,19 @@ class FirewallService {
     /**
      * Disable captive portal
      */
-    async disableCaptivePortal(vlan: string = "enp2s0.22") {
+    async disableCaptivePortal(
+        vlan: string = "enp2s0.22"
+    ): Promise<void> {
 
         try {
 
             await this.run(
-                `sudo iptables -D FORWARD -i ${vlan} -j DROP`
+                `${IPTABLES} -D FORWARD -i ${vlan} -j DROP`
             );
 
         } catch {
 
-            // Ignore
+            // Ignore if the rule doesn't exist
 
         }
 
@@ -93,12 +108,12 @@ class FirewallService {
     }
 
     /**
-     * Show all FORWARD rules
+     * List FORWARD rules
      */
-    async listRules() {
+    async listRules(): Promise<string> {
 
         return await this.run(
-            "sudo iptables -L FORWARD -n --line-numbers"
+            `${IPTABLES} -L FORWARD -n --line-numbers`
         );
 
     }
@@ -106,13 +121,13 @@ class FirewallService {
     /**
      * Flush FORWARD chain
      */
-    async flushForward() {
+    async flushForward(): Promise<void> {
 
         await this.run(
-            "sudo iptables -F FORWARD"
+            `${IPTABLES} -F FORWARD`
         );
 
-        console.log("🗑 FORWARD chain cleared");
+        console.log("🧹 FORWARD chain cleared");
 
     }
 
