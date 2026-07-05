@@ -24,7 +24,9 @@ export async function login(
         req.socket.remoteAddress ||
         ""
     );
-
+        console.log("req.ip =", req.ip);
+console.log("remoteAddress =", req.socket.remoteAddress);
+console.log("headers =", req.headers["x-forwarded-for"]);
         const result = await captiveLoginService.login({
             voucher,
             clientIP,
