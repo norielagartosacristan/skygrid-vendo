@@ -1,10 +1,65 @@
 import { useState } from "react";
+import api from "../../../services/api";
 
-export default function VoucherForm() {
+interface Package {
+    id: string;
+    name: string;
+    price: number;
+}
+
+interface Props {
+    packages: Package[];
+    onGenerated: () => void;
+}
+
+export default function VoucherForm({
+    packages,
+    onGenerated,
+}: Props) {
 
     const [packageId, setPackageId] = useState("");
 
     const [quantity, setQuantity] = useState(10);
+
+    const [loading, setLoading] = useState(false);
+
+    async function generate() {
+
+        if (!packageId) {
+
+            alert("Please select a package.");
+
+            return;
+
+        }
+
+        try {
+
+            setLoading(true);
+
+            await api.post("/vouchers/generate", {
+
+                packageId,
+
+                quantity,
+
+            });
+
+            alert("Voucher generated successfully.");
+
+            onGenerated();
+
+        } catch (err: any) {
+
+            alert(err.response?.data?.message || err.message);
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    }
 
     return (
 
@@ -25,28 +80,41 @@ export default function VoucherForm() {
                 >
 
                     <option value="">
-
                         Select Package
-
                     </option>
+
+                    {packages.map((pkg) => (
+
+                        <option
+                            key={pkg.id}
+                            value={pkg.id}
+                        >
+
+                            {pkg.name} - ₱{pkg.price}
+
+                        </option>
+
+                    ))}
 
                 </select>
 
                 <input
                     type="number"
                     min={1}
-                    className="border rounded-lg p-3"
                     value={quantity}
+                    className="border rounded-lg p-3"
                     onChange={(e) =>
                         setQuantity(Number(e.target.value))
                     }
                 />
 
                 <button
+                    onClick={generate}
+                    disabled={loading}
                     className="bg-sky-600 hover:bg-sky-700 text-white rounded-lg"
                 >
 
-                    Generate
+                    {loading ? "Generating..." : "Generate"}
 
                 </button>
 
