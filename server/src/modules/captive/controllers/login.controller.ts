@@ -18,12 +18,23 @@ export async function login(
 
         const { voucher } = req.body;
 
-        const clientIP =
-    normalizeIP(
-        req.headers["x-forwarded-for"] as string ||
-        req.socket.remoteAddress ||
-        ""
-    );
+       const forwarded = req.headers["x-forwarded-for"];
+const remote = req.socket.remoteAddress;
+const reqIp = req.ip;
+
+console.log("=================================");
+console.log("req.ip:", reqIp);
+console.log("remoteAddress:", remote);
+console.log("x-forwarded-for:", forwarded);
+console.log("=================================");
+
+const clientIP = normalizeIP(
+    (Array.isArray(forwarded) ? forwarded[0] : forwarded) ||
+    remote ||
+    ""
+);
+
+console.log("Resolved Client IP:", clientIP);
         console.log("req.ip =", req.ip);
 console.log("remoteAddress =", req.socket.remoteAddress);
 console.log("headers =", req.headers["x-forwarded-for"]);
