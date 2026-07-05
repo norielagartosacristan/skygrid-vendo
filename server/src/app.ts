@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import path from "path";
+//import path from "path";
 
 
 
@@ -48,20 +48,6 @@ app.use("/api/vouchers", voucherRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/machine", machineRoutes);
 
-app.use(
-    express.static(
-        path.join(__dirname, "../client/dist")
-    )
-);
-
-app.get("*", (_, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "../client/dist/index.html"
-        )
-    );
-});
 
 
 app.get("/", (_, res) => {
