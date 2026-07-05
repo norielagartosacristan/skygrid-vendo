@@ -65,7 +65,7 @@ export default function Router() {
                 <Route  path="vendors"  element={<VendorsPage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route  path="payments" element={<PaymentsPage />} />
-                <Route path="/admin/vouchers" element={<VouchersPage />} />
+                <Route path="vouchers" element={<VouchersPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="network/general" element={<GeneralSettingsPage />} />
                 <Route path="network/bandwidth" element={<GlobalBandwidthPage />} />
