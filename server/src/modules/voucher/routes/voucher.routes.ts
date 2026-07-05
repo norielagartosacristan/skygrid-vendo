@@ -3,7 +3,10 @@ import { voucherController } from "../controllers/voucher.controller";
 
 const router = Router();
 
-router.get("/", voucherController.getAll.bind(voucherController));
+router.get(
+    "/",
+    voucherController.getAll.bind(voucherController)
+);
 
 router.post(
     "/generate",
