@@ -1,0 +1,181 @@
+@page{
+    size:A4;
+    margin:8mm;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+
+    background:#eceff1;
+
+}
+
+.page{
+
+    width:194mm;
+
+    display:grid;
+
+    grid-template-columns:repeat(3,1fr);
+
+    gap:6mm;
+
+    margin:auto;
+
+}
+
+.voucher{
+
+    height:67mm;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    border:2px solid #1976d2;
+
+    background:#fff;
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.top{
+
+    background:linear-gradient(90deg,#1565C0,#42A5F5);
+
+    color:white;
+
+    padding:8px;
+
+    text-align:center;
+
+}
+
+.logo{
+
+    font-size:26px;
+
+}
+
+.title{
+
+    font-size:18px;
+
+    font-weight:bold;
+
+    letter-spacing:1px;
+
+}
+
+.subtitle{
+
+    font-size:10px;
+
+    opacity:.95;
+
+}
+
+.content{
+
+    padding:10px;
+
+    flex:1;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    font-size:12px;
+
+}
+
+td{
+
+    padding:2px;
+
+}
+
+td:last-child{
+
+    text-align:right;
+
+    font-weight:bold;
+
+}
+
+.code{
+
+    margin-top:8px;
+
+    border:2px dashed #1976d2;
+
+    border-radius:8px;
+
+    text-align:center;
+
+    padding:8px;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    letter-spacing:4px;
+
+}
+
+.bottom{
+
+    margin-top:8px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.qr{
+
+    width:70px;
+
+    height:70px;
+
+}
+
+.scan{
+
+    text-align:center;
+
+    font-size:11px;
+
+    color:#666;
+
+}
+
+.footer{
+
+    border-top:1px solid #ddd;
+
+    padding:5px;
+
+    text-align:center;
+
+    font-size:10px;
+
+    color:#777;
+
+}

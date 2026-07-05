@@ -91,6 +91,28 @@ class VoucherService {
 
     }
 
+    async getAll() {
+
+    return await prisma.voucher.findMany({
+
+        include: {
+
+            package: true,
+
+            session: true
+
+        },
+
+        orderBy: {
+
+            createdAt: "desc"
+
+        }
+
+    });
+
+}
+
 }
 
 export const voucherService = new VoucherService();

@@ -1,15 +1,30 @@
+import VoucherForm from "../components/VoucherForm";
+import VoucherTable from "../components/VoucherTable";
+
 export default function VouchersPage() {
-  return (
-    <div className="space-y-4">
+    return (
+        <div className="space-y-6">
 
-      <h1 className="text-3xl font-bold text-slate-800">
-        Vouchers
-      </h1>
+            <div className="flex justify-between items-center">
 
-      <p className="text-slate-500">
-        Generate and manage internet voucher codes.
-      </p>
+                <div>
 
-    </div>
-  );
+                    <h1 className="text-3xl font-bold">
+                        Voucher Management
+                    </h1>
+
+                    <p className="text-gray-500">
+                        Generate and manage internet vouchers.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <VoucherForm />
+
+            <VoucherTable />
+
+        </div>
+    );
 }

@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 
-import packageRoutes from "./routes/package.routes";
+//import packageRoutes from "./routes/package.routes";
 import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
 import { errorHandler } from "./middleware/error.middleware";
@@ -17,6 +17,8 @@ import networkRoutes from "./modules/network/routes/network.routes";
 import interfaceRoutes from "./modules/network/routes/interface.routes";
 import captiveRoutes from "./modules/captive/routes/captive.routes";
 import voucherRoutes from "./modules/voucher/routes/voucher.routes";
+import packageRoutes from "./modules/package/routes/package.routes";
+
 
 
 const app = express();
@@ -26,7 +28,7 @@ app.use(express.json());
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/packages", packageRoutes);
+//app.use("/api/packages", packageRoutes);
 app.use("/api/network/interfaces", networkInterfaceRoutes);
 app.use("/api/network/general", networkGeneralRoutes);
 app.use("/api/network/bandwidth", globalBandwidthRoutes);
@@ -40,6 +42,7 @@ app.use("/api/network", networkRoutes);
 app.use("/api/network/interfaces", interfaceRoutes);
 app.use("/api/captive", captiveRoutes);
 app.use("/api/vouchers", voucherRoutes);
+app.use("/api/packages", packageRoutes);
 
 
 

@@ -51,6 +51,37 @@ class VoucherController {
 
     }
 
+    async getAll(req: Request, res: Response) {
+
+    try {
+
+        const vouchers =
+            await voucherService.getAll();
+
+        return res.json({
+
+            success: true,
+
+            data: vouchers
+
+        });
+
+    }
+
+    catch (error: any) {
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+}
+
 }
 
 export const voucherController =

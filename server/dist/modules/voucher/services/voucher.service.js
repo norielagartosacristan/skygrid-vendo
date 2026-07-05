@@ -57,5 +57,16 @@ class VoucherService {
         }
         return voucher;
     }
+    async getAll() {
+        return await prisma_1.default.voucher.findMany({
+            include: {
+                package: true,
+                session: true
+            },
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
+    }
 }
 exports.voucherService = new VoucherService();
