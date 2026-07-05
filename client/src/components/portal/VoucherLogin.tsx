@@ -19,7 +19,7 @@ export default function VoucherLogin() {
             setMessage("");
 
             const res = await api.post("/captive/login", {
-                voucher,
+                voucher: voucher.trim().toUpperCase(),
             });
 
             if (!res.data.success) {
@@ -30,7 +30,7 @@ export default function VoucherLogin() {
             setMessage("✅ Connected successfully.");
 
             setTimeout(() => {
-                window.location.href = "https://google.com";
+                window.location.reload();
             }, 1500);
 
         } catch (err: any) {
@@ -70,9 +70,15 @@ export default function VoucherLogin() {
             </button>
 
             {message && (
-                <p className="mt-4 text-center">
-                    {message}
-                </p>
+                <p
+    className={`mt-4 rounded-xl p-3 text-center ${
+        message.startsWith("✅")
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700"
+                }`}
+            >
+                {message}
+            </p>
             )}
 
         </div>
