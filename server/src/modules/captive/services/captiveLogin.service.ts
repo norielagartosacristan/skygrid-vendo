@@ -32,8 +32,8 @@ const machine = await prisma.machine.findUnique({
 console.log("Machine:", machine);
 
 await sessionService.createSession(
-    machineId,
-    voucherData.id,
+    machineService.getMachineId(),
+    voucherData.package.id,   // ✅ tama
     clientIP,
     clientIP,
     convertToMinutes(
