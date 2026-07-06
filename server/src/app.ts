@@ -50,11 +50,11 @@ app.use("/api/machine", machineRoutes);
 
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-app.get("*", (req, res) => {
+app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
 
-app.get("/", (_, res) => {
+app.get("/api", (_, res) => {
   res.json({
     message: "SkyGrid Vendo API Running 🚀",
   });
