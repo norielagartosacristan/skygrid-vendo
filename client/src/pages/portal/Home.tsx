@@ -4,15 +4,34 @@ import Footer from "../../components/portal/Footer";
 import Clock from "../../components/portal/Clock";
 import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCountdown } from "../../hooks/useCountdown";
 
 export default function Home() {
-  const [session, setSession] = useState<any>(null);
-  const remaining = useCountdown(session?.expiresAt);
+  // 1. Kuhanin ang initial state mula sa localStorage kung meron man
+  const [session, setSession] = useState<any>(() => {
+    const savedSession = localStorage.getItem("skygrid_session");
+    return savedSession ? JSON.parse(savedSession) : null;
+  });
 
-  // Isang mabilis na check kung may active session ba ang user
+  const remaining = useCountdown(session?.expiresAt);
   const isConnected = !!session;
+
+  // 2. I-save sa localStorage tuwing magbabago ang session state
+  useEffect(() => {
+    if (session) {
+      localStorage.setItem("skygrid_session", JSON.stringify(session));
+    } else {
+      localStorage.removeItem("skygrid_session");
+    }
+  }, [session]);
+
+  // 3. Opsyonal: Kung tapos na ang oras (remaining time), kusang i-clear ang session
+  useEffect(() => {
+    if (remaining === "00:00:00" || (session && new Date(session.expiresAt) <= new Date())) {
+      setSession(null);
+    }
+  }, [remaining, session]);
 
   return (
     <PortalLayout>
@@ -21,10 +40,7 @@ export default function Home() {
       {/* HERO SECTION - FULL WIDTH */}
       <section className="relative w-full h-[280px] lg:h-[520px] overflow-hidden">
         <HeroCarousel />
-        {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/40 to-transparent" />
-
-        {/* Hero Content */}
         <div className="absolute inset-0 flex items-center">
           <div className="max-w-7xl mx-auto w-full px-6">
             <div className="max-w-2xl text-white">
@@ -43,7 +59,6 @@ export default function Home() {
           
           {/* TOP HEADER: DYNAMIC WI-FI ICON & CLOCK */}
           <div className="text-center flex flex-col items-center gap-3">
-            {/* Dynamic Wi-Fi Icon */}
             <div className={`p-4 rounded-full transition-all duration-500 shadow-sm border ${
               isConnected 
                 ? "bg-green-50 border-green-200 text-green-500 animate-pulse" 
@@ -61,7 +76,6 @@ export default function Home() {
               </svg>
             </div>
             
-            {/* Status Text Under Icon */}
             <span className={`text-xs font-bold uppercase tracking-widest ${
               isConnected ? "text-green-600" : "text-slate-400"
             }`}>
@@ -73,7 +87,6 @@ export default function Home() {
 
           {/* MAIN CONTROLS (THE HERO CARD) */}
           <div className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100 flex flex-col gap-4">
-            {/* BIG ACTION BUTTON */}
             <button className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl py-5 text-2xl font-black shadow-lg shadow-sky-200 transition active:scale-[0.98] flex items-center justify-center gap-3">
               <span>🪙</span> INSERT COIN
             </button>
@@ -84,7 +97,6 @@ export default function Home() {
               <div className="flex-grow border-t border-slate-200"></div>
             </div>
 
-            {/* VOUCHER LOGIN COMPONENT */}
             <div className="bg-slate-50 rounded-2xl p-2 border border-slate-100">
               <VoucherLogin onLoginSuccess={setSession} />
             </div>
@@ -92,7 +104,6 @@ export default function Home() {
 
           {/* STATUS PANEL (GRID OVERVIEW) */}
           <div className="grid grid-cols-2 gap-4">
-            {/* TIME STATUS - SPANS 2 COLUMNS FOR EMPHASIS */}
             <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-5 shadow-lg text-white flex justify-between items-center">
               <div>
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Remaining Time</p>
@@ -105,7 +116,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* CONNECTION STATUS */}
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
               <p className="text-xs text-slate-400 font-medium">Status</p>
               <div className="flex items-center gap-2 mt-2">
@@ -116,15 +126,15 @@ export default function Home() {
               </div>
             </div>
 
-            {/* CREDIT BALANCE */}
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
               <p className="text-xs text-slate-400 font-medium">Credit</p>
-              <h3 className="text-xl font-black text-green-600 mt-1">₱0.00</h3>
+              <h3 className="text-xl font-black text-green-600 mt-1">
+                {isConnected ? "₱0.00 (Active)" : "₱0.00"}
+              </h3>
             </div>
           </div>
         </div>
 
-        {/* FOOTER FOOTPRINT */}
         <div className="text-center text-xs text-slate-400 mt-6">
           <p>SkyGrid Vendo Network • All Rights Reserved</p>
         </div>
