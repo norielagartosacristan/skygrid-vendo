@@ -10,6 +10,7 @@ import { useCountdown } from "../../hooks/useCountdown";
 
 
 
+
 export default function Home() {
   
   const [session, setSession] = useState<any>(null);
@@ -58,56 +59,76 @@ export default function Home() {
       </section>
 
       {/* MAIN CONTENT */}
-      <section className="bg-slate-100 py-3">
-
-        <div className="max-w-7xl mx-auto px-4">
-
+     <section className="min-h-screen bg-slate-50 py-6 flex flex-col justify-between font-sans">
+      <div className="max-w-md mx-auto w-full px-4 flex-grow flex flex-col justify-center gap-6">
+        
+        {/* TOP HEADER: CLOCK & BRANDING */}
+        <div className="text-center">
           <Clock />
+        </div>
 
-          {/* STATUS CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        {/* MAIN CONTROLS (THE HERO CARD) */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100 flex flex-col gap-4">
+          
+          {/* BIG ACTION BUTTON */}
+          <button className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl py-5 text-2xl font-black shadow-lg shadow-sky-200 transition active:scale-[0.98] flex items-center justify-center gap-3">
+            <span>🪙</span> INSERT COIN
+          </button>
 
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-              <p className="text-gray-500">Connection Status</p>
-              <h2 className="text-4xl font-bold text-green-600 mt-3">
-                Connected
-              </h2>
-            </div>
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink mx-4 text-slate-400 text-sm font-medium">OR ENTER CODE</span>
+            <div className="flex-grow border-t border-slate-200"></div>
+          </div>
 
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-              <p className="text-gray-500">Credit Balance</p>
-              <h2 className="text-5xl font-bold text-green-600 mt-3">
-                ₱0.00
-              </h2>
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-
-    <p className="text-gray-500">
-
-        Remaining Time
-
-    </p>
-
-    <h2 className="text-5xl font-bold mt-3">
-
-        {remaining}
-
-    </h2>
-
-</div>
-
-            <VoucherLogin
-    onLoginSuccess={setSession}
-/>
-             <button className="w-full bg-sky-600 hover:bg-sky-700 text-white rounded-3xl py-6 text-2xl font-bold shadow-xl transition">
-                🪙 INSERT COIN
-            </button>
-
+          {/* VOUCHER LOGIN COMPONENT */}
+          <div className="bg-slate-50 rounded-2xl p-2 border border-slate-100">
+            <VoucherLogin onLoginSuccess={setSession} />
           </div>
         </div>
 
-      </section>
+        {/* STATUS PANEL (GRID OVERVIEW) */}
+        <div className="grid grid-cols-2 gap-4">
+          
+          {/* TIME STATUS - SPANS 2 COLUMNS FOR EMPHASIS */}
+          <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-5 shadow-lg text-white flex justify-between items-center">
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Remaining Time</p>
+              <h2 className="text-3xl font-black mt-1 text-sky-400 tracking-tight">
+                {remaining || "00:00:00"}
+              </h2>
+            </div>
+            <div className="bg-slate-700/50 p-3 rounded-2xl">
+              <span>⏳</span>
+            </div>
+          </div>
+
+          {/* CONNECTION STATUS */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
+            <p className="text-xs text-slate-400 font-medium">Status</p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
+              <h3 className="text-lg font-bold text-slate-700">Connected</h3>
+            </div>
+          </div>
+
+          {/* CREDIT BALANCE */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
+            <p className="text-xs text-slate-400 font-medium">Credit</p>
+            <h3 className="text-xl font-black text-green-600 mt-1">
+              ₱0.00
+            </h3>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* FOOTER FOOTPRINT */}
+      <div className="text-center text-xs text-slate-400 mt-6">
+        <p>SkyGrid Vendo Network • All Rights Reserved</p>
+      </div>
+    </section>
       <Footer />
     </PortalLayout>
   );
