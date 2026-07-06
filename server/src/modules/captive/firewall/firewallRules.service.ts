@@ -8,16 +8,13 @@ const IPSET = "sudo /usr/sbin/ipset";
 const SYSCTL = "sudo /usr/sbin/sysctl";
 
 class FirewallRulesService {
-
     /**
      * Execute shell command
      */
     private async run(command: string): Promise<string> {
-
         console.log("[Firewall]", command);
 
         try {
-
             const { stdout, stderr } = await execAsync(command);
 
             if (stderr) {
@@ -25,143 +22,142 @@ class FirewallRulesService {
             }
 
             return stdout;
-
         } catch (err: any) {
-
-            console.error("[Firewall Error]");
-            console.error(err.stderr || err.message);
-
+            console.error("[Firewall]", err.stderr || err.message);
             return "";
-
         }
-
     }
 
     /**
      * Initialize firewall
      */
-    async initialize() {
-
+    async initialize(): Promise<void> {
         console.log("🔥 Initializing SkyGrid Firewall...");
 
         await this.enableIpForward();
-
         await this.createIPSet();
-
         await this.allowEstablishedConnections();
 
         console.log("✅ Firewall initialized.");
-
     }
 
     /**
      * Enable IPv4 Forwarding
      */
-    private async enableIpForward() {
-
+    private async enableIpForward(): Promise<void> {
         await this.run(
             `${SYSCTL} -w net.ipv4.ip_forward=1`
         );
-
     }
 
     /**
-     * Create SkyGrid IPSet
+     * Create IPSET
      */
-    private async createIPSet() {
-
+    private async createIPSet(): Promise<void> {
         await this.run(
             `${IPSET} create skygrid_clients hash:ip -exist`
         );
-
     }
 
     /**
-     * Allow RELATED / ESTABLISHED connections
+     * Allow established connections
      */
-    private async allowEstablishedConnections() {
-
+    private async allowEstablishedConnections(): Promise<void> {
         await this.run(
-            `${IPTABLES} -C FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT || ${IPTABLES} -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT`
+            `${IPTABLES} -C FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT || ${IPTABLES} -I FORWARD 1 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT`
         );
-
     }
 
     /**
-     * Configure WAN Masquerade
+     * Configure WAN masquerade
      */
-    async configureWAN(wan: string) {
-
+    async configureWAN(wan: string): Promise<void> {
         await this.run(
             `${IPTABLES} -t nat -C POSTROUTING -o ${wan} -j MASQUERADE || ${IPTABLES} -t nat -A POSTROUTING -o ${wan} -j MASQUERADE`
         );
-
     }
 
     /**
      * Register Captive VLAN
      */
-    async registerVLAN(vlanInterface: string, gateway: string) {
+    async registerVLAN(vlanInterface: string, gateway: string): Promise<void> {
 
-    console.log(`📡 Registering VLAN ${vlanInterface}`);
+        console.log(`📡 Registering ${vlanInterface}`);
 
-    // 1. Allow gateway access
-    await this.run(
-        `${IPTABLES} -C INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT || ${IPTABLES} -A INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
-    );
+        //
+        // Remove old rules first
+        //
 
-    // 2. Allow ESTABLISHED first (IMPORTANT)
-    await this.run(
-        `${IPTABLES} -C FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT || ${IPTABLES} -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT`
-    );
+        await this.unregisterVLAN(vlanInterface, gateway);
 
-    // 3. Allow authenticated users
-    await this.run(
-        `${IPTABLES} -C FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT || ${IPTABLES} -A FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
-    );
+        //
+        // Allow portal access
+        //
 
-    // 4. DROP LAST (IMPORTANT ORDER)
-    await this.run(
-        `${IPTABLES} -C FORWARD -i ${vlanInterface} -j DROP || ${IPTABLES} -A FORWARD -i ${vlanInterface} -j DROP`
-    );
+        await this.run(
+            `${IPTABLES} -C INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT || ${IPTABLES} -A INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
+        );
 
-    console.log(`✅ ${vlanInterface} registered.`);
-}
+        //
+        // Allow authenticated clients
+        //
+
+        await this.run(
+            `${IPTABLES} -I FORWARD 2 -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+        );
+
+        //
+        // Block everyone else
+        //
+
+        await this.run(
+            `${IPTABLES} -A FORWARD -i ${vlanInterface} -j DROP`
+        );
+
+        console.log(`✅ ${vlanInterface} registered.`);
+    }
+
     /**
-     * Remove VLAN Rules
+     * Remove VLAN rules
      */
     async unregisterVLAN(
         vlanInterface: string,
         gateway: string
-    ) {
+    ): Promise<void> {
 
-        await this.run(
-            `${IPTABLES} -D INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
-        );
+        while (true) {
+            const result = await this.run(
+                `${IPTABLES} -D INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
+            );
 
-        await this.run(
-            `${IPTABLES} -D FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
-        );
+            if (!result) break;
+        }
 
-        await this.run(
-            `${IPTABLES} -D FORWARD -i ${vlanInterface} -j DROP`
-        );
+        while (true) {
+            const result = await this.run(
+                `${IPTABLES} -D FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+            );
 
-        console.log(`🗑 ${vlanInterface} unregistered.`);
+            if (!result) break;
+        }
 
+        while (true) {
+            const result = await this.run(
+                `${IPTABLES} -D FORWARD -i ${vlanInterface} -j DROP`
+            );
+
+            if (!result) break;
+        }
     }
 
     /**
-     * Show Firewall Rules
+     * Show firewall rules
      */
-    async showRules() {
-
-        return await this.run(
-            `${IPTABLES} -L -n -v`
+    async showRules(): Promise<string> {
+        return this.run(
+            `${IPTABLES} -L -n -v --line-numbers`
         );
-
     }
-
 }
 
 export const firewallRules = new FirewallRulesService();
