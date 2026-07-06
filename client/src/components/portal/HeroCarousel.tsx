@@ -12,7 +12,7 @@ const slides = [
   {
     image: banner1,
     title: "Welcome to",
-    subtitle: "SkyGrid Vendo",
+    subtitle: "BayanNet Telecom",
     description: "High-Speed Internet Access",
   },
   {
@@ -24,7 +24,7 @@ const slides = [
   {
     image: banner3,
     title: "Powered by",
-    subtitle: "SkyGrid Tech Solutions",
+    subtitle: "BayanNet Telecom Corp.",
     description: "Fast • Secure • Reliable",
   },
 ];
@@ -69,24 +69,6 @@ export default function HeroCarousel() {
                   <p className="mt-4 text-gray-200 text-sm sm:text-base lg:text-xl">
                     {slide.description}
                   </p>
-
-                  <button
-                    className="
-                      mt-6
-                      bg-sky-600
-                      hover:bg-sky-700
-                      text-white
-                      font-semibold
-                      rounded-xl
-                      px-5
-                      py-3
-                      sm:px-7
-                      sm:py-3
-                      transition
-                    "
-                  >
-                    View Packages
-                  </button>
 
                 </div>
 

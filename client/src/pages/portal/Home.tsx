@@ -34,31 +34,28 @@ export default function Home() {
 
   return (
     <PortalLayout>
-      {/*<Header />*/}
-
-      {/* HERO SECTION - FULL WIDTH */}
-      <section className="relative w-full h-[280px] lg:h-[520px] overflow-hidden">
+      {/* HERO SECTION - REDUCED HEIGHT FOR MOBILE */}
+      <section className="relative w-full h-[160px] sm:h-[220px] lg:h-[400px] overflow-hidden">
         <HeroCarousel />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-transparent" />
         <div className="absolute inset-0 flex items-center">
-          <div className="max-w-7xl mx-auto w-full px-6">
+          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
             <div className="max-w-2xl text-white">
-              <h4 className="text-sky-400 text-xl lg:text-2xl font-semibold mb-2">Welcome to</h4>
-              <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight">SkyGrid Vendo</h1>
-              <p className="mt-6 text-lg lg:text-2xl text-gray-200">High-Speed Internet Access</p>
-              <p className="mt-3 text-gray-300">Fast • Secure • Reliable</p>
+              <h4 className="text-sky-400 text-sm sm:text-base lg:text-xl font-semibold">Welcome to</h4>
+              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-extrabold leading-tight">BayanNet Telecom</h1>
+              <p className="text-xs sm:text-sm lg:text-xl text-gray-200 mt-1">High-Speed Internet Access</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
-      <section className="min-h-screen bg-slate-50 py-6 flex flex-col justify-between font-sans">
-        <div className="max-w-md mx-auto w-full px-4 flex-grow flex flex-col justify-center gap-6">
+      {/* MAIN CONTENT - COMPACT SPACING */}
+      <section className="bg-slate-50 py-4 px-3 flex flex-col justify-between font-sans min-h-[calc(100vh-160px)]">
+        <div className="max-w-md mx-auto w-full flex-grow flex flex-col justify-start gap-4">
           
-          {/* TOP HEADER: DYNAMIC WI-FI ICON & CLOCK */}
-          <div className="text-center flex flex-col items-center gap-3">
-            <div className={`p-4 rounded-full transition-all duration-500 shadow-sm border ${
+          {/* TOP HEADER: DYNAMIC WI-FI ICON & CLOCK (SHRUNK) */}
+          <div className="text-center flex flex-col items-center gap-1.5 mt-1">
+            <div className={`p-2.5 rounded-full transition-all duration-500 shadow-sm border ${
               isConnected 
                 ? "bg-green-50 border-green-200 text-green-500 animate-pulse" 
                 : "bg-slate-100 border-slate-200 text-slate-400"
@@ -69,13 +66,13 @@ export default function Home() {
                 viewBox="0 0 24 24" 
                 strokeWidth={2.5} 
                 stroke="currentColor" 
-                className="w-12 h-12"
+                className="w-7 h-7 sm:w-9 sm:h-9"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22a.75.75 0 1 1-1.06 0 .75.75 0 0 1 1.06 0Z" />
               </svg>
             </div>
             
-            <span className={`text-xs font-bold uppercase tracking-widest ${
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${
               isConnected ? "text-green-600" : "text-slate-400"
             }`}>
               {isConnected ? "Internet Active" : "No Active Session"}
@@ -84,53 +81,59 @@ export default function Home() {
             <Clock />
           </div>
 
-          {/* MAIN CONTROLS (THE HERO CARD) */}
-          <div className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100 flex flex-col gap-4">
-            <button className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl py-5 text-2xl font-black shadow-lg shadow-sky-200 transition active:scale-[0.98] flex items-center justify-center gap-3">
-              <span>🪙</span> INSERT COIN
+          {/* MAIN CONTROLS (COMPACT CARD & BUTTONS) */}
+          <div className="bg-white rounded-2xl shadow-md p-4 border border-slate-100 flex flex-col gap-3">
+            <button className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-98 transition">
+              🪙 Insert Coin
             </button>
 
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-slate-200"></div>
-              <span className="flex-shrink mx-4 text-slate-400 text-sm font-medium">OR ENTER CODE</span>
-              <div className="flex-grow border-t border-slate-200"></div>
-            </div>
-
-            <div className="bg-slate-50 rounded-2xl p-2 border border-slate-100">
+            <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
+              <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
+                OR LOGIN USING VOUCHER
+              </p>
               <VoucherLogin onLoginSuccess={setSession} />
             </div>
           </div>
 
-          {/* STATUS PANEL (GRID OVERVIEW) */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-5 shadow-lg text-white flex justify-between items-center">
+          {/* STATUS PANEL (GRID OVERVIEW - FIX NESTING & ALIGNMENT) */}
+          <div className="grid grid-cols-2 gap-3">
+            
+            {/* REMAINING TIME CARD */}
+            <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 shadow-md text-white flex justify-between items-center">
               <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Remaining Time</p>
-                <h2 className="text-3xl font-black mt-1 text-sky-400 tracking-tight">
+                <p className="uppercase tracking-wider text-sky-300 text-[10px] font-bold">
+                  Remaining Time
+                </p>
+                <h1 className="text-3xl sm:text-4xl font-black mt-1 tracking-tight">
                   {remaining || "00:00:00"}
+                </h1>
+              </div>
+              <div className="bg-slate-700/50 p-2.5 rounded-xl text-lg">
+                ⏳
+              </div>
+            </div>
+
+            {/* STATUS CARD */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-400 font-medium">Status</p>
+                <h2 className="font-bold text-sm text-slate-800 mt-0.5">
+                  {isConnected ? "Connected" : "Disconnected"}
                 </h2>
               </div>
-              <div className="bg-slate-700/50 p-3 rounded-2xl">
-                <span>⏳</span>
-              </div>
+              <div className={`w-3 h-3 rounded-full ${
+                isConnected ? "bg-green-500 animate-pulse" : "bg-slate-300"
+              }`} />
             </div>
 
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
-              <p className="text-xs text-slate-400 font-medium">Status</p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? "bg-green-500 animate-pulse" : "bg-slate-300"}`}></span>
-                <h3 className="text-lg font-bold text-slate-700">
-                  {isConnected ? "Connected" : "Disconnected"}
-                </h3>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
+            {/* CREDIT CARD */}
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex flex-col justify-center">
               <p className="text-xs text-slate-400 font-medium">Credit</p>
-              <h3 className="text-xl font-black text-green-600 mt-1">
+              <h3 className="text-sm sm:text-base font-bold text-green-600 mt-0.5">
                 {isConnected ? "₱0.00 (Active)" : "₱0.00"}
               </h3>
             </div>
+
           </div>
         </div>
       </section>
