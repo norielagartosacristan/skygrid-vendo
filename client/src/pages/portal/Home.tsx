@@ -134,10 +134,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        <div className="text-center text-xs text-slate-400 mt-6">
-          <p>SkyGrid Vendo Network • All Rights Reserved</p>
-        </div>
       </section>
       <Footer />
     </PortalLayout>

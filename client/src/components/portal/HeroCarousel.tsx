@@ -1,8 +1,7 @@
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 
 import "swiper/css";
-import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import banner1 from "../../assets/banners/banner1.jpg";
@@ -33,14 +32,14 @@ const slides = [
 export default function HeroCarousel() {
   return (
     <Swiper
-      modules={[Navigation, Pagination, Autoplay]}
-      navigation
+      modules={[Pagination, Autoplay]}
       pagination={{ clickable: true }}
       autoplay={{
         delay: 5000,
+        disableOnInteraction: false,
       }}
       loop
-      className="h-[300px] lg:h-[520px]"
+      className="h-[220px] sm:h-[280px] md:h-[380px] lg:h-[520px]"
     >
       {slides.map((slide) => (
         <SwiperSlide key={slide.subtitle}>
@@ -48,38 +47,51 @@ export default function HeroCarousel() {
 
             <img
               src={slide.image}
+              alt={slide.subtitle}
               className="w-full h-full object-cover"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/50 to-transparent" />
 
-           <div className="absolute inset-0 flex items-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="max-w-7xl mx-auto w-full px-5 sm:px-8">
 
-  <div className="max-w-7xl mx-auto w-full px-6">
+                <div className="max-w-xl">
 
-    <div className="max-w-2xl">
+                  <h4 className="text-sky-400 font-semibold text-sm sm:text-lg lg:text-xl">
+                    {slide.title}
+                  </h4>
 
-      <h4 className="text-sky-400 text-xl font-semibold">
-        High-Speed Internet
-      </h4>
+                  <h1 className="mt-2 text-3xl sm:text-5xl lg:text-7xl font-black text-white leading-tight">
+                    {slide.subtitle}
+                  </h1>
 
-      <h1 className="text-6xl lg:text-7xl font-black text-white mt-4 leading-tight">
-        SkyGrid Vendo
-      </h1>
+                  <p className="mt-4 text-gray-200 text-sm sm:text-base lg:text-xl">
+                    {slide.description}
+                  </p>
 
-      <p className="text-gray-200 text-xl mt-6">
-        Fast • Secure • Reliable Internet Access
-      </p>
+                  <button
+                    className="
+                      mt-6
+                      bg-sky-600
+                      hover:bg-sky-700
+                      text-white
+                      font-semibold
+                      rounded-xl
+                      px-5
+                      py-3
+                      sm:px-7
+                      sm:py-3
+                      transition
+                    "
+                  >
+                    View Packages
+                  </button>
 
-      <button className="mt-8 bg-sky-600 hover:bg-sky-700 px-8 py-4 rounded-2xl text-white text-lg font-semibold transition">
-        View Packages
-      </button>
+                </div>
 
-    </div>
-
-  </div>
-
-</div>
+              </div>
+            </div>
 
           </div>
         </SwiperSlide>
