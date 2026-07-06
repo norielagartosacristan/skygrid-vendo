@@ -101,38 +101,32 @@ class FirewallRulesService {
     /**
      * Register Captive VLAN
      */
-    async registerVLAN(
-        vlanInterface: string,
-        gateway: string
-    ) {
+    async registerVLAN(vlanInterface: string, gateway: string) {
 
-        console.log(`📡 Registering VLAN ${vlanInterface}`);
+    console.log(`📡 Registering VLAN ${vlanInterface}`);
 
-        /**
-         * Allow access to Portal/API
-         */
-        await this.run(
-            `${IPTABLES} -C INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT || ${IPTABLES} -A INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
-        );
+    // 1. Allow gateway access
+    await this.run(
+        `${IPTABLES} -C INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT || ${IPTABLES} -A INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
+    );
 
-        /**
-         * Allow authenticated clients
-         */
-        await this.run(
-            `${IPTABLES} -C FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT || ${IPTABLES} -A FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
-        );
+    // 2. Allow ESTABLISHED first (IMPORTANT)
+    await this.run(
+        `${IPTABLES} -C FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT || ${IPTABLES} -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT`
+    );
 
-        /**
-         * Block everyone else
-         */
-        await this.run(
-            `${IPTABLES} -C FORWARD -i ${vlanInterface} -j DROP || ${IPTABLES} -A FORWARD -i ${vlanInterface} -j DROP`
-        );
+    // 3. Allow authenticated users
+    await this.run(
+        `${IPTABLES} -C FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT || ${IPTABLES} -A FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+    );
 
-        console.log(`✅ ${vlanInterface} registered.`);
+    // 4. DROP LAST (IMPORTANT ORDER)
+    await this.run(
+        `${IPTABLES} -C FORWARD -i ${vlanInterface} -j DROP || ${IPTABLES} -A FORWARD -i ${vlanInterface} -j DROP`
+    );
 
-    }
-
+    console.log(`✅ ${vlanInterface} registered.`);
+}
     /**
      * Remove VLAN Rules
      */
