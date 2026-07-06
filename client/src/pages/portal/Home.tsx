@@ -35,7 +35,7 @@ export default function Home() {
 
   return (
     <PortalLayout>
-      <Header />
+      {/*<Header />*/}
 
       {/* HERO SECTION - FULL WIDTH */}
       <section className="relative w-full h-[280px] lg:h-[520px] overflow-hidden">
