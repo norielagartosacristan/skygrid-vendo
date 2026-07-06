@@ -1,5 +1,6 @@
 import PortalLayout from "../../layouts/PortalLayout";
 import Header from "../../components/portal/Header";
+import Footer from "../../components/portal/Footer";
 import Clock from "../../components/portal/Clock";
 import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
@@ -120,9 +121,9 @@ export default function Home() {
 
             </div>
 
-            {/* RIGHT */}
+          
           {/* RIGHT */}
-<div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-6">
 
     <VoucherLogin />
 
@@ -130,29 +131,13 @@ export default function Home() {
         🪙 INSERT COIN
     </button>
 
-    <div className="bg-white rounded-3xl shadow-lg p-6">
-
-        <h2 className="text-xl font-bold mb-4">
-            Announcement
-        </h2>
-
-        <p className="text-gray-600">
-            Welcome to SkyGrid Vendo.
-        </p>
-
-        <p className="text-gray-600 mt-2">
-            Enjoy fast and reliable internet.
-        </p>
-
-    </div>
-
 </div>
           </div>
 
         </div>
 
       </section>
-
+      <Footer />
     </PortalLayout>
   );
 }
