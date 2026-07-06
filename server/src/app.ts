@@ -48,21 +48,11 @@ app.use("/api/vouchers", voucherRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/machine", machineRoutes);
 
-app.use(
-    express.static(
-        path.join(__dirname, "../client/dist")
-    )
-);
+app.use(express.static(path.join(__dirname, "../client/dist")));
 
-app.use((_, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "../client/dist/index.html"
-        )
-    );
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
-
 
 app.get("/", (_, res) => {
   res.json({
