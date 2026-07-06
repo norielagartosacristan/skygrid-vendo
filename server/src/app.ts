@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 
 import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
@@ -22,7 +23,12 @@ import { errorHandler } from "./middleware/error.middleware";
 
 const app = express();
 
-const CLIENT_BUILD_PATH = path.join(__dirname, "../client/dist");
+
+
+const CLIENT_BUILD_PATH = path.resolve(
+  process.cwd(),
+  "client/dist"
+);
 
 app.set("trust proxy", true);
 app.use(cors());
@@ -61,31 +67,48 @@ app.use(express.static(CLIENT_BUILD_PATH));
 ========================= */
 
 // Android captive check
-app.get("/generate_204", (req, res) => {
+app.get("/generate_204", (_, res) => {
   res.redirect("/login");
 });
 
 // Windows connectivity test
-app.get("/connecttest.txt", (req, res) => {
+app.get("/connecttest.txt", (_, res) => {
   res.redirect("/login");
 });
 
 // Apple captive check
-app.get("/hotspot-detect.html", (req, res) => {
+app.get("/hotspot-detect.html", (_, res) => {
   res.redirect("/login");
 });
 
 // Main login route (SAFE)
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(CLIENT_BUILD_PATH, "index.html"));
-});
+app.get("/login", (_, res) => {
+  const filePath = path.join(CLIENT_BUILD_PATH, "index.html");
 
+  if (!fs.existsSync(filePath)) {
+    return res.status(500).json({
+      success: false,
+      message: "Frontend build missing (client/dist/index.html)",
+    });
+  }
+
+  res.sendFile(filePath);
+});
 /* =========================
    ROOT ROUTE
 ========================= */
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(CLIENT_BUILD_PATH, "index.html"));
+app.get("/", (_, res) => {
+  const filePath = path.join(CLIENT_BUILD_PATH, "index.html");
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(500).json({
+      success: false,
+      message: "Frontend build missing (client/dist/index.html)",
+    });
+  }
+
+  res.sendFile(filePath);
 });
 
 /* =========================
