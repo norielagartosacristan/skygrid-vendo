@@ -1,5 +1,4 @@
 import PortalLayout from "../../layouts/PortalLayout";
-import Header from "../../components/portal/Header";
 import Footer from "../../components/portal/Footer";
 import Clock from "../../components/portal/Clock";
 import HeroCarousel from "../../components/portal/HeroCarousel";
