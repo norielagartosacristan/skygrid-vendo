@@ -10,6 +10,7 @@ const networkMonitor_service_1 = require("./modules/network/services/networkMoni
 const http_1 = __importDefault(require("http"));
 const network_socket_1 = require("./modules/network/websocket/network.socket");
 const firewallRules_service_1 = require("./modules/captive/firewall/firewallRules.service");
+const machine_service_1 = require("./modules/machine/services/machine.service");
 const PORT = process.env.PORT || 5000;
 const server = http_1.default.createServer(app_1.default);
 network_socket_1.networkSocket.init(server);
@@ -18,6 +19,9 @@ server.listen(PORT, async () => {
     try {
         // Auto Provision
         await (0, networkProvision_service_1.autoProvision)();
+        const machine = await machine_service_1.machineService.register();
+        console.log("✅ Machine Registered:");
+        console.log(machine);
         // First update immediately
         await networkMonitor_service_1.networkMonitor.update();
         await firewallRules_service_1.firewallRules.initialize();

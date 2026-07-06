@@ -13,13 +13,30 @@ const machine_service_1 = require("../../machine/services/machine.service");
 class CaptiveLoginService {
     async login(data) {
         const { voucher, clientIP } = data;
-        // 1. Validate voucher
+        console.log("========== LOGIN START ==========");
+        console.log("Voucher:", voucher);
+        console.log("Client:", clientIP);
+        // 1
         const voucherData = await voucher_service_1.voucherService.redeem(voucher);
-        // 2. Allow internet
+        console.log("Voucher OK");
+        console.log(voucherData);
+        // 2
+        console.log("Adding IP to ipset...");
         await ipset_service_1.ipsetService.allow(clientIP);
-        // 3. Create session
-        await session_service_1.sessionService.createSession(machine_service_1.machineService.getMachineId(), voucherData.id, clientIP, clientIP, (0, time_1.convertToMinutes)(voucherData.package.duration, voucherData.package.durationUnit));
-        // 4. Mark voucher as used
+        console.log("IPSET DONE");
+        // 3
+        const machineId = machine_service_1.machineService.getMachineId();
+        console.log("Machine ID:", machineId);
+        const machine = await prisma_1.default.machine.findUnique({
+            where: { id: machineId }
+        });
+        console.log("Machine:", machine);
+        console.log("Creating session...");
+        const session = await session_service_1.sessionService.createSession(machineId, voucherData.package.id, clientIP, clientIP, (0, time_1.convertToMinutes)(voucherData.package.duration, voucherData.package.durationUnit));
+        console.log("Session Created");
+        console.log(session);
+        // 4
+        console.log("Updating voucher...");
         await prisma_1.default.voucher.update({
             where: {
                 id: voucherData.id
@@ -30,11 +47,12 @@ class CaptiveLoginService {
                 usedAt: new Date()
             }
         });
+        console.log("Voucher Updated");
+        console.log("========== LOGIN SUCCESS ==========");
         return {
             success: true,
             message: "Login Successful",
-            ip: clientIP,
-            voucher
+            session
         };
     }
     async logout(clientIP) {
