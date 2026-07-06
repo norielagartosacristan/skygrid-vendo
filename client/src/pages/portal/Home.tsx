@@ -46,7 +46,7 @@ export default function Home() {
       </section>
 
       {/* MAIN CONTENT */}
-      <section className="bg-slate-100 py-10">
+      <section className="bg-slate-100 py-3">
 
         <div className="max-w-7xl mx-auto px-4">
 
@@ -56,7 +56,14 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
 
             <div className="bg-white rounded-3xl shadow-lg p-6">
-              <p className="text-gray-500">Balance</p>
+              <p className="text-gray-500">Connection Status</p>
+              <h2 className="text-4xl font-bold text-green-600 mt-3">
+                Connected
+              </h2>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-lg p-6">
+              <p className="text-gray-500">Credit Balance</p>
               <h2 className="text-5xl font-bold text-green-600 mt-3">
                 ₱0.00
               </h2>
@@ -69,71 +76,12 @@ export default function Home() {
               </h2>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-              <p className="text-gray-500">Connection Status</p>
-              <h2 className="text-4xl font-bold text-green-600 mt-3">
-                Connected
-              </h2>
-            </div>
+            <VoucherLogin />
+             <button className="w-full bg-sky-600 hover:bg-sky-700 text-white rounded-3xl py-6 text-2xl font-bold shadow-xl transition">
+                🪙 INSERT COIN
+            </button>
 
           </div>
-
-          {/* CONTENT */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
-
-            {/* LEFT */}
-            <div className="lg:col-span-8">
-
-              <div className="bg-white rounded-3xl shadow-lg p-6">
-
-                <h2 className="text-2xl font-bold mb-6">
-                  Internet Packages
-                </h2>
-
-                <div className="space-y-4">
-
-                  {[
-                    { price: "₱5", time: "1 Hour" },
-                    { price: "₱10", time: "3 Hours" },
-                    { price: "₱20", time: "1 Day" },
-                  ].map((pkg) => (
-
-                    <div
-                      key={pkg.price}
-                      className="flex justify-between items-center bg-slate-100 rounded-2xl p-5 hover:bg-sky-50 transition"
-                    >
-
-                      <span className="text-2xl font-bold text-sky-600">
-                        {pkg.price}
-                      </span>
-
-                      <span className="text-lg font-medium">
-                        {pkg.time}
-                      </span>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-            </div>
-
-          
-          {/* RIGHT */}
-        <div className="lg:col-span-4 space-y-6">
-
-    <VoucherLogin />
-
-    <button className="w-full bg-sky-600 hover:bg-sky-700 text-white rounded-3xl py-6 text-2xl font-bold shadow-xl transition">
-        🪙 INSERT COIN
-    </button>
-
-</div>
-          </div>
-
         </div>
 
       </section>
