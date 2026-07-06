@@ -72,11 +72,10 @@ class CaptiveLoginService {
     console.log("========== LOGIN SUCCESS ==========");
 
     return {
-        success: true,
-        message: "Login Successful",
-        ip: clientIP,
-        voucher
-    };
+    success: true,
+    message: "Login Successful",
+    session
+};
 }
 
     async logout(clientIP: string) {

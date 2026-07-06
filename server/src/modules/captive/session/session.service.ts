@@ -1,43 +1,58 @@
 import prisma from "../../../config/prisma";
+import { networkSocket } from "../../network/websocket/network.socket";
 
 class SessionService {
 
     async createSession(
-        machineId: string,
-        packageId: string,
-        clientMac: string,
-        clientIP: string,
-        durationMinutes: number
-    ) {
+    machineId: string,
+    packageId: string,
+    clientMac: string,
+    clientIP: string,
+    durationMinutes: number
+) {
 
-        const expiresAt = new Date(
-            Date.now() + durationMinutes * 60 * 1000
-        );
+    const expiresAt = new Date(
+        Date.now() + durationMinutes * 60 * 1000
+    );
 
-            console.log("========== CREATE SESSION ==========");
-console.log("machineId:", machineId);
-console.log("packageId:", packageId);
-console.log("clientIP:", clientIP);
-console.log("clientMac:", clientMac);
-        return await prisma.session.create({
+    console.log("========== CREATE SESSION ==========");
+    console.log("machineId:", machineId);
+    console.log("packageId:", packageId);
+    console.log("clientIP:", clientIP);
+    console.log("clientMac:", clientMac);
 
-            data: {
+    const session = await prisma.session.create({
 
-                machineId,
-                packageId,
-                clientMac,
+        data: {
 
-                ipAddress: clientIP,
+            machineId,
+            packageId,
+            clientMac,
+            ipAddress: clientIP,
+            expiresAt,
+            isActive: true
 
-                expiresAt,
+        },
 
-                isActive: true
+        include: {
 
-            }
+            package: true
 
-        });
+        }
 
-    }
+    });
+
+    networkSocket.broadcast({
+
+        type: "session.created",
+
+        payload: session
+
+    });
+
+    return session;
+
+}
 
     async expireSession(sessionId: string) {
 

@@ -9,8 +9,33 @@ import StatCard from "../../../components/admin/StatCard";
 import RevenueChart from "../../../components/admin/RevenueChart";
 import RecentTransactions from "../../../components/admin/RecentTransactions";
 import MachineActivity from "../../../components/admin/MachineActivity";
+import { websocketService } from "../../../services/websocket.service";
+import { useEffect } from "react";
+
 
 export default function DashboardPage() {
+  useEffect(() => {
+    websocketService.connect((data) => {
+      switch (data.type) {
+        case "session.created":
+          console.log("New Session", data.payload);
+          break;
+
+        case "session.updated":
+          console.log("Updated Session", data.payload);
+          break;
+
+        case "session.expired":
+          console.log("Expired Session", data.payload);
+          break;
+      }
+    });
+
+    return () => {
+      websocketService.disconnect();
+    };
+  }, []);
+  
   return (
     <div className="space-y-6">
 

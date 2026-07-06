@@ -1,7 +1,11 @@
 import { useState } from "react";
 import api from "../../services/api";
 
-export default function VoucherLogin() {
+interface Props {
+    onLoginSuccess: (session: any) => void;
+}
+
+export default function VoucherLogin({ onLoginSuccess }: Props) {
     const [voucher, setVoucher] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
@@ -30,7 +34,9 @@ export default function VoucherLogin() {
             setMessage("✅ Connected successfully.");
 
             setTimeout(() => {
-                window.location.reload();
+                onLoginSuccess(res.data.session);
+
+                setMessage("✅ Connected successfully.");
             }, 1500);
 
         } catch (err: any) {

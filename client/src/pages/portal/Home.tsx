@@ -4,8 +4,20 @@ import Footer from "../../components/portal/Footer";
 import Clock from "../../components/portal/Clock";
 import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
+import { useState } from "react";
+import { useCountdown } from "../../hooks/useCountdown";
+
+
+
 
 export default function Home() {
+  
+  const [session, setSession] = useState<any>(null);
+
+    const remaining = useCountdown(
+        session?.expiresAt
+    );
+  
   return (
     <PortalLayout>
       <Header />
@@ -70,13 +82,24 @@ export default function Home() {
             </div>
 
             <div className="bg-white rounded-3xl shadow-lg p-6">
-              <p className="text-gray-500">Remaining Time</p>
-              <h2 className="text-5xl font-bold mt-3">
-                00:00:00
-              </h2>
-            </div>
 
-            <VoucherLogin />
+    <p className="text-gray-500">
+
+        Remaining Time
+
+    </p>
+
+    <h2 className="text-5xl font-bold mt-3">
+
+        {remaining}
+
+    </h2>
+
+</div>
+
+            <VoucherLogin
+    onLoginSuccess={setSession}
+/>
              <button className="w-full bg-sky-600 hover:bg-sky-700 text-white rounded-3xl py-6 text-2xl font-bold shadow-xl transition">
                 🪙 INSERT COIN
             </button>
