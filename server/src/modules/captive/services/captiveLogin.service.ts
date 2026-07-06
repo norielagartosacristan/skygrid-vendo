@@ -9,58 +9,75 @@ class CaptiveLoginService {
 
     async login(data: { voucher: string; clientIP: string }) {
 
-        const { voucher, clientIP } = data;
+    const { voucher, clientIP } = data;
 
-        // 1. Validate voucher
-        const voucherData =
-            await voucherService.redeem(voucher);
+    console.log("========== LOGIN START ==========");
+    console.log("Voucher:", voucher);
+    console.log("Client:", clientIP);
 
-        // 2. Allow internet
-        await ipsetService.allow(clientIP);
+    // 1
+    const voucherData = await voucherService.redeem(voucher);
 
-        // 3. Create session
-        const machineId = machineService.getMachineId();
+    console.log("Voucher OK");
+    console.log(voucherData);
 
-console.log("Machine ID:", machineId);
+    // 2
+    console.log("Adding IP to ipset...");
+    await ipsetService.allow(clientIP);
+    console.log("IPSET DONE");
 
-const machine = await prisma.machine.findUnique({
-    where: {
-        id: machineId
-    }
-});
+    // 3
+    const machineId = machineService.getMachineId();
 
-console.log("Machine:", machine);
+    console.log("Machine ID:", machineId);
 
-await sessionService.createSession(
-    machineService.getMachineId(),
-    voucherData.package.id,   // ✅ tama
-    clientIP,
-    clientIP,
-    convertToMinutes(
-        voucherData.package.duration,
-        voucherData.package.durationUnit
-    )
-);
+    const machine = await prisma.machine.findUnique({
+        where: { id: machineId }
+    });
 
-        // 4. Mark voucher as used
-        await prisma.voucher.update({
-            where: {
-                id: voucherData.id
-            },
-            data: {
-                status: "USED",
-                usedByIP: clientIP,
-                usedAt: new Date()
-            }
-            });
+    console.log("Machine:", machine);
 
-        return {
-            success: true,
-            message: "Login Successful",
-            ip: clientIP,
-            voucher
-        };
-    }
+    console.log("Creating session...");
+
+    const session = await sessionService.createSession(
+        machineId,
+        voucherData.package.id,
+        clientIP,
+        clientIP,
+        convertToMinutes(
+            voucherData.package.duration,
+            voucherData.package.durationUnit
+        )
+    );
+
+    console.log("Session Created");
+    console.log(session);
+
+    // 4
+    console.log("Updating voucher...");
+
+    await prisma.voucher.update({
+        where: {
+            id: voucherData.id
+        },
+        data: {
+            status: "USED",
+            usedByIP: clientIP,
+            usedAt: new Date()
+        }
+    });
+
+    console.log("Voucher Updated");
+
+    console.log("========== LOGIN SUCCESS ==========");
+
+    return {
+        success: true,
+        message: "Login Successful",
+        ip: clientIP,
+        voucher
+    };
+}
 
     async logout(clientIP: string) {
 
