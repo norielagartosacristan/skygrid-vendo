@@ -56,10 +56,6 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
     return (
         <div className="bg-white rounded-3xl shadow-lg p-6">
 
-            <h2 className="text-2xl font-bold mb-5">
-                Voucher Login
-            </h2>
-
             <input
                 value={voucher}
                 onChange={(e) => setVoucher(e.target.value)}
@@ -77,12 +73,12 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
 
             {message && (
                 <p
-    className={`mt-4 rounded-xl p-3 text-center ${
-        message.startsWith("✅")
-            ? "bg-green-100 text-green-700"
-            : "bg-red-100 text-red-700"
-                }`}
-            >
+                className={`mt-4 rounded-xl p-3 text-center ${
+                message.startsWith("✅")
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+                    }`}
+                >
                 {message}
             </p>
             )}

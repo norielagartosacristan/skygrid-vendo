@@ -1,44 +1,39 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
-export function useCountdown(endTime?: string | Date) {
+export function useCountdown(expiresAt: string | number | Date) {
+  const [remaining, setRemaining] = useState("00:00:00");
 
-    const [remaining, setRemaining] = useState("00:00:00");
+  useEffect(() => {
+    if (!expiresAt) {
+      setRemaining("00:00:00");
+      return;
+    }
 
-    useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = +new Date(expiresAt) - +new Date();
+      
+      if (difference <= 0) {
+        return "00:00:00";
+      }
 
-        if (!endTime) {
-            setRemaining("00:00:00");
-            return;
-        }
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
 
-        const update = () => {
+      const pad = (num: number) => String(num).padStart(2, "0");
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    };
 
-            const diff =
-                new Date(endTime).getTime() - Date.now();
+    // I-run agad sa simula
+    setRemaining(calculateTimeLeft());
 
-            if (diff <= 0) {
-                setRemaining("00:00:00");
-                return;
-            }
+    // I-update bawat segundo
+    const timer = setInterval(() => {
+      setRemaining(calculateTimeLeft());
+    }, 1000);
 
-            const total = Math.floor(diff / 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt]); // Mahalaga: dapat kasama ang expiresAt sa dependency array
 
-            const h = Math.floor(total / 3600);
-            const m = Math.floor((total % 3600) / 60);
-            const s = total % 60;
-
-            setRemaining(
-                `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-            );
-        };
-
-        update();
-
-        const timer = setInterval(update, 1000);
-
-        return () => clearInterval(timer);
-
-    }, [endTime]);
-
-    return remaining;
+  return remaining;
 }
