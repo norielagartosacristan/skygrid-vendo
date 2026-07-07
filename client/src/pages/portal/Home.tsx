@@ -35,7 +35,7 @@ export default function Home() {
   return (
     <PortalLayout>
       {/* HERO SECTION - REDUCED HEIGHT FOR MOBILE */}
-      <section className="relative w-full h-[160px] sm:h-[220px] lg:h-[400px] overflow-hidden">
+      <section className="relative w-full h-[450px] sm:h-[220px] lg:h-[400px] overflow-hidden">
         <HeroCarousel />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-transparent" />
         <div className="absolute inset-0 flex items-center">
