@@ -3,41 +3,16 @@
 
 struct DeviceConfig
 {
-    String chipId;
+    String chipId;          // Auto-generated ID ng ESP8266 para sa auto-detect ng server
+    String machineName;     // Pangalan ng vendo (e.g., "Vendo-Node-1")
 
-    // SkyGrid Controller
-    String serverIP;
-    uint16_t serverPort;
-
-    // WiFi
+    // WiFi Settings para makakonekta sa Main AP ng server
     String ssid;
     String password;
 
-    // Device
-    String machineName;
-    String parentInterface;
-
-    uint16_t vlanId;
-
-    String ipMode;
-
-    String ipAddress;
-
-    String subnetMask;
-
-    String gateway;
-
-    String dns1;
-
-    String dns2;
-
-    uint16_t clientStartIp;
-
-    uint16_t clientEndIp;
-
-    String bandwidthProfile;
-
-    String portal;
+    // SkyGrid Controller (Dito isesend ang coin/pulse signals)
+    String serverIP;
+    uint16_t serverPort;
 
     bool enabled;
 };

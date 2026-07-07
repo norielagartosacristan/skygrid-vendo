@@ -1,7 +1,10 @@
-#pragma once
+#ifndef API_H
+#define API_H
 
-bool registerDevice();
+#include <Arduino.h>
 
-bool downloadConfiguration();
+// Deklarasyon para magamit sa main file
+void registerSubvendo();
+void sendCoinsToServer(int pulses);
 
-bool sendHeartbeat();
+#endif
