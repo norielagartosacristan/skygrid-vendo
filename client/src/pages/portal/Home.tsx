@@ -42,7 +42,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
             <div className="max-w-2xl text-white">
               <h4 className="text-sky-400 text-sm sm:text-base lg:text-xl font-semibold">Welcome to</h4>
-              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-extrabold leading-tight">BayanNet Telecom</h1>
+              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-extrabold leading-tight">BayanNet Wifi Vendo</h1>
               <p className="text-xs sm:text-sm lg:text-xl text-gray-200 mt-1">High-Speed Internet Access</p>
             </div>
           </div>
@@ -50,7 +50,7 @@ export default function Home() {
       </section>
 
       {/* MAIN CONTENT - COMPACT SPACING */}
-      <section className="bg-slate-50 py-4 px-3 flex flex-col justify-between font-sans min-h-[calc(100vh-160px)]">
+      <section className="bg-slate-50 py-2 px-3 flex flex-col justify-between font-sans min-h-[calc(100vh-160px)]">
         <div className="max-w-md mx-auto w-full flex-grow flex flex-col justify-start gap-4">
           
           {/* TOP HEADER: DYNAMIC WI-FI ICON & CLOCK (SHRUNK) */}

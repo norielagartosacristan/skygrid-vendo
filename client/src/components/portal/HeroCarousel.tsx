@@ -12,7 +12,7 @@ const slides = [
   {
     image: banner1,
     title: "Welcome to",
-    subtitle: "BayanNet Telecom",
+    subtitle: "BayanNet Wifi Vendo",
     description: "High-Speed Internet Access",
   },
   {
@@ -24,7 +24,7 @@ const slides = [
   {
     image: banner3,
     title: "Powered by",
-    subtitle: "BayanNet Telecom Corp.",
+    subtitle: "BayanNet Wifi Vendo",
     description: "Fast • Secure • Reliable",
   },
 ];
