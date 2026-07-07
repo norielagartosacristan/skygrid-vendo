@@ -39,7 +39,7 @@ export default function HeroCarousel() {
         disableOnInteraction: false,
       }}
       loop
-      className="h-[220px] sm:h-[280px] md:h-[380px] lg:h-[520px]"
+      className="h-[350px] sm:h-[380px] md:h-[380px] lg:h-[520px]"
     >
       {slides.map((slide) => (
         <SwiperSlide key={slide.subtitle}>
