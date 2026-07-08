@@ -12,10 +12,9 @@ const network_socket_1 = require("./modules/network/websocket/network.socket");
 const firewallRules_service_1 = require("./modules/captive/firewall/firewallRules.service");
 const machine_service_1 = require("./modules/machine/services/machine.service");
 const prisma_1 = __importDefault(require("./config/prisma"));
+const ipset_service_1 = require("./modules/captive/firewall/ipset.service");
 const child_process_1 = require("child_process");
 const session_scheduler_1 = require("./modules/captive/session/session.scheduler");
-const util_1 = require("util");
-const execAsync = (0, util_1.promisify)(child_process_1.exec);
 const PORT = process.env.PORT || 5000;
 const server = http_1.default.createServer(app_1.default);
 network_socket_1.networkSocket.init(server);
@@ -44,6 +43,19 @@ server.listen(PORT, async () => {
                         }
                     }
                 });
+                for (const session of expired) {
+                    console.log(`Expiring ${session.ipAddress}`);
+                    await prisma_1.default.session.update({
+                        where: {
+                            id: session.id
+                        },
+                        data: {
+                            isActive: false
+                        }
+                    });
+                    await ipset_service_1.ipsetService.removeIP(session.ipAddress);
+                    (0, child_process_1.exec)(`conntrack -D -s ${session.ipAddress} || true`);
+                }
             }
             catch (err) {
                 console.error("Expire Session Error:", err);
