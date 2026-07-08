@@ -28,6 +28,7 @@ const isConnected = !!session;
 
   // 3. Opsyonal: Kung tapos na ang oras (remaining time), kusang i-clear ang session
 useEffect(() => {
+  console.log(session);
   const handleDisconnect = async () => {
     if (session) {
       const isExpired = new Date(session.expiresAt) <= new Date();
