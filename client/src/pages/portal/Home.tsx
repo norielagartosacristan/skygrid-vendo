@@ -105,6 +105,20 @@ const isConnected = !!session;
             </span>
 
             <Clock />
+             {/* REMAINING TIME CARD */}
+            <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 shadow-md text-white flex justify-between items-center">
+              <div>
+                <p className="uppercase tracking-wider text-sky-300 text-[10px] font-bold">
+                  Remaining Time
+                </p>
+                <h1 className="text-3xl sm:text-4xl font-black mt-1 tracking-tight">
+                  {remaining || "00:00:00"}
+                </h1>
+              </div>
+              <div className="bg-slate-700/50 p-2.5 rounded-xl text-lg">
+                ⏳
+              </div>
+            </div>
           </div>
 
           {/* MAIN CONTROLS (COMPACT CARD & BUTTONS) */}
@@ -124,21 +138,7 @@ const isConnected = !!session;
           {/* STATUS PANEL (GRID OVERVIEW - FIX NESTING & ALIGNMENT) */}
           <div className="grid grid-cols-2 gap-3">
             
-            {/* REMAINING TIME CARD */}
-            <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 shadow-md text-white flex justify-between items-center">
-              <div>
-                <p className="uppercase tracking-wider text-sky-300 text-[10px] font-bold">
-                  Remaining Time
-                </p>
-                <h1 className="text-3xl sm:text-4xl font-black mt-1 tracking-tight">
-                  {remaining || "00:00:00"}
-                </h1>
-              </div>
-              <div className="bg-slate-700/50 p-2.5 rounded-xl text-lg">
-                ⏳
-              </div>
-            </div>
-
+           
             {/* STATUS CARD */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 flex items-center justify-between">
               <div>
