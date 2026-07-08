@@ -1,40 +1,44 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export function useCountdown(expiresAt: string | number | Date | undefined, onExpire?: () => void) {
-  const [remaining, setRemaining] = useState("00:00:00");
+export function useCountdown(endTime?: string | Date) {
 
-  useEffect(() => {
-    if (!expiresAt) {
-      setRemaining("00:00:00");
-      return;
-    }
+    const [remaining, setRemaining] = useState("00:00:00");
 
-    const calculateTimeLeft = () => {
-      const difference = +new Date(expiresAt) - +new Date();
-      
-      if (difference <= 0) {
-        onExpire?.();
-        return "00:00:00";
-      }
+    useEffect(() => {
 
-      const hours = Math.floor(difference / (1000 * 60 * 60));
-      const minutes = Math.floor((difference / 1000 / 60) % 60);
-      const seconds = Math.floor((difference / 1000) % 60);
+        if (!endTime) {
+            setRemaining("00:00:00");
+            return;
+        }
 
-      const pad = (num: number) => String(num).padStart(2, "0");
-      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-    };
+        const update = () => {
 
-    // I-run agad sa simula
-    setRemaining(calculateTimeLeft());
+            const diff =
+                new Date(endTime).getTime() - Date.now();
 
-    // I-update bawat segundo
-    const timer = setInterval(() => {
-      setRemaining(calculateTimeLeft());
-    }, 1000);
+            if (diff <= 0) {
+                setRemaining("00:00:00");
+                return;
+            }
 
-    return () => clearInterval(timer);
-  }, [expiresAt]); // Mahalaga: dapat kasama ang expiresAt sa dependency array
+            const total = Math.floor(diff / 1000);
 
-  return remaining;
+            const h = Math.floor(total / 3600);
+            const m = Math.floor((total % 3600) / 60);
+            const s = total % 60;
+
+            setRemaining(
+                `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+            );
+        };
+
+        update();
+
+        const timer = setInterval(update, 1000);
+
+        return () => clearInterval(timer);
+
+    }, [endTime]);
+
+    return remaining;
 }

@@ -11,6 +11,10 @@ import prisma from "./config/prisma";
 import { ipsetService } from "./modules/captive/firewall/ipset.service";
 import { exec } from "child_process";
 import { sessionScheduler } from "./modules/captive/session/session.scheduler";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
@@ -60,33 +64,24 @@ server.listen(PORT, async () => {
 
         });
 
-        for (const session of expired) {
+        for (const session of expiredSessions) {
 
-            console.log(
-                `Expiring ${session.ipAddress}`
-            );
+    console.log(`⏰ Expiring ${session.ipAddress}`);
 
-            await prisma.session.update({
+    // 1. Alisin sa ipset
+    await ipsetService.block(session.ipAddress);
 
-                where: {
-                    id: session.id
-                },
-
-                data: {
-                    isActive: false
-                }
-
-            });
-
-            await ipsetService.removeIP(
-                session.ipAddress
-            );
-
-            exec(
-                `conntrack -D -s ${session.ipAddress} || true`
-            );
-
+    // 2. Mark session as inactive
+    await prisma.session.update({
+        where: {
+            id: session.id
+        },
+        data: {
+            isActive: false
         }
+    });
+
+}
 
     } catch (err) {
 

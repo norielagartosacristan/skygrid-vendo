@@ -1,5 +1,10 @@
 import prisma from "../../../config/prisma";
 import { sessionService } from "./session.service";
+import { ipsetService } from "../firewall/ipset.service";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 class SessionScheduler {
 

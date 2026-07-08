@@ -54,35 +54,37 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
     }
 
     return (
-        <div className="bg-white rounded-3xl shadow-lg p-6">
+       <div className="bg-white rounded-3xl shadow-lg p-6">
 
-            <input
-                value={voucher}
-                onChange={(e) => setVoucher(e.target.value)}
-                placeholder="Enter Voucher Code"
-                className="w-full border rounded-xl p-4"
-            />
+  <div className="flex gap-1">
+    <input
+      value={voucher}
+      onChange={(e) => setVoucher(e.target.value)}
+      placeholder="Enter Voucher Code"
+      className="flex-1 border rounded-xl p-4"
+    />
 
-            <button
-                onClick={handleLogin}
-                disabled={loading}
-                className="w-full mt-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl py-4 font-semibold"
-            >
-                {loading ? "Connecting..." : "Connect"}
-            </button>
+    <button
+      onClick={handleLogin}
+      disabled={loading}
+      className="bg-sky-600 hover:bg-sky-700 text-white rounded-xl px-6 font-semibold whitespace-nowrap"
+    >
+      {loading ? "Connecting..." : "Submit"}
+    </button>
+  </div>
 
-            {message && (
-                <p
-                className={`mt-4 rounded-xl p-3 text-center ${
-                message.startsWith("✅")
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-                    }`}
-                >
-                {message}
-            </p>
-            )}
+  {message && (
+    <p
+      className={`mt-4 rounded-xl p-3 text-center ${
+        message.startsWith("✅")
+          ? "bg-green-100 text-green-700"
+          : "bg-red-100 text-red-700"
+      }`}
+    >
+      {message}
+    </p>
+  )}
 
-        </div>
+</div>
     );
 }
