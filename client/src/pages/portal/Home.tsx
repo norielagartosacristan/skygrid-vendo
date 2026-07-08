@@ -26,10 +26,29 @@ const isConnected = !!session;
     }
   }, [session]);
 
- useEffect(() => {
-  console.log("SESSION:", session);
+
+  useEffect(() => {
+  const socket = new WebSocket(
+    `ws://${window.location.host}`
+  );
+console.log("SESSION:", session);
   console.log("REMAINING:", remaining);
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === "session.expired") {
+      console.log("Session expired from server.");
+
+      localStorage.removeItem("skygrid_session");
+      setSession(null);
+    }
+  };
+
+  return () => {
+    socket.close();
+  };
 }, [session, remaining]);
+
 
   return (
     <PortalLayout>
