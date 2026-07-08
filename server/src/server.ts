@@ -1,26 +1,20 @@
 import "dotenv/config";
 import app from "./app";
 
+import http from "http";
+
 import { autoProvision } from "./services/networkProvision.service";
 import { networkMonitor } from "./modules/network/services/networkMonitor.service";
-import http from "http";
 import { networkSocket } from "./modules/network/websocket/network.socket";
 import { firewallRules } from "./modules/captive/firewall/firewallRules.service";
 import { machineService } from "./modules/machine/services/machine.service";
-import prisma from "./config/prisma";
-import { ipsetService } from "./modules/captive/firewall/ipset.service";
-import { exec } from "child_process";
 import { sessionScheduler } from "./modules/captive/session/session.scheduler";
-import { promisify } from "util";
-
-const execAsync = promisify(exec);
-
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
+// Initialize WebSocket
 networkSocket.init(server);
-
 
 server.listen(PORT, async () => {
 
@@ -30,52 +24,32 @@ server.listen(PORT, async () => {
 
         // Auto Provision
         await autoProvision();
+
+        // Register Machine
         const machine = await machineService.register();
 
         console.log("✅ Machine Registered:");
         console.log(machine);
 
-        // First update immediately
+        // Update network information
         await networkMonitor.update();
 
+        // Initialize firewall
         await firewallRules.initialize();
 
-        await firewallRules.configureWAN("enp2s0");
+        await firewallRules.configureWAN(
+            "enp2s0"
+        );
 
         await firewallRules.registerVLAN(
             "enp2s0.22",
             "10.0.0.1"
         );
+
+        // Start automatic session expiration
         sessionScheduler.start();
 
-        // Update every second
-        setInterval(async () => {
-
-    try {
-
-        const expired = await prisma.session.findMany({
-
-            where: {
-                isActive: true,
-                expiresAt: {
-                    lte: new Date()
-                }
-            }
-
-        });
-
-        
-
-    } catch (err) {
-
-        console.error(
-            "Expire Session Error:",
-            err
-        );
-
-    }
-
-}, 5000);
+        console.log("✅ Session Scheduler Started");
 
     } catch (err) {
 
