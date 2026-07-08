@@ -4,8 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sessionService = void 0;
+const child_process_1 = require("child_process");
 const prisma_1 = __importDefault(require("../../../config/prisma"));
 const network_socket_1 = require("../../network/websocket/network.socket");
+const ipset_service_1 = require("../firewall/ipset.service");
 class SessionService {
     async createSession(machineId, packageId, clientMac, clientIP, durationMinutes) {
         const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
@@ -34,7 +36,7 @@ class SessionService {
         return session;
     }
     async expireSession(sessionId) {
-        return await prisma_1.default.session.update({
+        const session = await prisma_1.default.session.update({
             where: {
                 id: sessionId
             },
@@ -42,6 +44,10 @@ class SessionService {
                 isActive: false
             }
         });
+        await ipset_service_1.ipsetService.block(session.ipAddress);
+        (0, child_process_1.exec)(`sudo conntrack -D -s ${session.ipAddress} || true`, () => { });
+        console.log(`❌ Session expired: ${session.ipAddress}`);
+        return session;
     }
 }
 exports.sessionService = new SessionService();

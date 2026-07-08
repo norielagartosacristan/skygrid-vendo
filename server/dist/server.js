@@ -11,6 +11,11 @@ const http_1 = __importDefault(require("http"));
 const network_socket_1 = require("./modules/network/websocket/network.socket");
 const firewallRules_service_1 = require("./modules/captive/firewall/firewallRules.service");
 const machine_service_1 = require("./modules/machine/services/machine.service");
+const prisma_1 = __importDefault(require("./config/prisma"));
+const child_process_1 = require("child_process");
+const session_scheduler_1 = require("./modules/captive/session/session.scheduler");
+const util_1 = require("util");
+const execAsync = (0, util_1.promisify)(child_process_1.exec);
 const PORT = process.env.PORT || 5000;
 const server = http_1.default.createServer(app_1.default);
 network_socket_1.networkSocket.init(server);
@@ -27,15 +32,23 @@ server.listen(PORT, async () => {
         await firewallRules_service_1.firewallRules.initialize();
         await firewallRules_service_1.firewallRules.configureWAN("enp2s0");
         await firewallRules_service_1.firewallRules.registerVLAN("enp2s0.22", "10.0.0.1");
+        session_scheduler_1.sessionScheduler.start();
         // Update every second
         setInterval(async () => {
             try {
-                await networkMonitor_service_1.networkMonitor.update();
+                const expired = await prisma_1.default.session.findMany({
+                    where: {
+                        isActive: true,
+                        expiresAt: {
+                            lte: new Date()
+                        }
+                    }
+                });
             }
             catch (err) {
-                console.error("Network Monitor Error:", err);
+                console.error("Expire Session Error:", err);
             }
-        }, 1000);
+        }, 5000);
     }
     catch (err) {
         console.error("Startup Error:", err);

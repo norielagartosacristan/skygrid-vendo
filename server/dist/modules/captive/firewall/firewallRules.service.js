@@ -21,7 +21,7 @@ class FirewallRulesService {
             return stdout;
         }
         catch (err) {
-            console.error("[Firewall]", err.stderr || err.message);
+            // Huwag mag-alala sa error kapag nagbubura ng rules na wala naman talaga
             return "";
         }
     }
@@ -64,21 +64,24 @@ class FirewallRulesService {
      */
     async registerVLAN(vlanInterface, gateway) {
         console.log(`📡 Registering ${vlanInterface}`);
-        //
-        // Remove old rules first
-        //
+        // 1. Linisin muna ang mga lumang rules para walang magka-conflict
         await this.unregisterVLAN(vlanInterface, gateway);
-        //
-        // Allow portal access
-        //
-        await this.run(`${IPTABLES} -C INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT || ${IPTABLES} -A INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`);
-        //
-        // Allow authenticated clients
-        //
-        await this.run(`${IPTABLES} -I FORWARD 2 -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`);
-        //
-        // Block everyone else
-        //
+        // 2. Payagan ang portal access (Web and DNS Server ng local Ubuntu Machine)
+        await this.run(`${IPTABLES} -A INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`);
+        // ==========================================
+        // DITO ANG MAGIC PARA SA AUTOMATIC REDIRECT
+        // ==========================================
+        // 3. KUNG naka-login na (nasa skygrid_clients), LAMPAS diretso sa internet (Bypass NAT Redirect)
+        await this.run(`${IPTABLES} -t nat -A PREROUTING -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`);
+        // 4. I-intercept at i-force redirect ang DNS requests (Port 53) sa server mo (Kailangan para sa portal detection ng phones)
+        await this.run(`${IPTABLES} -t nat -A PREROUTING -i ${vlanInterface} -p udp --dport 53 -j DNAT --to-destination ${gateway}:53`);
+        await this.run(`${IPTABLES} -t nat -A PREROUTING -i ${vlanInterface} -p tcp --dport 53 -j DNAT --to-destination ${gateway}:53`);
+        // 5. I-redirect ang lahat ng HTTP (Port 80) traffic papunta sa portal screen mo (Port 3000)
+        await this.run(`${IPTABLES} -t nat -A PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:3000`);
+        // ==========================================
+        // 6. Payagan ang authenticated clients sa FORWARD chain
+        await this.run(`${IPTABLES} -A FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`);
+        // 7. I-DROP ang traffic ng lahat ng hindi pa authenticated para hindi sila makalusot sa ibang ports
         await this.run(`${IPTABLES} -A FORWARD -i ${vlanInterface} -j DROP`);
         console.log(`✅ ${vlanInterface} registered.`);
     }
@@ -86,19 +89,42 @@ class FirewallRulesService {
      * Remove VLAN rules
      */
     async unregisterVLAN(vlanInterface, gateway) {
+        // Linisin ang INPUT chain
         while (true) {
-            const result = await this.run(`${IPTABLES} -D INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`);
-            if (!result)
+            const res = await this.run(`${IPTABLES} -D INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`);
+            if (!res)
+                break;
+        }
+        // Linisin ang FORWARD chain rules
+        while (true) {
+            const res = await this.run(`${IPTABLES} -D FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`);
+            if (!res)
                 break;
         }
         while (true) {
-            const result = await this.run(`${IPTABLES} -D FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`);
-            if (!result)
+            const res = await this.run(`${IPTABLES} -D FORWARD -i ${vlanInterface} -j DROP`);
+            if (!res)
+                break;
+        }
+        // Linisin ang NAT PREROUTING redirect rules na idinagdag natin
+        while (true) {
+            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`);
+            if (!res)
                 break;
         }
         while (true) {
-            const result = await this.run(`${IPTABLES} -D FORWARD -i ${vlanInterface} -j DROP`);
-            if (!result)
+            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p udp --dport 53 -j DNAT --to-destination ${gateway}:53`);
+            if (!res)
+                break;
+        }
+        while (true) {
+            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 53 -j DNAT --to-destination ${gateway}:53`);
+            if (!res)
+                break;
+        }
+        while (true) {
+            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:3000`);
+            if (!res)
                 break;
         }
     }

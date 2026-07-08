@@ -64,24 +64,7 @@ server.listen(PORT, async () => {
 
         });
 
-        for (const session of expiredSessions) {
-
-    console.log(`⏰ Expiring ${session.ipAddress}`);
-
-    // 1. Alisin sa ipset
-    await ipsetService.block(session.ipAddress);
-
-    // 2. Mark session as inactive
-    await prisma.session.update({
-        where: {
-            id: session.id
-        },
-        data: {
-            isActive: false
-        }
-    });
-
-}
+        
 
     } catch (err) {
 
