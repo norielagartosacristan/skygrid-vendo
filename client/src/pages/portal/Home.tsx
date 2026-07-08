@@ -31,8 +31,7 @@ const isConnected = !!session;
   const socket = new WebSocket(
     `ws://${window.location.host}`
   );
-console.log("SESSION:", session);
-  console.log("REMAINING:", remaining);
+
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
@@ -47,8 +46,7 @@ console.log("SESSION:", session);
   return () => {
     socket.close();
   };
-}, [session, remaining]);
-
+}, []);
 
   return (
     <PortalLayout>
