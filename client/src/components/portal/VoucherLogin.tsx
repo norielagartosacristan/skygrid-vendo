@@ -11,14 +11,12 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
     const [message, setMessage] = useState("");
 
     async function handleLogin() {
-
         if (!voucher.trim()) {
             setMessage("Please enter your voucher.");
             return;
         }
 
         try {
-
             setLoading(true);
             setMessage("");
 
@@ -35,56 +33,51 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
 
             setTimeout(() => {
                 onLoginSuccess(res.data.session);
-
-                setMessage("✅ Connected successfully.");
             }, 1500);
-
         } catch (err: any) {
-
             setMessage(
                 err.response?.data?.message ??
                 "Unable to connect."
             );
-
         } finally {
-
             setLoading(false);
-
         }
     }
 
     return (
-       <div className="bg-white rounded-3xl shadow-lg p-6">
+        <div className="bg-white rounded-3xl shadow-lg p-4 sm:p-6">
 
-  <div className="flex gap-1">
-    <input
-      value={voucher}
-      onChange={(e) => setVoucher(e.target.value)}
-      placeholder="Enter Voucher Code"
-      className="flex-1 border rounded-xl p-4"
-    />
+            <div className="flex flex-col sm:flex-row gap-3">
 
-    <button
-      onClick={handleLogin}
-      disabled={loading}
-      className="bg-sky-600 hover:bg-sky-700 text-white rounded-xl px-6 font-semibold whitespace-nowrap"
-    >
-      {loading ? "Connecting..." : "Submit"}
-    </button>
-  </div>
+                <input
+                    value={voucher}
+                    onChange={(e) => setVoucher(e.target.value)}
+                    placeholder="Enter Voucher Code"
+                    className="flex-1 border rounded-xl p-4 text-base focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
 
-  {message && (
-    <p
-      className={`mt-4 rounded-xl p-3 text-center ${
-        message.startsWith("✅")
-          ? "bg-green-100 text-green-700"
-          : "bg-red-100 text-red-700"
-      }`}
-    >
-      {message}
-    </p>
-  )}
+                <button
+                    onClick={handleLogin}
+                    disabled={loading}
+                    className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white rounded-xl px-6 py-4 font-semibold transition-colors whitespace-nowrap"
+                >
+                    {loading ? "Connecting..." : "Submit"}
+                </button>
 
-</div>
+            </div>
+
+            {message && (
+                <p
+                    className={`mt-4 rounded-xl p-3 text-center text-sm sm:text-base ${
+                        message.startsWith("✅")
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                    }`}
+                >
+                    {message}
+                </p>
+            )}
+
+        </div>
     );
 }
