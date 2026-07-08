@@ -8,23 +8,14 @@ import { useCountdown } from "../../hooks/useCountdown";
 
 export default function Home() {
 
-  const [isConnected, setIsConnected] = useState(false);
 
   // 1. Kuhanin ang initial state mula sa localStorage kung meron man
   const [session, setSession] = useState<any>(() => {
     const savedSession = localStorage.getItem("skygrid_session");
     return savedSession ? JSON.parse(savedSession) : null;
   });
-
-  const remaining = useCountdown(
-    session?.expiresAt,
-    () => {
-
-        setIsConnected(false);
-
-    }
-);
-
+const isConnected = !!session;
+  const remaining = useCountdown(session?.expiresAt);
 
   // 2. I-save sa localStorage tuwing magbabago ang session state
   useEffect(() => {
