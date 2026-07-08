@@ -48,6 +48,13 @@ const isConnected = !!session;
   };
 }, []);
 
+useEffect(() => {
+  if (remaining === "00:00:00") {
+    localStorage.removeItem("skygrid_session");
+    setSession(null);
+  }
+}, [remaining]);
+
   return (
     <PortalLayout>
       {/* HERO SECTION - REDUCED HEIGHT FOR MOBILE */}
