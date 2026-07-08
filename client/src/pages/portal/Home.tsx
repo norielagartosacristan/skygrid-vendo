@@ -29,31 +29,34 @@ const isConnected = !!session;
 
   useEffect(() => {
   const socket = new WebSocket(
-    `ws://${window.location.host}`
+    `ws://${window.location.host}/ws/network`
   );
 
+  socket.onopen = () => {
+    console.log("✅ WS Connected");
+  };
+
   socket.onmessage = (event) => {
+    console.log("📩", event.data);
+
     const data = JSON.parse(event.data);
 
     if (data.type === "session.expired") {
-      console.log("Session expired from server.");
-
       localStorage.removeItem("skygrid_session");
       setSession(null);
     }
   };
 
-  return () => {
-    socket.close();
+  socket.onclose = () => {
+    console.log("❌ WS Closed");
   };
-}, []);
 
-useEffect(() => {
-  if (remaining === "00:00:00") {
-    localStorage.removeItem("skygrid_session");
-    setSession(null);
-  }
-}, [remaining]);
+  socket.onerror = (err) => {
+    console.log("WS Error", err);
+  };
+
+  return () => socket.close();
+}, []);
 
   return (
     <PortalLayout>
