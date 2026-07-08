@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export function useCountdown(expiresAt: string | number | Date) {
+export function useCountdown(expiresAt: string | number | Date | undefined, onExpire?: () => void) {
   const [remaining, setRemaining] = useState("00:00:00");
 
   useEffect(() => {
@@ -13,6 +13,7 @@ export function useCountdown(expiresAt: string | number | Date) {
       const difference = +new Date(expiresAt) - +new Date();
       
       if (difference <= 0) {
+        onExpire?.();
         return "00:00:00";
       }
 

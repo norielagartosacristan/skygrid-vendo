@@ -10,6 +10,7 @@ import { machineService } from "./modules/machine/services/machine.service";
 import prisma from "./config/prisma";
 import { ipsetService } from "./modules/captive/firewall/ipset.service";
 import { exec } from "child_process";
+import { sessionScheduler } from "./modules/captive/session/session.scheduler";
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
@@ -41,6 +42,7 @@ server.listen(PORT, async () => {
             "enp2s0.22",
             "10.0.0.1"
         );
+        sessionScheduler.start();
 
         // Update every second
         setInterval(async () => {

@@ -56,21 +56,42 @@ class SessionService {
 
 }
 
-    async expireSession(sessionId: string) {
+   async expireSession(sessionId: string) {
 
-    const session = await prisma.session.update({
-        where: { id: sessionId },
-        data: { isActive: false }
-    });
+    const session =
+        await prisma.session.update({
 
-    await ipsetService.removeIP(session.ipAddress);
+            where: {
+
+                id: sessionId
+
+            },
+
+            data: {
+
+                isActive: false
+
+            }
+
+        });
+
+    await ipsetService.block(
+        session.ipAddress
+    );
 
     exec(
-        `conntrack -D -s ${session.ipAddress} || true`
+        `sudo conntrack -D -s ${session.ipAddress} || true`,
+        () => {}
+    );
+
+    console.log(
+        `❌ Session expired: ${session.ipAddress}`
     );
 
     return session;
+
 }
+
 }
 
 export const sessionService = new SessionService();
