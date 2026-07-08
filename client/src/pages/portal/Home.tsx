@@ -26,43 +26,10 @@ const isConnected = !!session;
     }
   }, [session]);
 
-  // 3. Opsyonal: Kung tapos na ang oras (remaining time), kusang i-clear ang session
-useEffect(() => {
-  console.log(session);
-  const handleDisconnect = async () => {
-    if (session) {
-      const isExpired = new Date(session.expiresAt) <= new Date();
-      
-      if (remaining === "00:00:00" || isExpired) {
-        try {
-          // 1. Tawagin ang backend para sipain ang user sa router
-          const response = await fetch('/api/voucher/disconnect', { // Palitan ang URL kung iba ang daan sa backend mo
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              // Kung may Authorization Header ang API mo, ilagay dito:
-              // 'Authorization': `Bearer ${session.token}` 
-            },
-            body: JSON.stringify({ 
-              token: session.token, // O kung anong field ang gamit niyo (e.g., voucher: session.code)
-            }),
-          });
-
-          if (!response.ok) {
-            console.error("Failed to disconnect from router backend");
-          }
-        } catch (error) {
-          console.error("Network error while disconnecting:", error);
-        } finally {
-          // 2. Kahit mag-error o mag-success ang API, burahin pa rin ang session sa screen
-          setSession(null);
-        }
-      }
-    }
-  };
-
-  handleDisconnect();
-}, [remaining, session]);
+ useEffect(() => {
+  console.log("SESSION:", session);
+  console.log("REMAINING:", remaining);
+}, [session, remaining]);
 
   return (
     <PortalLayout>
