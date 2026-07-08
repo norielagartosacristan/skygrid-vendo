@@ -1,5 +1,7 @@
+import { exec } from "child_process";
 import prisma from "../../../config/prisma";
 import { networkSocket } from "../../network/websocket/network.socket";
+import { ipsetService } from "../firewall/ipset.service";
 
 class SessionService {
 
@@ -56,20 +58,19 @@ class SessionService {
 
     async expireSession(sessionId: string) {
 
-        return await prisma.session.update({
+    const session = await prisma.session.update({
+        where: { id: sessionId },
+        data: { isActive: false }
+    });
 
-            where: {
-                id: sessionId
-            },
+    await ipsetService.removeIP(session.ipAddress);
 
-            data: {
-                isActive: false
-            }
+    exec(
+        `conntrack -D -s ${session.ipAddress} || true`
+    );
 
-        });
-
-    }
-
+    return session;
+}
 }
 
 export const sessionService = new SessionService();
