@@ -45,72 +45,75 @@ export default function Home() {
   }, [remaining, session]);
 
   // 4. WebSocket Connection na may auto Reconnection Logic
-  useEffect(() => {
-    function connectWebSocket() {
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-
-      console.log("🔄 Connecting to WebSocket...");
-      const socket = new WebSocket(`ws://${window.location.host}/ws/network`);
-      socketRef.current = socket;
-
-      socket.onopen = () => {
-        console.log("✅ WebSocket Connected");
-      };
-
-      socket.onmessage = (event) => {
-        console.log("📩 WS Message:", event.data);
-        try {
-          const data = JSON.parse(event.data);
-          switch (data.type) {
-            case "session.expired":
-              console.log("❌ Session expired received from server.");
-              localStorage.removeItem("skygrid_session");
-              setSession(null);
-              break;
-            default:
-              console.log("ℹ️ Unknown WS message:", data);
-              break;
-          }
-        } catch (err) {
-          console.error("Failed to parse WebSocket message:", err);
-        }
-      };
-
-      socket.onclose = (event) => {
-        console.log(`❌ WebSocket Closed. Code: ${event.code}. Reason: ${event.reason}`);
-        
-        // Mag-reconnect kung may active session pa at hindi pa lumalabas na ubos na ang oras
-        if (session && remaining !== "00:00:00") {
-          console.log("⏳ Attempting to reconnect in 3 seconds...");
-          reconnectTimeoutRef.current = setTimeout(() => {
-            connectWebSocket();
-          }, 3000);
-        }
-      };
-
-      socket.onerror = (err) => {
-        console.error("❌ WebSocket Error:", err);
-      };
+ // 4. WebSocket Connection na may auto Reconnection Logic
+useEffect(() => {
+  function connectWebSocket() {
+    if (socketRef.current) {
+      socketRef.current.close();
     }
 
-    // Papayagan na nating kumonekta agad basta may session habang naglo-load pa ang remaining hook
-    if (session && remaining !== "00:00:00") {
-      connectWebSocket();
-    }
+    console.log("🔄 Connecting to WebSocket...");
+    
+    // Gumamit ng secure ws (wss) kung naka-https ang iyong portal sa prod
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const socket = new WebSocket(`${protocol}//${window.location.host}/ws/network`);
+    socketRef.current = socket;
 
-    return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      if (socketRef.current) {
-        socketRef.current.close();
+    socket.onopen = () => {
+      console.log("✅ WebSocket Connected");
+    };
+
+    socket.onmessage = (event) => {
+      console.log("📩 WS Message:", event.data);
+      try {
+        const data = JSON.parse(event.data);
+        switch (data.type) {
+          case "session.expired":
+            console.log("❌ Session expired received from server.");
+            localStorage.removeItem("skygrid_session");
+            setSession(null);
+            break;
+          default:
+            console.log("ℹ️ Unknown WS message:", data);
+            break;
+        }
+      } catch (err) {
+        console.error("Failed to parse WebSocket message:", err);
       }
     };
-  }, [session, remaining]); // Idinagdag ang 'remaining' sa dependency para sumunod kapag nag-load na ang oras
 
-  // ... (Ipagpatuloy ang iyong return statement pababa)
+    socket.onclose = (event) => {
+      console.log(`❌ WebSocket Closed. Code: ${event.code}. Reason: ${event.reason}`);
+      
+      // Mag-reconnect kung may active session pa sa localStorage
+      const currentSession = localStorage.getItem("skygrid_session");
+      if (currentSession) {
+        console.log("⏳ Attempting to reconnect in 3 seconds...");
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connectWebSocket();
+        }, 3000);
+      }
+    };
+
+    socket.onerror = (err) => {
+      console.error("❌ WebSocket Error:", err);
+    };
+  }
+
+  // Patakbuhin lang kung may session sa state
+  if (session) {
+    connectWebSocket();
+  }
+
+  return () => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
+  };
+}, [session]); // IBINALIK SA [session] LANG. Alisin ang 'remaining' dito para hindi mag-loop kada segundo.
 
   return (
     <PortalLayout>
