@@ -6,9 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sessionScheduler = void 0;
 const prisma_1 = __importDefault(require("../../../config/prisma"));
 const session_service_1 = require("./session.service");
-const child_process_1 = require("child_process");
-const util_1 = require("util");
-const execAsync = (0, util_1.promisify)(child_process_1.exec);
 class SessionScheduler {
     start() {
         console.log("🕒 Session Scheduler Started");

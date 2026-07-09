@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,18 +8,224 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(cuid())
-  fullName String
-  email    String @unique
-  password String
-
-  role UserRole @default(VENDOR)
-
-  vendorId String?
-  vendor   Vendor? @relation(fields: [vendorId], references: [id])
-
+  id        String   @id @default(cuid())
+  fullName  String
+  email     String   @unique
+  password  String
+  role      UserRole @default(VENDOR)
+  vendorId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  vendor    Vendor?  @relation(fields: [vendorId], references: [id])
+}
+
+model Vendor {
+  id          String    @id @default(cuid())
+  name        String
+  companyName String?
+  phone       String?
+  address     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  machines    Machine[]
+  users       User[]
+}
+
+model Machine {
+  id           String        @id @default(cuid())
+  vendorId     String
+  name         String
+  ipAddress    String
+  macAddress   String
+  location     String?
+  status       MachineStatus @default(OFFLINE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  fingerprint  String        @unique
+  hostname     String?
+  vendor       Vendor        @relation(fields: [vendorId], references: [id])
+  sessions     Session[]
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String        @id @default(cuid())
+  machineId     String
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  reference     String?
+  createdAt     DateTime      @default(now())
+  machine       Machine       @relation(fields: [machineId], references: [id])
+}
+
+model NetworkVlan {
+  id          String   @id @default(cuid())
+  vlanId      Int      @unique
+  name        String
+  gateway     String
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  dhcpEnabled Boolean  @default(true)
+  dns         String
+  interface   String
+  internet    Boolean  @default(true)
+  subnet      String
+}
+
+model NetworkGeneral {
+  id            String   @id @default(cuid())
+  systemName    String
+  companyName   String
+  country       String
+  timezone      String
+  currency      String
+  language      String
+  supportEmail  String?
+  supportPhone  String?
+  machinePrefix String
+  voucherPrefix String
+  autoRestart   Boolean  @default(true)
+  primaryDNS    String
+  secondaryDNS  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model GlobalBandwidth {
+  id              String   @id @default(cuid())
+  burstDownload   Int
+  burstDuration   Int
+  burstEnabled    Boolean  @default(false)
+  burstUpload     Int
+  createdAt       DateTime @default(now())
+  downloadSpeed   Int
+  mode            String
+  reserveDownload Int
+  reserveUpload   Int
+  updatedAt       DateTime @updatedAt
+  uploadSpeed     Int
+}
+
+model ClientControl {
+  id              String   @id @default(cuid())
+  defaultDownload Int
+  defaultUpload   Int
+  autoDisconnect  Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  deviceIsolation Boolean  @default(false)
+  idleTimeout     Int
+  macLock         Boolean  @default(true)
+  maxClients      Int
+  queueType       String
+  reconnectDelay  Int
+  sessionTimeout  Int
+  updatedAt       DateTime @updatedAt
+}
+
+model NetworkInterface {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  type            String
+  enabled         Boolean  @default(true)
+  ipAddress       String?
+  subnetMask      String?
+  gateway         String?
+  dns1            String?
+  dns2            String?
+  mtu             Int      @default(1500)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  displayName     String
+  ipMode          String   @default("STATIC")
+  dhcpEnabled     Boolean  @default(false)
+  dhcpEnd         String?
+  dhcpStart       String?
+  parentInterface String?
+  password        String?
+  role            String   @default("LAN")
+  security        String?
+  ssid            String?
+  vlanId          Int?
+}
+
+model SubVendo {
+  id               String    @id @default(cuid())
+  chipId           String    @unique
+  macAddress       String    @unique
+  firmwareVersion  String
+  ipAddress        String
+  status           String    @default("PENDING")
+  machineName      String?
+  parentInterface  String?
+  vlanId           Int?
+  ipMode           String?
+  ipAddressStatic  String?
+  subnetMask       String?
+  gateway          String?
+  dns1             String?
+  dns2             String?
+  clientStartIp    Int?
+  clientEndIp      Int?
+  bandwidthProfile String?
+  portal           String?
+  enabled          Boolean   @default(false)
+  lastSeen         DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  connectedClients Int       @default(0)
+  freeMemory       Int       @default(0)
+  online           Boolean   @default(false)
+  temperature      Float     @default(0)
+  uptime           Int       @default(0)
+  wifiSignal       Int       @default(0)
+}
+
+model Package {
+  id           String       @id @default(cuid())
+  name         String
+  price        Decimal      @db.Decimal(10, 2)
+  duration     Int
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  dataLimitMB  Int?
+  description  String?
+  downloadMbps Int?
+  durationUnit DurationUnit
+  uploadMbps   Int?
+  sessions     Session[]
+  vouchers     Voucher[]
+}
+
+model Voucher {
+  id        String        @id @default(cuid())
+  code      String        @unique
+  packageId String
+  status    VoucherStatus @default(ACTIVE)
+  sessionId String?       @unique
+  usedByIP  String?
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  package   Package       @relation(fields: [packageId], references: [id])
+  session   Session?      @relation(fields: [sessionId], references: [id])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  machineId String
+  packageId String
+  clientMac String
+  ipAddress String
+  startedAt DateTime @default(now())
+  expiresAt DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  machine   Machine  @relation(fields: [machineId], references: [id])
+  package   Package  @relation(fields: [packageId], references: [id])
+  voucher   Voucher?
 }
 
 enum UserRole {
@@ -34,334 +235,18 @@ enum UserRole {
   STAFF
 }
 
-model Vendor {
-  id String @id @default(cuid())
-
-  name        String
-  companyName String?
-  phone       String?
-  address     String?
-
-  users User[]
-
-  machines Machine[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Machine {
-  id String @id @default(cuid())
-
-  vendorId String
-  vendor Vendor @relation(fields: [vendorId], references: [id])
-
-  name String
-
-  ipAddress String
-
-  macAddress String
-
-  fingerprint String @unique
-
-  hostname String?
-
-  location String?
-
-  status MachineStatus @default(OFFLINE)
-
-  sessions Session[]
-
-  transactions Transaction[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-}
-
 enum MachineStatus {
   ONLINE
-
   OFFLINE
-
   MAINTENANCE
-}
-
-model Transaction {
-  id String @id @default(cuid())
-
-  machineId String
-
-  machine Machine @relation(fields: [machineId], references: [id])
-
-  amount Decimal @db.Decimal(10, 2)
-
-  paymentMethod PaymentMethod
-
-  reference String?
-
-  createdAt DateTime @default(now())
 }
 
 enum PaymentMethod {
   COIN
-
   GCASH
-
   MAYA
-
   VOUCHER
-
   MANUAL
-}
-
-model NetworkVlan {
-  id   String @id @default(cuid())
-  name String
-
-  vlanId Int @unique
-
-  interface String
-
-  gateway String
-
-  subnet String
-
-  dns String
-
-  dhcpEnabled Boolean @default(true)
-
-  internet Boolean @default(true)
-
-  enabled Boolean @default(true)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-}
-
-model NetworkGeneral {
-  id String @id @default(cuid())
-
-  systemName  String
-  companyName String
-
-  country  String
-  timezone String
-  currency String
-  language String
-
-  supportEmail String?
-  supportPhone String?
-
-  machinePrefix String
-  voucherPrefix String
-
-  autoRestart Boolean @default(true)
-
-  primaryDNS   String
-  secondaryDNS String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model GlobalBandwidth {
-  id String @id @default(cuid())
-
-  downloadSpeed Int
-  uploadSpeed   Int
-
-  reserveDownload Int
-  reserveUpload   Int
-
-  burstEnabled Boolean @default(false)
-
-  burstDownload Int
-  burstUpload   Int
-
-  burstDuration Int
-
-  mode String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ClientControl {
-  id String @id @default(cuid())
-
-  defaultDownload Int
-  defaultUpload   Int
-
-  maxClients Int
-
-  idleTimeout    Int
-  sessionTimeout Int
-
-  macLock         Boolean @default(true)
-  deviceIsolation Boolean @default(false)
-  autoDisconnect  Boolean @default(true)
-
-  reconnectDelay Int
-
-  queueType String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model NetworkInterface {
-  id String @id @default(cuid())
-
-  name        String @unique
-  displayName String
-
-  // Interface Role
-  role String @default("LAN")
-  // WAN, LAN, AP, VLAN, BRIDGE
-
-  type String
-
-  enabled Boolean @default(true)
-
-  // Network Configuration
-  ipMode String @default("STATIC")
-  // STATIC, DHCP, PPPoE, IPoE
-
-  ipAddress  String?
-  subnetMask String?
-  gateway    String?
-
-  dns1 String?
-  dns2 String?
-
-  mtu Int @default(1500)
-
-  // VLAN
-  vlanId Int?
-
-  // Parent Interface
-  parentInterface String?
-
-  // Access Point Settings
-  ssid     String?
-  password String?
-  security String?
-  // OPEN, WPA2
-
-  // DHCP Server
-  dhcpEnabled Boolean @default(false)
-
-  dhcpStart String?
-  dhcpEnd   String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model SubVendo {
-  id String @id @default(cuid())
-
-  chipId     String @unique
-  macAddress String @unique
-
-  firmwareVersion String
-
-  ipAddress String
-
-  status String @default("PENDING")
-
-  machineName String?
-
-  parentInterface String?
-
-  vlanId Int?
-
-  ipMode String?
-
-  ipAddressStatic String?
-
-  subnetMask String?
-
-  gateway String?
-
-  dns1 String?
-
-  dns2 String?
-
-  clientStartIp Int?
-
-  clientEndIp Int?
-
-  bandwidthProfile String?
-
-  portal String?
-
-  enabled Boolean @default(false)
-
-  // ===== Heartbeat =====
-
-  online Boolean @default(false)
-
-  uptime Int @default(0)
-
-  connectedClients Int @default(0)
-
-  freeMemory Int @default(0)
-
-  wifiSignal Int @default(0)
-
-  temperature Float @default(0)
-
-  // =====================
-
-  lastSeen DateTime?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-}
-
-model Package {
-  id          String  @id @default(cuid())
-  name        String
-  description String?
-  price       Decimal @db.Decimal(10, 2)
-
-  duration     Int
-  durationUnit DurationUnit
-
-  downloadMbps Int?
-  uploadMbps   Int?
-  dataLimitMB  Int?
-
-  isActive Boolean @default(true)
-
-  vouchers Voucher[]
-  sessions Session[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Voucher {
-  id   String @id @default(cuid())
-  code String @unique
-
-  packageId String
-  package   Package @relation(fields: [packageId], references: [id])
-
-  status VoucherStatus @default(ACTIVE)
-
-  sessionId String?  @unique
-  session   Session? @relation(fields: [sessionId], references: [id])
-
-  usedByIP String?
-  usedAt   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 enum VoucherStatus {
@@ -378,6 +263,7 @@ enum DurationUnit {
   MONTH
   YEAR
 }
+
 
 model Session {
   id String @id @default(cuid())
