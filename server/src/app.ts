@@ -21,7 +21,9 @@ import packageRoutes from "./modules/package/routes/package.routes";
 import machineRoutes from "./modules/machine/routes/machine.routes";
 import { errorHandler } from "./middleware/error.middleware";
 import coinRoutes from "./modules/payment/coin/coin.routes";
-import router from "./routes/package.routes";
+
+
+
 
 
 const app = express();
@@ -57,7 +59,8 @@ app.use("/api/captive", captiveRoutes);
 app.use("/api/vouchers", voucherRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/machine", machineRoutes);
-router.use("/coin", coinRoutes);
+app.use("/api/coin", coinRoutes);
+
 
 /* =========================
    STATIC FRONTEND
