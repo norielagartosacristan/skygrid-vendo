@@ -105,8 +105,15 @@ const isConnected = !!session;
             </span>
 
             <Clock />
-             {/* REMAINING TIME CARD */}
-            <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 shadow-md text-white flex justify-between items-center">
+           
+          </div>
+
+
+
+          {/* MAIN CONTROLS (COMPACT CARD & BUTTONS) */}
+          <div className="bg-white rounded-2xl shadow-md p-4 border border-slate-100 flex flex-col gap-3">
+              {/* REMAINING TIME CARD */}
+             <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 shadow-md text-white flex justify-between items-center">
               <div>
                 <p className="uppercase tracking-wider text-sky-300 text-[10px] font-bold">
                   Remaining Time
@@ -119,10 +126,6 @@ const isConnected = !!session;
                 ⏳
               </div>
             </div>
-          </div>
-
-          {/* MAIN CONTROLS (COMPACT CARD & BUTTONS) */}
-          <div className="bg-white rounded-2xl shadow-md p-4 border border-slate-100 flex flex-col gap-3">
             <button className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-98 transition">
               🪙 Insert Coin
             </button>
