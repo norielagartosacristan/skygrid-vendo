@@ -108,8 +108,6 @@ const isConnected = !!session;
            
           </div>
 
-
-
           {/* MAIN CONTROLS (COMPACT CARD & BUTTONS) */}
           <div className="bg-white rounded-2xl shadow-md p-4 border border-slate-100 flex flex-col gap-3">
               {/* REMAINING TIME CARD */}
