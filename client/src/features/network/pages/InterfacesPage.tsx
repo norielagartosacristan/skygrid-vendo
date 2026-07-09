@@ -18,6 +18,7 @@ import InterfaceModal from "../components/InterfaceModal";
 
 export default function InterfacesPage() {
   //const [interfaces, setInterfaces] = useState<any[]>([]);
+ 
 
   const [loading, setLoading] = useState(false);
 

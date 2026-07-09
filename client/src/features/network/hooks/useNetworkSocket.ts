@@ -22,12 +22,12 @@ export default function useNetworkSocket() {
         };
 
         socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
 
-            const data = JSON.parse(event.data);
+    console.log("WS DATA:", data);
 
-            setInterfaces(data);
-
-        };
+    setInterfaces(data);
+};
 
         socket.onclose = () => {
 
