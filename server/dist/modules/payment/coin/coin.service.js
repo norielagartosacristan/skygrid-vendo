@@ -20,7 +20,7 @@ class CoinService {
         if (!pkg) {
             throw new Error(`No package configured for ₱${amount}`);
         }
-        const session = await session_service_1.sessionService.createSession(machineId, pkg.id, clientMac, clientIP, pkg.durationMinutes);
+        const session = await session_service_1.sessionService.createSession(machineId, pkg.id, clientMac, clientIP, pkg.duration);
         return {
             success: true,
             session
