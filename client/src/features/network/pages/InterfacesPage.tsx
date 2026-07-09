@@ -28,7 +28,8 @@ export default function InterfacesPage() {
 
   const interfaces = useNetworkSocket();
 
-
+console.log(interfaces);
+console.log(Array.isArray(interfaces));
 
   async function loadInterfaces() {
     try {
