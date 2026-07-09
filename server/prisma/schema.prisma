@@ -32,20 +32,21 @@ model Vendor {
 }
 
 model Machine {
-  id           String        @id @default(cuid())
-  vendorId     String
-  name         String
-  ipAddress    String
-  macAddress   String
-  location     String?
-  status       MachineStatus @default(OFFLINE)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  fingerprint  String        @unique
-  hostname     String?
-  vendor       Vendor        @relation(fields: [vendorId], references: [id])
-  sessions     Session[]
-  transactions Transaction[]
+  id               String            @id @default(cuid())
+  vendorId         String
+  name             String
+  ipAddress        String
+  macAddress       String
+  location         String?
+  status           MachineStatus     @default(OFFLINE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  fingerprint      String            @unique
+  hostname         String?
+  vendor           Vendor            @relation(fields: [vendorId], references: [id])
+  sessions         Session[]
+  transactions     Transaction[]
+  coinTransactions CoinTransaction[]
 }
 
 model Transaction {
@@ -212,22 +213,6 @@ model Voucher {
   session   Session?      @relation(fields: [sessionId], references: [id])
 }
 
-model Session {
-  id        String   @id @default(cuid())
-  machineId String
-  packageId String
-  clientMac String
-  ipAddress String
-  startedAt DateTime @default(now())
-  expiresAt DateTime
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  machine   Machine  @relation(fields: [machineId], references: [id])
-  package   Package  @relation(fields: [packageId], references: [id])
-  voucher   Voucher?
-}
-
 enum UserRole {
   SUPER_ADMIN
   ADMIN
@@ -264,7 +249,6 @@ enum DurationUnit {
   YEAR
 }
 
-
 model Session {
   id String @id @default(cuid())
 
@@ -286,10 +270,26 @@ model Session {
 
   voucher Voucher?
 
-  isPaused         Boolean  @default(false)
+  isPaused         Boolean   @default(false)
   remainingSeconds Int?
   pausedAt         DateTime?
 
+  coinTransactions CoinTransaction[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model CoinTransaction {
+  id String @id @default(cuid())
+
+  machineId String
+  machine   Machine @relation(fields: [machineId], references: [id])
+
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id])
+
+  amount Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
 }
