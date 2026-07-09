@@ -117,9 +117,9 @@ class FirewallRulesService {
         // ==========================================
 
         // 6. Payagan ang authenticated clients sa FORWARD chain
-        await this.run(
-            `${IPTABLES} -A FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
-        );
+        //await this.run(
+          //  `${IPTABLES} -A FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+        //);
 
         // 7. I-DROP ang traffic ng lahat ng hindi pa authenticated para hindi sila makalusot sa ibang ports
         await this.run(
