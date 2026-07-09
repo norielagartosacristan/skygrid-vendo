@@ -13,15 +13,74 @@ class SessionService {
     durationMinutes: number
 ) {
 
-    const expiresAt = new Date(
-        Date.now() + durationMinutes * 60 * 1000
-    );
-
     console.log("========== CREATE SESSION ==========");
     console.log("machineId:", machineId);
     console.log("packageId:", packageId);
     console.log("clientIP:", clientIP);
     console.log("clientMac:", clientMac);
+
+    const existing = await prisma.session.findFirst({
+
+        where: {
+            clientMac,
+            isActive: true
+        },
+
+        include: {
+            package: true
+        }
+
+    });
+
+    if (existing) {
+
+        const baseTime =
+            existing.expiresAt > new Date()
+                ? existing.expiresAt
+                : new Date();
+
+        const newExpiresAt = new Date(
+            baseTime.getTime() +
+            durationMinutes * 60 * 1000
+        );
+
+        const session = await prisma.session.update({
+
+            where: {
+                id: existing.id
+            },
+
+            data: {
+                ipAddress: clientIP,
+                packageId,
+                expiresAt: newExpiresAt
+            },
+
+            include: {
+                package: true
+            }
+
+        });
+
+        console.log(
+            `➕ Session extended until ${newExpiresAt}`
+        );
+
+        networkSocket.broadcast({
+
+            type: "session.updated",
+
+            payload: session
+
+        });
+
+        return session;
+
+    }
+
+    const expiresAt = new Date(
+        Date.now() + durationMinutes * 60 * 1000
+    );
 
     const session = await prisma.session.create({
 

@@ -400,6 +400,10 @@ model Session {
 
   voucher Voucher?
 
+  isPaused         Boolean  @default(false)
+  remainingSeconds Int?
+  pausedAt         DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
