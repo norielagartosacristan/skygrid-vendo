@@ -158,9 +158,6 @@ const isConnected = !!session;
                   {remaining || "00:00:00"}
                 </h1>
               </div>
-              <div className="bg-slate-700/50 p-2.5 rounded-xl text-lg">
-                ⏳
-              </div>
             </div>
             <button className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-98 transition">
               🪙 Insert Coin
