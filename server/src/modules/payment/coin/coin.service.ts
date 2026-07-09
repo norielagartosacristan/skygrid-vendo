@@ -41,7 +41,7 @@ class CoinService {
                 pkg.id,
                 clientMac,
                 clientIP,
-                pkg.durationMinutes
+                pkg.duration
 
             );
 
