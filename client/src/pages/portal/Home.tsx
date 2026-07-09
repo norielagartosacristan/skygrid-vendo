@@ -26,37 +26,65 @@ const isConnected = !!session;
     }
   }, [session]);
 
+useEffect(() => {
+    const socket = new WebSocket(
+        `ws://${window.location.host}/ws/network`
+    );
 
-  useEffect(() => {
-  const socket = new WebSocket(
-    `ws://${window.location.host}/ws/network`
-  );
+    socket.onopen = () => {
+        console.log("✅ WebSocket Connected");
+    };
 
-  socket.onopen = () => {
-    console.log("✅ WS Connected");
-  };
+    socket.onmessage = (event) => {
 
-  socket.onmessage = (event) => {
-    console.log("📩", event.data);
+        console.log("📩 WS Message:", event.data);
 
-    const data = JSON.parse(event.data);
+        try {
 
-    if (data.type === "session.expired") {
-      localStorage.removeItem("skygrid_session");
-      setSession(null);
-    }
-  };
+            const data = JSON.parse(event.data);
 
-  socket.onclose = () => {
-    console.log("❌ WS Closed");
-  };
+            switch (data.type) {
 
-  socket.onerror = (err) => {
-    console.log("WS Error", err);
-  };
+                case "session.expired":
 
-  return () => socket.close();
+                    console.log("❌ Session expired received.");
+
+                    localStorage.removeItem("skygrid_session");
+
+                    setSession(null);
+
+                    break;
+
+                default:
+
+                    console.log("ℹ️ Unknown WS message:", data);
+
+                    break;
+
+            }
+
+        } catch (err) {
+
+            console.error("Failed to parse WebSocket message:", err);
+
+        }
+
+    };
+
+    socket.onclose = () => {
+        console.log("❌ WebSocket Closed");
+    };
+
+    socket.onerror = (err) => {
+        console.error("❌ WebSocket Error:", err);
+    };
+
+    return () => {
+        socket.close();
+    };
+
 }, []);
+  
 
   return (
     <PortalLayout>
