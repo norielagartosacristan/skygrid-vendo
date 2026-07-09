@@ -3,24 +3,19 @@ import Footer from "../../components/portal/Footer";
 import Clock from "../../components/portal/Clock";
 import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useCountdown } from "../../hooks/useCountdown";
 
 export default function Home() {
+
+
   // 1. Kuhanin ang initial state mula sa localStorage kung meron man
   const [session, setSession] = useState<any>(() => {
     const savedSession = localStorage.getItem("skygrid_session");
     return savedSession ? JSON.parse(savedSession) : null;
   });
-
+const isConnected = !!session;
   const remaining = useCountdown(session?.expiresAt);
-
-  // MODIFIED: Connected basta may session, AT kung may remaining time na, siguraduhing hindi ito "00:00:00"
-  const isConnected = !!session && (!remaining || remaining !== "00:00:00");
-
-  // Gagamit ng useRef para sa WebSocket at Reconnection Timeout para iwas unneeded component re-renders
-  const socketRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<any>(null);
 
   // 2. I-save sa localStorage tuwing magbabago ang session state
   useEffect(() => {
@@ -31,89 +26,65 @@ export default function Home() {
     }
   }, [session]);
 
-  // 3. Auto-clear session kapag umabot na sa zero ang countdown timer
-  useEffect(() => {
-    if (session && remaining === "00:00:00") {
-      console.log("⏱️ Countdown finished. Clearing local session...");
-      localStorage.removeItem("skygrid_session");
-      setSession(null);
-      
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-    }
-  }, [remaining, session]);
-
-  // 4. WebSocket Connection na may auto Reconnection Logic
- // 4. WebSocket Connection na may auto Reconnection Logic
 useEffect(() => {
-  function connectWebSocket() {
-    if (socketRef.current) {
-      socketRef.current.close();
-    }
-
-    console.log("🔄 Connecting to WebSocket...");
-    
-    // Gumamit ng secure ws (wss) kung naka-https ang iyong portal sa prod
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const socket = new WebSocket(`${protocol}//${window.location.host}/ws/network`);
-    socketRef.current = socket;
+    const socket = new WebSocket(
+        `ws://${window.location.host}/ws/network`
+    );
 
     socket.onopen = () => {
-      console.log("✅ WebSocket Connected");
+        console.log("✅ WebSocket Connected");
     };
 
     socket.onmessage = (event) => {
-      console.log("📩 WS Message:", event.data);
-      try {
-        const data = JSON.parse(event.data);
-        switch (data.type) {
-          case "session.expired":
-            console.log("❌ Session expired received from server.");
-            localStorage.removeItem("skygrid_session");
-            setSession(null);
-            break;
-          default:
-            console.log("ℹ️ Unknown WS message:", data);
-            break;
+
+        console.log("📩 WS Message:", event.data);
+
+        try {
+
+            const data = JSON.parse(event.data);
+
+            switch (data.type) {
+
+                case "session.expired":
+
+                    console.log("❌ Session expired received.");
+
+                    localStorage.removeItem("skygrid_session");
+
+                    setSession(null);
+
+                    break;
+
+                default:
+
+                    console.log("ℹ️ Unknown WS message:", data);
+
+                    break;
+
+            }
+
+        } catch (err) {
+
+            console.error("Failed to parse WebSocket message:", err);
+
         }
-      } catch (err) {
-        console.error("Failed to parse WebSocket message:", err);
-      }
+
     };
 
-    socket.onclose = (event) => {
-      console.log(`❌ WebSocket Closed. Code: ${event.code}. Reason: ${event.reason}`);
-      
-      // Mag-reconnect kung may active session pa sa localStorage
-      const currentSession = localStorage.getItem("skygrid_session");
-      if (currentSession) {
-        console.log("⏳ Attempting to reconnect in 3 seconds...");
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connectWebSocket();
-        }, 3000);
-      }
+    socket.onclose = () => {
+        console.log("❌ WebSocket Closed");
     };
 
     socket.onerror = (err) => {
-      console.error("❌ WebSocket Error:", err);
+        console.error("❌ WebSocket Error:", err);
     };
-  }
 
-  // Patakbuhin lang kung may session sa state
-  if (session) {
-    connectWebSocket();
-  }
+    return () => {
+        socket.close();
+    };
 
-  return () => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-    if (socketRef.current) {
-      socketRef.current.close();
-    }
-  };
-}, [session]); // IBINALIK SA [session] LANG. Alisin ang 'remaining' dito para hindi mag-loop kada segundo.
+}, []);
+  
 
   return (
     <PortalLayout>
@@ -162,12 +133,13 @@ useEffect(() => {
             </span>
 
             <Clock />
+           
           </div>
 
           {/* MAIN CONTROLS (COMPACT CARD & BUTTONS) */}
           <div className="bg-white rounded-2xl shadow-md p-4 border border-slate-100 flex flex-col gap-3">
-            {/* REMAINING TIME CARD */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 shadow-md text-white flex justify-between items-center">
+              {/* REMAINING TIME CARD */}
+             <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 shadow-md text-white flex justify-between items-center">
               <div>
                 <p className="uppercase tracking-wider text-sky-300 text-[10px] font-bold">
                   Remaining Time
@@ -180,7 +152,6 @@ useEffect(() => {
                 ⏳
               </div>
             </div>
-            
             <button className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-98 transition">
               🪙 Insert Coin
             </button>
@@ -193,8 +164,10 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* STATUS PANEL */}
+          {/* STATUS PANEL (GRID OVERVIEW - FIX NESTING & ALIGNMENT) */}
           <div className="grid grid-cols-2 gap-3">
+            
+           
             {/* STATUS CARD */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 flex items-center justify-between">
               <div>
@@ -215,8 +188,8 @@ useEffect(() => {
                 {isConnected ? "₱0.00 (Active)" : "₱0.00"}
               </h3>
             </div>
-          </div>
 
+          </div>
         </div>
       </section>
       <Footer />
