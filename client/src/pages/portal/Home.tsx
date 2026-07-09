@@ -26,65 +26,50 @@ const isConnected = !!session;
     }
   }, [session]);
 
-useEffect(() => {
-    const socket = new WebSocket(
-        `ws://${window.location.host}/ws/network`
-    );
 
-    socket.onopen = () => {
-        console.log("✅ WebSocket Connected");
-    };
+  useEffect(() => {
+  const socket = new WebSocket(
+    `ws://${window.location.host}/ws/network`
+  );
 
-    socket.onmessage = (event) => {
+  socket.onopen = () => {
+    console.log("✅ WS Connected");
+  };
 
-        console.log("📩 WS Message:", event.data);
+  socket.onmessage = (event) => {
+    console.log("📩", event.data);
 
-        try {
+    const data = JSON.parse(event.data);
 
-            const data = JSON.parse(event.data);
+    if (data.type === "session.expired") {
+      localStorage.removeItem("skygrid_session");
+      setSession(null);
+    }
+  };
 
-            switch (data.type) {
+  socket.onmessage = (event) => {
+  console.log("WS Message:", event.data);
 
-                case "session.expired":
+  const data = JSON.parse(event.data);
 
-                    console.log("❌ Session expired received.");
+  if (data.type === "session.expired") {
+    console.log("Session expired received!");
 
-                    localStorage.removeItem("skygrid_session");
+    localStorage.removeItem("skygrid_session");
+    setSession(null);
+  }
+};
 
-                    setSession(null);
+  socket.onclose = () => {
+    console.log("❌ WS Closed");
+  };
 
-                    break;
+  socket.onerror = (err) => {
+    console.log("WS Error", err);
+  };
 
-                default:
-
-                    console.log("ℹ️ Unknown WS message:", data);
-
-                    break;
-
-            }
-
-        } catch (err) {
-
-            console.error("Failed to parse WebSocket message:", err);
-
-        }
-
-    };
-
-    socket.onclose = () => {
-        console.log("❌ WebSocket Closed");
-    };
-
-    socket.onerror = (err) => {
-        console.error("❌ WebSocket Error:", err);
-    };
-
-    return () => {
-        socket.close();
-    };
-
+  return () => socket.close();
 }, []);
-  
 
   return (
     <PortalLayout>
