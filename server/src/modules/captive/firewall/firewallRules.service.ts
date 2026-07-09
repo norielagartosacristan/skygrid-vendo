@@ -111,15 +111,15 @@ class FirewallRulesService {
 
         // 5. I-redirect ang lahat ng HTTP (Port 80) traffic papunta sa portal screen mo (Port 3000)
         await this.run(
-            `${IPTABLES} -t nat -A PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:3000`
+            `${IPTABLES} -t nat -A PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:80`
         );
 
         // ==========================================
 
         // 6. Payagan ang authenticated clients sa FORWARD chain
-        //await this.run(
-          //  `${IPTABLES} -A FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
-        //);
+        await this.run(
+            `${IPTABLES} -A FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+        );
 
         // 7. I-DROP ang traffic ng lahat ng hindi pa authenticated para hindi sila makalusot sa ibang ports
         await this.run(
