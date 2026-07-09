@@ -15,8 +15,8 @@ export default function Home() {
 
   const remaining = useCountdown(session?.expiresAt);
 
-  // Bagong isConnected Logic: Connected LANG kung may session AT hindi pa ubos ang oras ("00:00:00" o 0)
-  const isConnected = !!session && remaining !== "00:00:00";
+  // MODIFIED: Connected basta may session, AT kung may remaining time na, siguraduhing hindi ito "00:00:00"
+  const isConnected = !!session && (!remaining || remaining !== "00:00:00");
 
   // Gagamit ng useRef para sa WebSocket at Reconnection Timeout para iwas unneeded component re-renders
   const socketRef = useRef<WebSocket | null>(null);
@@ -33,12 +33,11 @@ export default function Home() {
 
   // 3. Auto-clear session kapag umabot na sa zero ang countdown timer
   useEffect(() => {
-    if (session && (remaining === "00:00:00")) {
+    if (session && remaining === "00:00:00") {
       console.log("⏱️ Countdown finished. Clearing local session...");
       localStorage.removeItem("skygrid_session");
       setSession(null);
       
-      // Isara ang WebSocket dahil opisyal nang tapos ang session ng user
       if (socketRef.current) {
         socketRef.current.close();
       }
@@ -48,7 +47,6 @@ export default function Home() {
   // 4. WebSocket Connection na may auto Reconnection Logic
   useEffect(() => {
     function connectWebSocket() {
-      // Kung may kasalukuyang koneksyon, isara muna para walang double connection
       if (socketRef.current) {
         socketRef.current.close();
       }
@@ -83,27 +81,25 @@ export default function Home() {
       socket.onclose = (event) => {
         console.log(`❌ WebSocket Closed. Code: ${event.code}. Reason: ${event.reason}`);
         
-        // Mag-reconnect LANG kung may active session pa (hindi pa ubos ang oras)
+        // Mag-reconnect kung may active session pa at hindi pa lumalabas na ubos na ang oras
         if (session && remaining !== "00:00:00") {
           console.log("⏳ Attempting to reconnect in 3 seconds...");
           reconnectTimeoutRef.current = setTimeout(() => {
             connectWebSocket();
-          }, 3000); // Susubukan muling kumonekta pagkatapos ng 3 segundo
+          }, 3000);
         }
       };
 
       socket.onerror = (err) => {
         console.error("❌ WebSocket Error:", err);
-        // Hahayaan ang .onclose event ang mag-trigger ng reconnect para iwas sa loop
       };
     }
 
-    // Patakbuhin lamang ang websocket connection kung valid at active ang session
+    // Papayagan na nating kumonekta agad basta may session habang naglo-load pa ang remaining hook
     if (session && remaining !== "00:00:00") {
       connectWebSocket();
     }
 
-    // Cleanup kapag nag-unmount ang component o nagbago ang session state
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
@@ -112,7 +108,9 @@ export default function Home() {
         socketRef.current.close();
       }
     };
-  }, [session]); 
+  }, [session, remaining]); // Idinagdag ang 'remaining' sa dependency para sumunod kapag nag-load na ang oras
+
+  // ... (Ipagpatuloy ang iyong return statement pababa)
 
   return (
     <PortalLayout>
