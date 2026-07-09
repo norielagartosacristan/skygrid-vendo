@@ -5,16 +5,26 @@ class FingerprintService {
 
     generate() {
 
-        const cpus = os.cpus()[0].model;
+        const cpu = os.cpus()[0]?.model ?? "";
 
         const hostname = os.hostname();
 
-        const interfaces =
-            JSON.stringify(os.networkInterfaces());
+        const macs = Object.values(os.networkInterfaces())
+            .flat()
+            .filter(
+                (i) =>
+                    i &&
+                    !i.internal &&
+                    i.mac &&
+                    i.mac !== "00:00:00:00:00:00"
+            )
+            .map((i) => i!.mac)
+            .sort()
+            .join("|");
 
         return crypto
             .createHash("sha256")
-            .update(cpus + hostname + interfaces)
+            .update(cpu + hostname + macs)
             .digest("hex");
 
     }
