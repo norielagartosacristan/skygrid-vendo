@@ -12,9 +12,9 @@ export default function Clock() {
   }, []);
 
   return (
-    <div className="text-center py-5">
+    <div className="text-center py-2">
 
-      <h2 className="text-3xl font-bold">
+      <h2 className="text-sm font-bold">
         {now.toLocaleTimeString()}
       </h2>
 
