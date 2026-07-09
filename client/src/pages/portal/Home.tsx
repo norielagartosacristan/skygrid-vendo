@@ -1,10 +1,10 @@
 import PortalLayout from "../../layouts/PortalLayout";
 import Footer from "../../components/portal/Footer";
-import Clock from "../../components/portal/Clock";
 import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
 import { useState, useEffect } from "react";
 import { useCountdown } from "../../hooks/useCountdown";
+//import Clock from "../../components/portal/Clock";
 
 export default function Home() {
 
@@ -116,9 +116,34 @@ const isConnected = !!session;
             }`}>
               {isConnected ? "Internet Active" : "No Active Session"}
             </span>
-
-            <Clock />
            
+          </div>
+
+               {/* STATUS PANEL (GRID OVERVIEW - FIX NESTING & ALIGNMENT) */}
+          <div className="grid grid-cols-2 gap-3">
+            
+           
+            {/* STATUS CARD */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-400 font-medium">Status</p>
+                <h2 className="font-bold text-sm text-slate-800 mt-0.5">
+                  {isConnected ? "Connected" : "Disconnected"}
+                </h2>
+              </div>
+              <div className={`w-3 h-3 rounded-full ${
+                isConnected ? "bg-green-500 animate-pulse" : "bg-slate-300"
+              }`} />
+            </div>
+
+            {/* CREDIT CARD */}
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex flex-col justify-center">
+              <p className="text-xs text-slate-400 font-medium">Credit</p>
+              <h3 className="text-sm sm:text-base font-bold text-green-600 mt-0.5">
+                {isConnected ? "₱0.00 (Active)" : "₱0.00"}
+              </h3>
+            </div>
+
           </div>
 
           {/* MAIN CONTROLS (COMPACT CARD & BUTTONS) */}
@@ -149,32 +174,7 @@ const isConnected = !!session;
             </div>
           </div>
 
-          {/* STATUS PANEL (GRID OVERVIEW - FIX NESTING & ALIGNMENT) */}
-          <div className="grid grid-cols-2 gap-3">
-            
-           
-            {/* STATUS CARD */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-400 font-medium">Status</p>
-                <h2 className="font-bold text-sm text-slate-800 mt-0.5">
-                  {isConnected ? "Connected" : "Disconnected"}
-                </h2>
-              </div>
-              <div className={`w-3 h-3 rounded-full ${
-                isConnected ? "bg-green-500 animate-pulse" : "bg-slate-300"
-              }`} />
-            </div>
-
-            {/* CREDIT CARD */}
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex flex-col justify-center">
-              <p className="text-xs text-slate-400 font-medium">Credit</p>
-              <h3 className="text-sm sm:text-base font-bold text-green-600 mt-0.5">
-                {isConnected ? "₱0.00 (Active)" : "₱0.00"}
-              </h3>
-            </div>
-
-          </div>
+         
         </div>
       </section>
       <Footer />
