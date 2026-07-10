@@ -25,6 +25,9 @@ export default function Home() {
 /**
  * Kunin ang client IP at ang kasalukuyang session mula sa server
  */
+/**
+ * Kunin ang client IP at ang active session mula sa database
+ */
 useEffect(() => {
     fetch("/api/captive/client")
         .then(res => res.json())
@@ -32,7 +35,7 @@ useEffect(() => {
             console.log("Client IP:", data.ip);
             setClientIP(data.ip);
 
-            // PAGSURI: Mag-fetch din sa backend kung may active session talaga ang IP na ito
+            // 🌟 DAGDAG NA LOGIC: Kunin ang kasalukuyang session sa DB gamit ang IP
             return fetch(`/api/captive/session?ip=${data.ip}`);
         })
         .then(res => {
@@ -43,9 +46,8 @@ useEffect(() => {
             if (sessionData) {
                 console.log("Active Session Found on Refresh:", sessionData);
                 localStorage.setItem("skygrid_session", JSON.stringify(sessionData));
-                setSession(sessionData);
+                setSession(sessionData); // Dito mai-o-overide ang null at lalabas ang oras
             } else {
-                // Kung wala nang active session sa server, linisin ang local storage
                 localStorage.removeItem("skygrid_session");
                 setSession(null);
             }
