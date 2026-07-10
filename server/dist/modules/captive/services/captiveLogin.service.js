@@ -25,12 +25,13 @@ class CaptiveLoginService {
         await ipset_service_1.ipsetService.allow(clientIP);
         console.log("IPSET DONE");
         // 3
-        const machineId = machine_service_1.machineService.getMachineId();
-        console.log("Machine ID:", machineId);
-        const machine = await prisma_1.default.machine.findUnique({
-            where: { id: machineId }
-        });
+        const machine = await machine_service_1.machineService.getCurrentMachine();
+        if (!machine) {
+            throw new Error("Machine not registered.");
+        }
+        const machineId = machine.id;
         console.log("Machine:", machine);
+        console.log("Machine ID:", machineId);
         console.log("Creating session...");
         const session = await session_service_1.sessionService.createSession(machineId, voucherData.package.id, clientIP, clientIP, (0, time_1.convertToMinutes)(voucherData.package.duration, voucherData.package.durationUnit));
         console.log("Session Created");

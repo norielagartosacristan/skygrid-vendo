@@ -2,6 +2,7 @@ import { exec } from "child_process";
 import prisma from "../../../config/prisma";
 import { networkSocket } from "../../network/websocket/network.socket";
 import { ipsetService } from "../firewall/ipset.service";
+import { machineService } from "../../machine/services/machine.service";
 
 class SessionService {
 

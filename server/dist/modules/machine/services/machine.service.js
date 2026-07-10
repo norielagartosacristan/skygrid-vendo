@@ -8,7 +8,7 @@ const os_1 = __importDefault(require("os"));
 const prisma_1 = __importDefault(require("../../../config/prisma"));
 const vendor_service_1 = require("../../vendor/services/vendor.service");
 const fingerprint_service_1 = require("./fingerprint.service");
-const machineStorage_service_1 = require("./machineStorage.service");
+//import { machineStorageService } from "./machineStorage.service";
 class MachineService {
     async register() {
         const fingerprint = fingerprint_service_1.fingerprintService.generate();
@@ -48,20 +48,13 @@ class MachineService {
                 }
             });
         }
-        machineStorage_service_1.machineStorageService.save({
-            machineId: machine.id,
-            fingerprint
-        });
         return machine;
     }
-    getMachineId() {
-        const data = machineStorage_service_1.machineStorageService.load();
-        return data.machineId;
-    }
     async getCurrentMachine() {
-        return prisma_1.default.machine.findUnique({
+        const fingerprint = fingerprint_service_1.fingerprintService.generate();
+        return prisma_1.default.machine.findFirst({
             where: {
-                id: this.getMachineId()
+                fingerprint
             }
         });
     }

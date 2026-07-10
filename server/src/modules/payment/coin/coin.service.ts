@@ -1,23 +1,34 @@
 import prisma from "../../../config/prisma";
 import { sessionService } from "../../captive/session/session.service";
+import { convertToMinutes } from "../../../utils/time";
+import { machineService } from "../../machine/services/machine.service";
+import {
+    InsertCoinRequest,
+    InsertCoinResponse
+} from "./coin.types";
 
 class CoinService {
 
-    async insertCoin(
-        machineId: string,
-        clientMac: string,
-        clientIP: string,
-        amount: number
-    ) {
+   async insertCoin(
+    data: InsertCoinRequest
+): Promise<InsertCoinResponse> {
+
+    const {
+        clientMac,
+        clientIP,
+        amount
+    } = data;
 
         console.log("========== COIN INSERTED ==========");
+        //console.log("Machine:", machineId);
+        console.log("Client:", clientIP);
         console.log("Amount:", amount);
 
         const pkg = await prisma.package.findFirst({
 
             where: {
 
-                price: amount,
+                price: Number(amount),
                 isActive: true
 
             }
@@ -32,6 +43,14 @@ class CoinService {
 
         }
 
+        const machine = await machineService.getCurrentMachine();
+
+if (!machine) {
+    throw new Error("Machine not registered.");
+}
+
+const machineId = machine.id;
+
         const session =
             await sessionService.createSession(
 
@@ -39,7 +58,10 @@ class CoinService {
                 pkg.id,
                 clientMac,
                 clientIP,
-                pkg.duration
+                convertToMinutes(
+                    pkg.duration,
+                    pkg.durationUnit
+                )
 
             );
 

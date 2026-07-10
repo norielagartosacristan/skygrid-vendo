@@ -9,7 +9,6 @@ class CoinController {
 
             const {
 
-                machineId,
                 clientMac,
                 clientIP,
                 amount
@@ -17,14 +16,13 @@ class CoinController {
             } = req.body;
 
             const result =
-                await coinService.insertCoin(
+                await coinService.insertCoin({
 
-                    machineId,
                     clientMac,
                     clientIP,
-                    Number(amount)
+                    amount: Number(amount)
 
-                );
+                });
 
             return res.json(result);
 

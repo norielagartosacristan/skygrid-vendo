@@ -5,8 +5,12 @@ const coin_service_1 = require("./coin.service");
 class CoinController {
     async insert(req, res) {
         try {
-            const { machineId, clientMac, clientIP, amount } = req.body;
-            const result = await coin_service_1.coinService.insertCoin(machineId, clientMac, clientIP, Number(amount));
+            const { clientMac, clientIP, amount } = req.body;
+            const result = await coin_service_1.coinService.insertCoin({
+                clientMac,
+                clientIP,
+                amount: Number(amount)
+            });
             return res.json(result);
         }
         catch (err) {
