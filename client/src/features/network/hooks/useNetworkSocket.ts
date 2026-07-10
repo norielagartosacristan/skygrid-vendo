@@ -21,17 +21,28 @@ export default function useNetworkSocket() {
 
         };
 
-        socket.onmessage = (event) => {
+       socket.onmessage = (event) => {
+
     const data = JSON.parse(event.data);
 
     console.log("WS DATA:", data);
 
+    // Ignore session messages
+    if (data.type) {
+        return;
+    }
+
     setInterfaces(data);
+
 };
 
-        socket.onclose = () => {
+       socket.onclose = (event) => {
 
             console.log("Disconnected");
+
+            console.log("Close Code:", event.code);
+            console.log("Reason:", event.reason);
+            console.log("Clean:", event.wasClean);
 
         };
 
