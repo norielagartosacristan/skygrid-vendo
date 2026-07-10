@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.networkSocket = void 0;
 const ws_1 = require("ws");
+const networkMonitor_service_1 = require("../services/networkMonitor.service");
 class NetworkSocket {
     wss;
     init(server) {
@@ -11,10 +12,9 @@ class NetworkSocket {
         });
         this.wss.on("connection", (ws) => {
             console.log("📡 Network Dashboard Connected");
-            ws.on("close", (code, reason) => {
+            ws.send(JSON.stringify(networkMonitor_service_1.networkMonitor.getData()));
+            ws.on("close", () => {
                 console.log("📡 Network Dashboard Disconnected");
-                console.log("Code:", code);
-                console.log("Reason:", reason.toString());
             });
         });
     }
