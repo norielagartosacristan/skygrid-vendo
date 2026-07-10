@@ -33,6 +33,7 @@ class SessionService {
         }
 
     });
+    console.log("Existing session:", existing);
 
     if (existing) {
 
