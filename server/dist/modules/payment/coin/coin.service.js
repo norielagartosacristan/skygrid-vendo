@@ -8,6 +8,7 @@ const prisma_1 = __importDefault(require("../../../config/prisma"));
 const session_service_1 = require("../../captive/session/session.service");
 const time_1 = require("../../../utils/time");
 const machine_service_1 = require("../../machine/services/machine.service");
+const ipset_service_1 = require("../../captive/firewall/ipset.service");
 class CoinService {
     async insertCoin(data) {
         try {
@@ -35,6 +36,7 @@ class CoinService {
             console.log("Creating session...");
             const session = await session_service_1.sessionService.createSession(machine.id, pkg.id, clientMac, clientIP, (0, time_1.convertToMinutes)(pkg.duration, pkg.durationUnit));
             console.log("Session:", session);
+            await ipset_service_1.ipsetService.allow(clientIP);
             await prisma_1.default.coinTransaction.create({
                 data: {
                     machineId: machine.id,
