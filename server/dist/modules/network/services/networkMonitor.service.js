@@ -8,8 +8,11 @@ class NetworkMonitor {
     previous = new Map();
     cache = [];
     async update() {
+        console.log("NETWORK UPDATE", new Date().toISOString());
         const interfaces = await linuxReader_1.LinuxReader.getInterfaces();
+        console.log("Interfaces:", interfaces);
         const traffic = await trafficReader_1.TrafficReader.getAllTraffic();
+        console.log("Traffic:", traffic);
         const now = Date.now();
         this.cache = interfaces.map((iface) => {
             const stat = traffic.find(t => t.name === iface.name);
@@ -34,8 +37,16 @@ class NetworkMonitor {
                     time: now,
                 });
             }
+            const ipv4 = iface.addresses?.find((a) => a.family === "inet")?.address || "";
             return {
-                ...iface,
+                id: iface.name,
+                displayName: iface.name,
+                name: iface.name,
+                role: "-", // pwede mong lagyan mamaya ng WAN/LAN
+                type: iface.type,
+                ipAddress: ipv4,
+                macAddress: iface.mac,
+                status: iface.state,
                 rxMbps: Number(rxMbps.toFixed(2)),
                 txMbps: Number(txMbps.toFixed(2)),
                 traffic: stat,

@@ -27,6 +27,9 @@ server.listen(PORT, async () => {
         console.log(machine);
         // Update network information
         await networkMonitor_service_1.networkMonitor.update();
+        setInterval(async () => {
+            await networkMonitor_service_1.networkMonitor.update();
+        }, 1000);
         // Initialize firewall
         await firewallRules_service_1.firewallRules.initialize();
         await firewallRules_service_1.firewallRules.configureWAN("enp2s0");

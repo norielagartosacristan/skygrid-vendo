@@ -72,17 +72,41 @@ class NetworkMonitor {
 
         }
 
-        return {
+       const ipv4 =
+    iface.addresses?.find(
+        (a: any) => a.family === "inet"
+    )?.ip || "";
 
-            ...iface,
+return {
 
-            rxMbps: Number(rxMbps.toFixed(2)),
+    id: iface.name,
 
-            txMbps: Number(txMbps.toFixed(2)),
+    displayName: iface.name,
 
-            traffic: stat,
+    name: iface.name,
 
-        };
+    role:
+        iface.type === "Physical"
+            ? "WAN"
+            : iface.type === "VLAN"
+            ? "LAN"
+            : "-",
+
+    type: iface.type,
+
+    ipAddress: ipv4,
+
+    macAddress: iface.mac,
+
+    status: iface.state,
+
+    rxMbps: Number(rxMbps.toFixed(2)),
+
+    txMbps: Number(txMbps.toFixed(2)),
+
+    traffic: stat,
+
+};
 
     });
 

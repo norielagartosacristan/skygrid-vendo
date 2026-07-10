@@ -12,6 +12,7 @@ const fingerprint_service_1 = require("./fingerprint.service");
 class MachineService {
     async register() {
         const fingerprint = fingerprint_service_1.fingerprintService.generate();
+        console.log("Generated fingerprint:", fingerprint);
         const mac = Object.values(os_1.default.networkInterfaces())
             .flat()
             .find(i => i?.mac && i.mac !== "00:00:00:00:00:00")
