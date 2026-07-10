@@ -21,9 +21,11 @@ class NetworkMonitor {
 
     const interfaces =
         await LinuxReader.getInterfaces();
+        console.log("Interfaces:", interfaces);
 
     const traffic =
         await TrafficReader.getAllTraffic();
+        console.log("Traffic:", traffic);
 
     const now = Date.now();
 
