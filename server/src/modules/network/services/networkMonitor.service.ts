@@ -17,6 +17,7 @@ class NetworkMonitor {
     private cache: any[] = [];
 
     async update() {
+    console.log("NETWORK UPDATE", new Date().toISOString());
 
     const interfaces =
         await LinuxReader.getInterfaces();
