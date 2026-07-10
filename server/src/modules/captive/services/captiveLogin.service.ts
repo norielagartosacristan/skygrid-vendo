@@ -27,16 +27,16 @@ class CaptiveLoginService {
     console.log("IPSET DONE");
 
     // 3
-    const machineId = machineService.getMachineId();
+    const machine = await machineService.getCurrentMachine();
 
-    console.log("Machine ID:", machineId);
+if (!machine) {
+    throw new Error("Machine not registered.");
+}
 
-    const machine = await prisma.machine.findUnique({
-        where: { id: machineId }
-    });
-
+    const machineId = machine.id;
     console.log("Machine:", machine);
-
+    console.log("Machine ID:", machineId);
+    
     console.log("Creating session...");
 
     const session = await sessionService.createSession(
