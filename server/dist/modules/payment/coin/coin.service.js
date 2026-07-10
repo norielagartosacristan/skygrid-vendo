@@ -10,7 +10,6 @@ class CoinService {
     async insertCoin(machineId, clientMac, clientIP, amount) {
         console.log("========== COIN INSERTED ==========");
         console.log("Amount:", amount);
-        // Hanapin ang package na katumbas ng coin
         const pkg = await prisma_1.default.package.findFirst({
             where: {
                 price: amount,
@@ -21,6 +20,14 @@ class CoinService {
             throw new Error(`No package configured for ₱${amount}`);
         }
         const session = await session_service_1.sessionService.createSession(machineId, pkg.id, clientMac, clientIP, pkg.duration);
+        await prisma_1.default.coinTransaction.create({
+            data: {
+                machineId,
+                sessionId: session.id,
+                amount: pkg.price
+            }
+        });
+        console.log(`💰 Coin transaction saved: ₱${pkg.price}`);
         return {
             success: true,
             session
