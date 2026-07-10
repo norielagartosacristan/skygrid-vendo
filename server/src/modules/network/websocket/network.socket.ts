@@ -1,5 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { Server } from "http";
+import { networkMonitor } from "../services/networkMonitor.service";
+
 
 class NetworkSocket {
 
@@ -15,20 +17,19 @@ class NetworkSocket {
 
         });
 
-        this.wss.on("connection", (ws: WebSocket) => {
+        this.wss.on("connection", (ws) => {
 
-            console.log("📡 Network Dashboard Connected");
+                console.log("📡 Network Dashboard Connected");
 
-            ws.on("close", (code, reason) => {
+                ws.send(
+                    JSON.stringify(networkMonitor.getData())
+                );
 
-                console.log("📡 Network Dashboard Disconnected");
-                console.log("Code:", code);
-                console.log("Reason:", reason.toString());
+                ws.on("close", () => {
+                    console.log("📡 Network Dashboard Disconnected");
+                });
 
             });
-
-        });
-
     }
 
     broadcast(data: any) {

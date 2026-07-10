@@ -34,6 +34,9 @@ server.listen(PORT, async () => {
         // Update network information
         await networkMonitor.update();
 
+        setInterval(async () => {
+            await networkMonitor.update();
+        }, 1000);
         // Initialize firewall
         await firewallRules.initialize();
 
