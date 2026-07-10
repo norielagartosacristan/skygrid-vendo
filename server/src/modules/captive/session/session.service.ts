@@ -1,8 +1,9 @@
 import { exec } from "child_process";
 import prisma from "../../../config/prisma";
-import { networkSocket } from "../../network/websocket/network.socket";
+//import { networkSocket } from "../../network/websocket/network.socket";
 import { ipsetService } from "../firewall/ipset.service";
-import { machineService } from "../../machine/services/machine.service";
+//import { machineService } from "../../machine/services/machine.service";
+import { captiveSocket } from "../websocket/captive.socket";
 
 class SessionService {
 
@@ -67,13 +68,13 @@ class SessionService {
             `➕ Session extended until ${newExpiresAt}`
         );
 
-        networkSocket.broadcast({
-
-            type: "session.updated",
-
-            payload: session
-
-        });
+        captiveSocket.send(
+    session.ipAddress,
+    {
+        type: "session.updated",
+        payload: session
+    }
+);
 
         return session;
 
@@ -104,14 +105,13 @@ class SessionService {
 
     });
 
-    networkSocket.broadcast({
-
+   captiveSocket.send(
+    session.ipAddress,
+    {
         type: "session.created",
-
         payload: session
-
-    });
-
+    }
+);
     return session;
 
 }
@@ -138,6 +138,13 @@ class SessionService {
     await ipsetService.block(
         session.ipAddress
     );
+
+    captiveSocket.send(
+    session.ipAddress,
+    {
+        type: "session.expired"
+    }
+);
 
     exec(
         `sudo conntrack -D -s ${session.ipAddress} || true`,

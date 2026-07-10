@@ -197,12 +197,12 @@ console.log(Array.isArray(interfaces));
       {item.name}
     </td>
 
-    <td className="p-4">
-      {item.role || "-"}
+  <td className="p-4">
+      {item.type}
     </td>
 
     <td className="p-4">
-      {item.type}
+      {item.role || "-"}
     </td>
 
     <td className="p-4">

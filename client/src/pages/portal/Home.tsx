@@ -2,83 +2,106 @@ import PortalLayout from "../../layouts/PortalLayout";
 import Footer from "../../components/portal/Footer";
 import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCountdown } from "../../hooks/useCountdown";
-//import Clock from "../../components/portal/Clock";
+// import Clock from "../../components/portal/Clock";
 
 export default function Home() {
 
+    const [clientIP, setClientIP] = useState("");
 
-  // 1. Kuhanin ang initial state mula sa localStorage kung meron man
-  const [session, setSession] = useState<any>(() => {
-    const savedSession = localStorage.getItem("skygrid_session");
-    return savedSession ? JSON.parse(savedSession) : null;
-  });
-const isConnected = !!session;
-  const remaining = useCountdown(session?.expiresAt);
+    const [session, setSession] = useState<any>(() => {
+        const saved = localStorage.getItem("skygrid_session");
+        return saved ? JSON.parse(saved) : null;
+    });
 
-  // 2. I-save sa localStorage tuwing magbabago ang session state
-  useEffect(() => {
-    if (session) {
-      localStorage.setItem("skygrid_session", JSON.stringify(session));
-    } else {
-      localStorage.removeItem("skygrid_session");
-    }
-  }, [session]);
+    const isConnected = !!session;
 
+    const remaining = useCountdown(session?.expiresAt);
 
-  useEffect(() => {
+    /**
+     * Kunin ang client IP
+     */
+    useEffect(() => {
 
-    const socket = new WebSocket(
-        `ws://${window.location.host}/ws/network`
-    );
+        fetch("/api/captive/client")
+            .then(res => res.json())
+            .then(data => {
 
-    socket.onopen = () => {
-        console.log("✅ WS Connected");
-    };
+                console.log("Client IP:", data.ip);
 
-    socket.onmessage = (event) => {
+                setClientIP(data.ip);
 
-        console.log("WS:", event.data);
+            })
+            .catch(console.error);
 
-        const data = JSON.parse(event.data);
+    }, []);
 
-        switch (data.type) {
+    /**
+     * Listen only to THIS client's session
+     */
+    useEffect(() => {
 
-            case "session.created":
-            case "session.updated":
+        if (!clientIP) return;
 
-                localStorage.setItem(
-                    "skygrid_session",
-                    JSON.stringify(data.payload)
-                );
+        const protocol =
+            window.location.protocol === "https:"
+                ? "wss"
+                : "ws";
 
-                setSession(data.payload);
+        const socket = new WebSocket(
+            `${protocol}://${window.location.hostname}:5000/ws/session?ip=${clientIP}`
+        );
 
-                break;
+        socket.onopen = () => {
 
-            case "session.expired":
+            console.log("✅ Session WebSocket Connected");
 
-                localStorage.removeItem("skygrid_session");
+        };
 
-                setSession(null);
+        socket.onmessage = (event) => {
 
-                break;
+            const data = JSON.parse(event.data);
 
-        }
+            console.log("WS:", data);
 
-    };
+            switch (data.type) {
 
-    socket.onclose = () => {
+                case "session.created":
+                case "session.updated":
 
-        console.log("WS Closed");
+                    localStorage.setItem(
+                        "skygrid_session",
+                        JSON.stringify(data.payload)
+                    );
 
-    };
+                    setSession(data.payload);
 
-    return () => socket.close();
+                    break;
 
-}, []);
+                case "session.expired":
 
+                    localStorage.removeItem(
+                        "skygrid_session"
+                    );
+
+                    setSession(null);
+
+                    break;
+
+            }
+
+        };
+
+        socket.onclose = () => {
+
+            console.log("❌ Session WebSocket Closed");
+
+        };
+
+        return () => socket.close();
+
+    }, [clientIP]);
   return (
     <PortalLayout>
       {/* HERO SECTION - REDUCED HEIGHT FOR MOBILE */}

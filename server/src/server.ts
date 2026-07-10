@@ -9,12 +9,14 @@ import { networkSocket } from "./modules/network/websocket/network.socket";
 import { firewallRules } from "./modules/captive/firewall/firewallRules.service";
 import { machineService } from "./modules/machine/services/machine.service";
 import { sessionScheduler } from "./modules/captive/session/session.scheduler";
+import { captiveSocket } from "./modules/captive/websocket/captive.socket";
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
 // Initialize WebSocket
 networkSocket.init(server);
+captiveSocket.init(server);
 
 server.listen(PORT, async () => {
 
