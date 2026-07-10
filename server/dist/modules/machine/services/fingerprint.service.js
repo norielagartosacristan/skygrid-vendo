@@ -8,12 +8,20 @@ const crypto_1 = __importDefault(require("crypto"));
 const os_1 = __importDefault(require("os"));
 class FingerprintService {
     generate() {
-        const cpus = os_1.default.cpus()[0].model;
+        const cpu = os_1.default.cpus()[0]?.model ?? "";
         const hostname = os_1.default.hostname();
-        const interfaces = JSON.stringify(os_1.default.networkInterfaces());
+        const macs = Object.values(os_1.default.networkInterfaces())
+            .flat()
+            .filter((i) => i &&
+            !i.internal &&
+            i.mac &&
+            i.mac !== "00:00:00:00:00:00")
+            .map((i) => i.mac)
+            .sort()
+            .join("|");
         return crypto_1.default
             .createHash("sha256")
-            .update(cpus + hostname + interfaces)
+            .update(cpu + hostname + macs)
             .digest("hex");
     }
 }

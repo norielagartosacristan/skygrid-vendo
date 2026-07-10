@@ -10,12 +10,47 @@ const network_socket_1 = require("../../network/websocket/network.socket");
 const ipset_service_1 = require("../firewall/ipset.service");
 class SessionService {
     async createSession(machineId, packageId, clientMac, clientIP, durationMinutes) {
-        const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
         console.log("========== CREATE SESSION ==========");
         console.log("machineId:", machineId);
         console.log("packageId:", packageId);
         console.log("clientIP:", clientIP);
         console.log("clientMac:", clientMac);
+        const existing = await prisma_1.default.session.findFirst({
+            where: {
+                clientMac,
+                isActive: true
+            },
+            include: {
+                package: true
+            }
+        });
+        if (existing) {
+            const baseTime = existing.expiresAt > new Date()
+                ? existing.expiresAt
+                : new Date();
+            const newExpiresAt = new Date(baseTime.getTime() +
+                durationMinutes * 60 * 1000);
+            const session = await prisma_1.default.session.update({
+                where: {
+                    id: existing.id
+                },
+                data: {
+                    ipAddress: clientIP,
+                    packageId,
+                    expiresAt: newExpiresAt
+                },
+                include: {
+                    package: true
+                }
+            });
+            console.log(`➕ Session extended until ${newExpiresAt}`);
+            network_socket_1.networkSocket.broadcast({
+                type: "session.updated",
+                payload: session
+            });
+            return session;
+        }
+        const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
         const session = await prisma_1.default.session.create({
             data: {
                 machineId,

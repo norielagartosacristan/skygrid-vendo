@@ -24,6 +24,7 @@ const voucher_routes_1 = __importDefault(require("./modules/voucher/routes/vouch
 const package_routes_1 = __importDefault(require("./modules/package/routes/package.routes"));
 const machine_routes_1 = __importDefault(require("./modules/machine/routes/machine.routes"));
 const error_middleware_1 = require("./middleware/error.middleware");
+const coin_routes_1 = __importDefault(require("./modules/payment/coin/coin.routes"));
 const app = (0, express_1.default)();
 const CLIENT_BUILD_PATH = path_1.default.resolve(process.cwd(), "client/dist");
 app.set("trust proxy", true);
@@ -48,6 +49,7 @@ app.use("/api/captive", captive_routes_1.default);
 app.use("/api/vouchers", voucher_routes_1.default);
 app.use("/api/packages", package_routes_1.default);
 app.use("/api/machine", machine_routes_1.default);
+app.use("/api/coin", coin_routes_1.default);
 /* =========================
    STATIC FRONTEND
 ========================= */

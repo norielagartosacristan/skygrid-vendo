@@ -13,8 +13,6 @@ class CoinService {
         console.log("========== COIN INSERTED ==========");
         console.log("Amount:", amount);
 
-        // Hanapin ang package na katumbas ng coin
-
         const pkg = await prisma.package.findFirst({
 
             where: {
@@ -45,9 +43,28 @@ class CoinService {
 
             );
 
+        await prisma.coinTransaction.create({
+
+            data: {
+
+                machineId,
+
+                sessionId: session.id,
+
+                amount: pkg.price
+
+            }
+
+        });
+
+        console.log(
+            `💰 Coin transaction saved: ₱${pkg.price}`
+        );
+
         return {
 
             success: true,
+
             session
 
         };

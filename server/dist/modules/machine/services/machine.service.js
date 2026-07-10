@@ -12,32 +12,41 @@ const machineStorage_service_1 = require("./machineStorage.service");
 class MachineService {
     async register() {
         const fingerprint = fingerprint_service_1.fingerprintService.generate();
+        const mac = Object.values(os_1.default.networkInterfaces())
+            .flat()
+            .find(i => i?.mac && i.mac !== "00:00:00:00:00:00")
+            ?.mac ?? "";
+        const ip = Object.values(os_1.default.networkInterfaces())
+            .flat()
+            .find(i => i?.family === "IPv4" && !i.internal)
+            ?.address ?? "";
+        // Hanapin muna gamit ang fingerprint
         let machine = await prisma_1.default.machine.findFirst({
             where: {
                 fingerprint
             }
         });
+        // Kung wala, hanapin gamit ang MAC address
         if (!machine) {
-            const mac = Object.values(os_1.default.networkInterfaces())
-                .flat()
-                .find(i => i?.mac && i.mac !== "00:00:00:00:00:00")
-                ?.mac ?? "";
-            const ip = Object.values(os_1.default.networkInterfaces())
-                .flat()
-                .find(i => i?.family === "IPv4" && !i.internal)
-                ?.address ?? "";
+            machine = await prisma_1.default.machine.findFirst({
+                where: {
+                    macAddress: mac
+                }
+            });
+        }
+        // Kung wala pa rin, saka lang gumawa ng bagong machine
+        if (!machine) {
             const vendor = await vendor_service_1.vendorService.getOrCreateDefaultVendor();
-            machine =
-                await prisma_1.default.machine.create({
-                    data: {
-                        vendorId: vendor.id,
-                        name: os_1.default.hostname(),
-                        ipAddress: ip,
-                        macAddress: mac,
-                        fingerprint,
-                        status: "ONLINE"
-                    }
-                });
+            machine = await prisma_1.default.machine.create({
+                data: {
+                    vendorId: vendor.id,
+                    name: os_1.default.hostname(),
+                    ipAddress: ip,
+                    macAddress: mac,
+                    fingerprint,
+                    status: "ONLINE"
+                }
+            });
         }
         machineStorage_service_1.machineStorageService.save({
             machineId: machine.id,

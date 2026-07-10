@@ -2,7 +2,7 @@ import os from "os";
 import prisma from "../../../config/prisma";
 import { vendorService } from "../../vendor/services/vendor.service";
 import { fingerprintService } from "./fingerprint.service";
-import { machineStorageService } from "./machineStorage.service";
+//import { machineStorageService } from "./machineStorage.service";
 
 class MachineService {
 
@@ -68,39 +68,27 @@ class MachineService {
 
         }
 
-        machineStorageService.save({
-
-            machineId: machine.id,
-
-            fingerprint
-
-        });
-
         return machine;
 
     }
 
-    getMachineId() {
 
-        const data = machineStorageService.load();
+   async getCurrentMachine() {
 
-        return data.machineId;
+    const fingerprint =
+        fingerprintService.generate();
 
-    }
+    return prisma.machine.findFirst({
 
-    async getCurrentMachine() {
+        where: {
 
-        return prisma.machine.findUnique({
+            fingerprint
 
-            where: {
+        }
 
-                id: this.getMachineId()
+    });
 
-            }
-
-        });
-
-    }
+}
 
 }
 
