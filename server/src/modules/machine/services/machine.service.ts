@@ -9,6 +9,7 @@ class MachineService {
     async register() {
 
         const fingerprint = fingerprintService.generate();
+        console.log("Generated fingerprint:", fingerprint);
 
         const mac =
             Object.values(os.networkInterfaces())
