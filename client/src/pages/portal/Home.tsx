@@ -28,47 +28,55 @@ const isConnected = !!session;
 
 
   useEffect(() => {
-  const socket = new WebSocket(
-    `ws://${window.location.host}/ws/network`
-  );
 
-  socket.onopen = () => {
-    console.log("✅ WS Connected");
-  };
+    const socket = new WebSocket(
+        `ws://${window.location.host}/ws/network`
+    );
 
-  socket.onmessage = (event) => {
-    console.log("📩", event.data);
+    socket.onopen = () => {
+        console.log("✅ WS Connected");
+    };
 
-    const data = JSON.parse(event.data);
+    socket.onmessage = (event) => {
 
-    if (data.type === "session.expired") {
-      localStorage.removeItem("skygrid_session");
-      setSession(null);
-    }
-  };
+        console.log("WS:", event.data);
 
-  socket.onmessage = (event) => {
-  console.log("WS Message:", event.data);
+        const data = JSON.parse(event.data);
 
-  const data = JSON.parse(event.data);
+        switch (data.type) {
 
-  if (data.type === "session.expired") {
-    console.log("Session expired received!");
+            case "session.created":
+            case "session.updated":
 
-    localStorage.removeItem("skygrid_session");
-    setSession(null);
-  }
-};
+                localStorage.setItem(
+                    "skygrid_session",
+                    JSON.stringify(data.payload)
+                );
 
-  socket.onclose = () => {
-    console.log("❌ WS Closed");
-  };
+                setSession(data.payload);
 
-  socket.onerror = (err) => {
-    console.log("WS Error", err);
-  };
+                break;
 
-  return () => socket.close();
+            case "session.expired":
+
+                localStorage.removeItem("skygrid_session");
+
+                setSession(null);
+
+                break;
+
+        }
+
+    };
+
+    socket.onclose = () => {
+
+        console.log("WS Closed");
+
+    };
+
+    return () => socket.close();
+
 }, []);
 
   return (
