@@ -43,23 +43,30 @@ useEffect(() => {
     console.log("Fetching session for:", clientIP);
 
     fetch(`/api/captive/session?ip=${clientIP}`)
-        .then(res => res.json())
-        .then(session => {
+    .then(res => res.json())
+    .then(session => {
 
-    console.log("SESSION FROM API:", session);
+        console.log("SESSION FROM API:", session);
 
-    if (!session) return;
+        if (!session) {
 
-    console.log("SETTING SESSION...");
+            console.log("NO ACTIVE SESSION");
 
-    setSession(session);
+            localStorage.removeItem("skygrid_session");
 
-    localStorage.setItem(
-        "skygrid_session",
-        JSON.stringify(session)
-    );
+            setSession(null);
 
-});
+            return;
+        }
+
+        localStorage.setItem(
+            "skygrid_session",
+            JSON.stringify(session)
+        );
+
+        setSession(session);
+
+    });
 
 }, [clientIP]);
 
