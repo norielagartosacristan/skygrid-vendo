@@ -20,16 +20,6 @@ export default function Home() {
     const remaining = useCountdown(session?.expiresAt);
 
 
-    useEffect(() => {
-
-    fetch("/api/captive/client")
-        .then(res => res.json())
-        .then(data => {
-            setClientIP(data.ip);
-        });
-
-}, []);
-
     /**
      * Kunin ang client IP
      */
@@ -120,6 +110,7 @@ useEffect(() => {
         return () => socket.close();
 
     }, [clientIP]);
+
   return (
     <PortalLayout>
       {/* HERO SECTION - REDUCED HEIGHT FOR MOBILE */}
@@ -198,7 +189,7 @@ useEffect(() => {
           {/* MAIN CONTROLS (COMPACT CARD & BUTTONS) */}
           <div className="bg-white rounded-2xl shadow-md p-4 border border-slate-100 flex flex-col gap-3">
               {/* REMAINING TIME CARD */}
-             <div className="col-span-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 shadow-md text-white flex justify-between items-center">
+             <div className="col-span-2 p-4 text-blue flex justify-between items-center">
               <div>
                 <p className="uppercase tracking-wider text-sky-300 text-[10px] font-bold">
                   Remaining Time
