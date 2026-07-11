@@ -19,6 +19,16 @@ export default function Home() {
 
     const remaining = useCountdown(session?.expiresAt);
 
+    useEffect(() => {
+    fetch("/api/captive/client")
+        .then(res => res.json())
+        .then(data => {
+            console.log("CLIENT IP:", data.ip);
+            setClientIP(data.ip);
+        })
+        .catch(console.error);
+}, []);
+
 
     /**
      * Kunin ang client IP
