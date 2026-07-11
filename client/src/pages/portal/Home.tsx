@@ -25,6 +25,13 @@ export default function Home() {
     console.log("REMAINING:", remaining);
 }, [session, remaining]);
 
+useEffect(() => {
+    fetch("/api/captive/client")
+        .then(res => res.json())
+        .then(data => {
+            setClientIP(data.ip);
+        });
+}, []);
 
     /**
      * Kunin ang client IP
