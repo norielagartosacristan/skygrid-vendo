@@ -9,7 +9,10 @@ import { useCountdown } from "../../hooks/useCountdown";
 
 export default function Home() {
 
-    const [clientIP, setClientIP] = useState("");
+    const [client, setClient] = useState({
+    ip: "",
+    mac: ""
+});
 
     const [session, setSession] = useState<any>(() => {
 
@@ -35,31 +38,27 @@ export default function Home() {
     /**
      * Get client IP
      */
-    useEffect(() => {
-
-        fetch("/api/captive/client")
-            .then(res => res.json())
-            .then(data => {
-
-                console.log("CLIENT:", data);
-
-                setClientIP(data.ip);
-
-            })
-            .catch(console.error);
-
-    }, []);
+useEffect(() => {
+    fetch("/api/captive/client")
+        .then(res => res.json())
+        .then(data => {
+            setClient({
+                ip: data.ip,
+                mac: data.mac
+            });
+        });
+}, []);
 
     /**
      * Load active session
      */
     useEffect(() => {
 
-        if (!clientIP) return;
+        if (!client.ip) return;
 
-        console.log("Fetching session:", clientIP);
+        console.log("Fetching session:", client.ip);
 
-        fetch(`/api/captive/session?ip=${clientIP}`)
+        fetch(`/api/captive/session?ip=${client.ip}`)
             .then(res => res.json())
             .then(data => {
 
@@ -89,23 +88,23 @@ export default function Home() {
             })
             .catch(console.error);
 
-    }, [clientIP]);
+    }, [client.ip]);
 
     /**
      * Listen for realtime session updates
      */
     useEffect(() => {
 
-        if (!clientIP) return;
+        if (!client.ip) return;
 
         const protocol =
             window.location.protocol === "https:"
                 ? "wss"
                 : "ws";
 
-        const socket = new WebSocket(
-            `${protocol}://${window.location.hostname}:5000/ws/session?ip=${clientIP}`
-        );
+       const socket = new WebSocket(
+          `${protocol}://${window.location.hostname}/ws/session?ip=${client.ip}`
+      );
 
         socket.onopen = () => {
 
@@ -167,7 +166,7 @@ export default function Home() {
 
         };
 
-    }, [clientIP]);
+    }, [client.ip]);
 
   return (
     <PortalLayout>
