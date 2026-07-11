@@ -19,89 +19,110 @@ export default function Home() {
 
     const remaining = useCountdown(session?.expiresAt);
 
- /**
-     * EFFECT 1: Pagka-refresh/load ng page, kukunin ang Client IP.
-     * Kapag nakuha na ang IP, diretso agad fetch sa Database para sa Session.
-     */
-    useEffect(() => {
-        fetch("/api/captive/client")
-            .then(res => {
-                if (!res.ok) throw new Error("Failed to fetch client IP");
-                return res.json();
-            })
-            .then(data => {
-                console.log("Client IP fetched:", data.ip);
-                setClientIP(data.ip); // I-save sa state para magamit ng Effect 2 (WebSocket)
-
-                // 🌟 DIRETSO FETCH SA DATABASE: Tingnan kung may oras pa ang IP na ito
-                console.log("Fetching database session for:", data.ip);
-                return fetch(`/api/captive/session?ip=${data.ip}`);
-            })
-            .then(res => {
-                if (res && res.ok) return res.json();
-                return null;
-            })
-            .then(sessionData => {
-                console.log("SESSION FROM DATABASE:", sessionData);
-
-                if (sessionData && sessionData.expiresAt) {
-                    // Kung may active session pa sa DB, i-sync sa screen at local storage
-                    setSession(sessionData);
-                    localStorage.setItem("skygrid_session", JSON.stringify(sessionData));
-                } else {
-                    // Kung wala nang oras o expired na sa DB, linisin ang portal
-                    localStorage.removeItem("skygrid_session");
-                    setSession(null);
-                }
-            })
-            .catch(err => {
-                console.error("Error initializing session:", err);
-            });
-    }, []); // 👈 Isang beses lang ito tatakbo tuwing magre-refresh ang page
+   useEffect(() => {
+    console.log("SESSION STATE:", session);
+    console.log("EXPIRES:", session?.expiresAt);
+    console.log("REMAINING:", remaining);
+}, [session, remaining]);
 
 
     /**
-     * EFFECT 2: Makikinig sa WebSocket para sa mga LIVE EVENTS.
-     * Tatakbo LANG ito kapag may laman na ang `clientIP` galing sa Effect 1.
+     * Kunin ang client IP
+     */
+useEffect(() => {
+
+    if (!clientIP) return;
+
+    console.log("Fetching session for:", clientIP);
+
+    fetch(`/api/captive/session?ip=${clientIP}`)
+        .then(res => res.json())
+        .then(session => {
+
+    console.log("SESSION FROM API:", session);
+
+    if (!session) return;
+
+    console.log("SETTING SESSION...");
+
+    setSession(session);
+
+    localStorage.setItem(
+        "skygrid_session",
+        JSON.stringify(session)
+    );
+
+});
+
+}, [clientIP]);
+
+    /**
+     * Listen only to THIS client's session
      */
     useEffect(() => {
-        if (!clientIP) return; // Mag-antay muna hanggang makuha ang IP mula sa Effect 1
 
-        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-        const socket = new WebSocket(
-            `${protocol}://${window.location.hostname}:5000/ws/session?ip=${clientIP}`
-        );
+        
+    if (!clientIP) return;
+
+    const protocol =
+        window.location.protocol === "https:"
+            ? "wss"
+            : "ws";
+
+    const socket = new WebSocket(
+        `${protocol}://${window.location.hostname}:5000/ws/session?ip=${clientIP}`
+    );
 
         socket.onopen = () => {
+
             console.log("✅ Session WebSocket Connected");
+
         };
 
         socket.onmessage = (event) => {
+
             const data = JSON.parse(event.data);
-            console.log("WS LIVE EVENT:", data);
+
+            console.log("WS:", data);
 
             switch (data.type) {
+
                 case "session.created":
                 case "session.updated":
-                    localStorage.setItem("skygrid_session", JSON.stringify(data.payload));
+
+                    localStorage.setItem(
+                        "skygrid_session",
+                        JSON.stringify(data.payload)
+                    );
+
                     setSession(data.payload);
+
                     break;
 
                 case "session.expired":
-                    localStorage.removeItem("skygrid_session");
+
+                    localStorage.removeItem(
+                        "skygrid_session"
+                    );
+
                     setSession(null);
+
                     break;
+
             }
+
         };
 
         socket.onclose = () => {
+
             console.log("❌ Session WebSocket Closed");
+
         };
 
         return () => socket.close();
-    }, [clientIP]); // 👈 Babantayan nito kung nagbago o nagkalaman ang clientIP
 
-    
+    }, [clientIP]);
+
   return (
     <PortalLayout>
       {/* HERO SECTION - REDUCED HEIGHT FOR MOBILE */}
