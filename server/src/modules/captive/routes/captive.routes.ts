@@ -22,9 +22,7 @@ router.post("/allow", CaptiveController.allow);
 
 router.post("/block", CaptiveController.block);
 
-router.get("/clients", CaptiveController.clients);
 
-router.delete("/clients", CaptiveController.clear);
 router.get(
     "/session",
     CaptiveController.getSession
