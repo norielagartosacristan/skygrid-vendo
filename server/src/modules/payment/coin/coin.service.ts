@@ -6,7 +6,7 @@ import {
     InsertCoinRequest,
     InsertCoinResponse
 } from "./coin.types";
-import { ipsetService } from "../../captive/firewall/ipset.service";
+//import { ipsetService } from "../../captive/firewall/ipset.service";
 
 class CoinService {
 
