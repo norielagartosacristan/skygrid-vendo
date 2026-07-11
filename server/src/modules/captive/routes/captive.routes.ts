@@ -30,4 +30,9 @@ router.get(
     CaptiveController.getSession
 );
 
+router.get(
+    "/client",
+    CaptiveController.client
+);
+
 export default router;

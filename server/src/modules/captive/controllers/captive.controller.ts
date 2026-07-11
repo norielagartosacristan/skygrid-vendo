@@ -131,6 +131,22 @@ export async function getSession(
 
 }
 
+export async function client(
+    req: Request,
+    res: Response
+) {
+
+    const ip =
+        req.ip?.replace("::ffff:", "") ||
+        req.socket.remoteAddress?.replace("::ffff:", "") ||
+        "";
+
+    res.json({
+        ip
+    });
+
+}
+
 export async function clear(
     req: Request,
     res: Response
