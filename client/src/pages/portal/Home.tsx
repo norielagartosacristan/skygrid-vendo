@@ -1,91 +1,103 @@
+import { useEffect, useState } from "react";
+
 import PortalLayout from "../../layouts/PortalLayout";
 import Footer from "../../components/portal/Footer";
 import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
-import { useEffect, useState } from "react";
+
 import { useCountdown } from "../../hooks/useCountdown";
-// import Clock from "../../components/portal/Clock";
 
 export default function Home() {
 
     const [clientIP, setClientIP] = useState("");
 
     const [session, setSession] = useState<any>(() => {
+
         const saved = localStorage.getItem("skygrid_session");
+
         return saved ? JSON.parse(saved) : null;
+
     });
 
     const isConnected = !!session;
 
     const remaining = useCountdown(session?.expiresAt);
 
-   useEffect(() => {
-    console.log("SESSION STATE:", session);
-    console.log("EXPIRES:", session?.expiresAt);
-    console.log("REMAINING:", remaining);
-}, [session, remaining]);
-
-useEffect(() => {
-    fetch("/api/captive/client")
-        .then(res => res.json())
-        .then(data => {
-            setClientIP(data.ip);
-        });
-}, []);
-
+  
     /**
-     * Kunin ang client IP
-     */
-useEffect(() => {
-
-    if (!clientIP) return;
-
-    console.log("Fetching session for:", clientIP);
-
-    fetch(`/api/captive/session?ip=${clientIP}`)
-    .then(res => res.json())
-    .then(session => {
-
-        console.log("SESSION FROM API:", session);
-
-        if (!session) {
-
-            console.log("NO ACTIVE SESSION");
-
-            localStorage.removeItem("skygrid_session");
-
-            setSession(null);
-
-            return;
-        }
-
-        localStorage.setItem(
-            "skygrid_session",
-            JSON.stringify(session)
-        );
-
-        setSession(session);
-
-    });
-
-}, [clientIP]);
-
-    /**
-     * Listen only to THIS client's session
+     * Get client IP
      */
     useEffect(() => {
 
-        
-    if (!clientIP) return;
+        fetch("/api/captive/client")
+            .then(res => res.json())
+            .then(data => {
 
-    const protocol =
-        window.location.protocol === "https:"
-            ? "wss"
-            : "ws";
+                console.log("CLIENT:", data);
 
-    const socket = new WebSocket(
-        `${protocol}://${window.location.hostname}:5000/ws/session?ip=${clientIP}`
-    );
+                setClientIP(data.ip);
+
+            })
+            .catch(console.error);
+
+    }, []);
+
+    /**
+     * Load active session
+     */
+    useEffect(() => {
+
+        if (!clientIP) return;
+
+        console.log("Fetching session:", clientIP);
+
+        fetch(`/api/captive/session?ip=${clientIP}`)
+            .then(res => res.json())
+            .then(data => {
+
+                console.log("SESSION FROM API:", data);
+
+                if (!data) {
+
+                    console.log("NO ACTIVE SESSION");
+
+                    localStorage.removeItem(
+                        "skygrid_session"
+                    );
+
+                    setSession(null);
+
+                    return;
+
+                }
+
+                localStorage.setItem(
+                    "skygrid_session",
+                    JSON.stringify(data)
+                );
+
+                setSession(data);
+
+            })
+            .catch(console.error);
+
+    }, [clientIP]);
+
+    /**
+     * Listen for realtime session updates
+     */
+    useEffect(() => {
+
+        if (!clientIP) return;
+
+        const protocol =
+            window.location.protocol === "https:"
+                ? "wss"
+                : "ws";
+
+        const socket = new WebSocket(
+            `${protocol}://${window.location.hostname}:5000/ws/session?ip=${clientIP}`
+        );
 
         socket.onopen = () => {
 
@@ -115,6 +127,8 @@ useEffect(() => {
 
                 case "session.expired":
 
+                    console.log("SESSION EXPIRED");
+
                     localStorage.removeItem(
                         "skygrid_session"
                     );
@@ -127,13 +141,23 @@ useEffect(() => {
 
         };
 
+        socket.onerror = (err) => {
+
+            console.error("WebSocket Error", err);
+
+        };
+
         socket.onclose = () => {
 
             console.log("❌ Session WebSocket Closed");
 
         };
 
-        return () => socket.close();
+        return () => {
+
+            socket.close();
+
+        };
 
     }, [clientIP]);
 
