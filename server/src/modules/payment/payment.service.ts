@@ -12,70 +12,31 @@ class PaymentService {
         durationMinutes: number
     ) {
 
-        const activeSession =
+        const existingSession =
             await prisma.session.findFirst({
 
                 where: {
-                    ipAddress: clientIP,
                     clientMac,
+                    ipAddress: clientIP,
                     isActive: true
-
                 }
 
             });
 
-        // Existing session
-        if (activeSession) {
-
-            const expiresAt =
-                activeSession.expiresAt.getTime();
-
-            const now = Date.now();
-
-            const base =
-                expiresAt > now ? expiresAt : now;
-
-            const newExpiresAt =
-                new Date(
-                    base +
-                    durationMinutes * 60 * 1000
-                );
-
-            const updated =
-                await prisma.session.update({
-
-                    where: {
-
-                        id: activeSession.id
-
-                    },
-
-                    data: {
-
-                        expiresAt: newExpiresAt
-
-                    },
-
-                    include: {
-
-                        package: true
-
-                    } 
-
-                });
-
-            return {
-
-                action: "extended",
-                session: updated
-
-            };
-
-        } else {
-             await ipsetService.allow(clientIP);
+        /**
+         * First login only.
+         * Do not call this again when extending.
+         */
+        if (!existingSession) {
+            await ipsetService.allow(clientIP);
         }
 
-        // No session
+        /**
+         * SessionService will automatically:
+         * - create new session
+         * - extend existing session
+         * - broadcast websocket update
+         */
         const session =
             await sessionService.createSession(
 
@@ -89,7 +50,12 @@ class PaymentService {
 
         return {
 
-            action: "created",
+            success: true,
+
+            action: existingSession
+                ? "extended"
+                : "created",
+
             session
 
         };

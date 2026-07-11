@@ -1,165 +1,177 @@
 import { exec } from "child_process";
 import prisma from "../../../config/prisma";
-//import { networkSocket } from "../../network/websocket/network.socket";
 import { ipsetService } from "../firewall/ipset.service";
-//import { machineService } from "../../machine/services/machine.service";
 import { captiveSocket } from "../websocket/captive.socket";
 
 class SessionService {
 
     async createSession(
-    machineId: string,
-    packageId: string,
-    clientMac: string,
-    clientIP: string,
-    durationMinutes: number
-) {
+        machineId: string,
+        packageId: string,
+        clientMac: string,
+        clientIP: string,
+        durationMinutes: number
+    ) {
 
-    console.log("========== CREATE SESSION ==========");
-    console.log("machineId:", machineId);
-    console.log("packageId:", packageId);
-    console.log("clientIP:", clientIP);
-    console.log("clientMac:", clientMac);
+        console.log("========== CREATE SESSION ==========");
+        console.log("Machine:", machineId);
+        console.log("Package:", packageId);
+        console.log("Client MAC:", clientMac);
+        console.log("Client IP:", clientIP);
 
-    const existing = await prisma.session.findFirst({
+        const existing =
+            await prisma.session.findFirst({
 
-        where: {
-            clientMac,
-            isActive: true
-        },
+                where: {
+                    clientMac,
+                    ipAddress: clientIP,
+                    isActive: true
+                },
 
-        include: {
-            package: true
+                include: {
+                    package: true
+                }
+
+            });
+
+        /**
+         * EXTEND SESSION
+         */
+        if (existing) {
+
+            const now = Date.now();
+
+            const baseTime =
+                existing.expiresAt.getTime() > now
+                    ? existing.expiresAt.getTime()
+                    : now;
+
+            const newExpiresAt =
+                new Date(
+                    baseTime +
+                    durationMinutes * 60 * 1000
+                );
+
+            const session =
+                await prisma.session.update({
+
+                    where: {
+                        id: existing.id
+                    },
+
+                    data: {
+                        packageId,
+                        expiresAt: newExpiresAt
+                    },
+
+                    include: {
+                        package: true
+                    }
+
+                });
+
+            console.log(
+                `➕ Session extended until ${newExpiresAt}`
+            );
+
+            captiveSocket.send(
+                session.ipAddress,
+                {
+                    type: "session.updated",
+                    payload: session
+                }
+            );
+
+            return session;
+
         }
 
-    });
-    console.log("Existing session:", existing);
+        /**
+         * CREATE NEW SESSION
+         */
 
-    if (existing) {
+        const expiresAt =
+            new Date(
+                Date.now() +
+                durationMinutes * 60 * 1000
+            );
 
-        const baseTime =
-            existing.expiresAt > new Date()
-                ? existing.expiresAt
-                : new Date();
+        const session =
+            await prisma.session.create({
 
-        const newExpiresAt = new Date(
-            baseTime.getTime() +
-            durationMinutes * 60 * 1000
-        );
+                data: {
 
-        const session = await prisma.session.update({
+                    machineId,
+                    packageId,
+                    clientMac,
+                    ipAddress: clientIP,
+                    expiresAt,
+                    isActive: true
 
-            where: {
-                id: existing.id
-            },
+                },
 
-            data: {
-                ipAddress: clientIP,
-                packageId,
-                expiresAt: newExpiresAt
-            },
+                include: {
+                    package: true
+                }
 
-            include: {
-                package: true
-            }
-
-        });
+            });
 
         console.log(
-            `➕ Session extended until ${newExpiresAt}`
+            `✅ New session created until ${expiresAt}`
         );
 
         captiveSocket.send(
-    session.ipAddress,
-    {
-        type: "session.updated",
-        payload: session
-    }
-);
+            session.ipAddress,
+            {
+                type: "session.created",
+                payload: session
+            }
+        );
 
         return session;
 
     }
 
-    const expiresAt = new Date(
-        Date.now() + durationMinutes * 60 * 1000
-    );
+    async expireSession(sessionId: string) {
 
-    const session = await prisma.session.create({
+        const session =
+            await prisma.session.update({
 
-        data: {
+                where: {
+                    id: sessionId
+                },
 
-            machineId,
-            packageId,
-            clientMac,
-            ipAddress: clientIP,
-            expiresAt,
-            isActive: true
+                data: {
+                    isActive: false
+                }
 
-        },
+            });
 
-        include: {
+        await ipsetService.block(
+            session.ipAddress
+        );
 
-            package: true
-
-        }
-
-    });
-
-   captiveSocket.send(
-    session.ipAddress,
-    {
-        type: "session.created",
-        payload: session
-    }
-);
-    return session;
-
-}
-
-   async expireSession(sessionId: string) {
-
-    const session =
-        await prisma.session.update({
-
-            where: {
-
-                id: sessionId
-
-            },
-
-            data: {
-
-                isActive: false
-
+        captiveSocket.send(
+            session.ipAddress,
+            {
+                type: "session.expired"
             }
+        );
 
-        });
+        exec(
+            `sudo conntrack -D -s ${session.ipAddress} || true`,
+            () => {}
+        );
 
-    await ipsetService.block(
-        session.ipAddress
-    );
+        console.log(
+            `❌ Session expired: ${session.ipAddress}`
+        );
 
-    captiveSocket.send(
-    session.ipAddress,
-    {
-        type: "session.expired"
+        return session;
+
     }
-);
-
-    exec(
-        `sudo conntrack -D -s ${session.ipAddress} || true`,
-        () => {}
-    );
-
-    console.log(
-        `❌ Session expired: ${session.ipAddress}`
-    );
-
-    return session;
 
 }
 
-}
-
-export const sessionService = new SessionService();
+export const sessionService =
+    new SessionService();
