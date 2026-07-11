@@ -66,7 +66,7 @@ class SessionService {
                     }
 
                 });
-                 await ipsetService.allow(clientIP);
+                await ipsetService.allow(session.ipAddress);
 
             console.log(
                 `➕ Session extended until ${newExpiresAt}`
@@ -143,7 +143,7 @@ class SessionService {
                 }
 
             });
-             await ipsetService.allow(clientIP);
+             await ipsetService.allow(session.ipAddress);
 
         await ipsetService.block(
             session.ipAddress
