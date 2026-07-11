@@ -135,39 +135,12 @@ export async function client(
     req: Request,
     res: Response
 ) {
-
     const ip =
         req.ip?.replace("::ffff:", "") ||
         req.socket.remoteAddress?.replace("::ffff:", "") ||
         "";
 
-    res.json({
-        ip
-    });
-
-}
-
-export async function clear(
-    req: Request,
-    res: Response
-) {
-
-    try {
-
-        await ipsetService.clear();
-
-        res.json({
-            success: true
-        });
-
-    } catch (err: any) {
-
-        res.status(500).json({
-            message: err.message
-        });
-
-    }
-
+    res.json({ ip });
 }
 
 
