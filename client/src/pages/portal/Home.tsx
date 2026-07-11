@@ -10,93 +10,183 @@ import { useCountdown } from "../../hooks/useCountdown";
 export default function Home() {
 
     const [client, setClient] = useState({
-    ip: "",
-    mac: ""
-});
+        ip: "",
+        mac: ""
+    });
 
     const [session, setSession] = useState<any>(() => {
 
         const saved = localStorage.getItem("skygrid_session");
 
-        return saved ? JSON.parse(saved) : null;
+        return saved
+            ? JSON.parse(saved)
+            : null;
 
     });
 
     const isConnected = !!session;
 
-    const remaining = useCountdown(session?.expiresAt);
+    const remaining =
+        useCountdown(session?.expiresAt);
 
- 
     /**
-     * Get client IP
+     * Restore active session
      */
-useEffect(() => {
-    fetch("/api/captive/client")
-        .then(res => res.json())
-        .then(data => {
-            setClient({
-                ip: data.ip,
-                mac: data.mac
-            });
-        });
-}, []);
+    async function restoreSession(ip: string) {
+
+        try {
+
+            console.log("Checking active session...");
+
+            const res =
+                await fetch(`/api/captive/session?ip=${ip}`);
+
+            const data =
+                await res.json();
+
+            console.log("RESTORE RESULT:", data);
+
+            if (!data) {
+
+                localStorage.removeItem(
+                    "skygrid_session"
+                );
+
+                setSession(null);
+
+                return;
+
+            }
+
+            localStorage.setItem(
+                "skygrid_session",
+                JSON.stringify(data)
+            );
+
+setSession(data);
+setSession(data);
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
+
+    }
 
     /**
-     * Load active session
+     * Get current client
      */
     useEffect(() => {
 
-        if (!client.ip) return;
-
-        console.log("Fetching session:", client.ip);
-
-        fetch(`/api/captive/session?ip=${client.ip}`)
+        fetch("/api/captive/client")
             .then(res => res.json())
             .then(data => {
 
-                console.log("SESSION FROM API:", data);
+                console.log("CLIENT:", data);
 
-                if (!data) {
+                setClient({
 
-                    console.log("NO ACTIVE SESSION");
+                    ip: data.ip,
+                    mac: data.mac
 
-                    localStorage.removeItem(
-                        "skygrid_session"
-                    );
+                });
 
-                    setSession(null);
+            });
 
-                    return;
+    }, []);
 
-                }
+    /**
+     * Restore session when IP becomes available
+     */
+    useEffect(() => {
 
-                localStorage.setItem(
-                    "skygrid_session",
-                    JSON.stringify(data)
-                );
+        if (!client.ip)
+            return;
 
-                setSession(data);
-
-            })
-            .catch(console.error);
+        restoreSession(client.ip);
 
     }, [client.ip]);
 
     /**
-     * Listen for realtime session updates
+     * Recheck session when browser comes back
      */
     useEffect(() => {
 
-        if (!client.ip) return;
+        if (!client.ip)
+            return;
+
+        const reconnect = () => {
+
+            console.log("Rechecking session...");
+
+            restoreSession(client.ip);
+
+        };
+
+        const handleVisibility = () => {
+
+            if (!document.hidden) {
+
+                reconnect();
+
+            }
+
+        };
+
+        window.addEventListener(
+            "focus",
+            reconnect
+        );
+
+        window.addEventListener(
+            "online",
+            reconnect
+        );
+
+        document.addEventListener(
+            "visibilitychange",
+            handleVisibility
+        );
+
+        return () => {
+
+            window.removeEventListener(
+                "focus",
+                reconnect
+            );
+
+            window.removeEventListener(
+                "online",
+                reconnect
+            );
+
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibility
+            );
+
+        };
+
+    }, [client.ip]);
+
+    /**
+     * WebSocket realtime updates
+     */
+    useEffect(() => {
+
+        if (!client.ip)
+            return;
 
         const protocol =
             window.location.protocol === "https:"
                 ? "wss"
                 : "ws";
 
-       const socket = new WebSocket(
-          `${protocol}://${window.location.hostname}/ws/session?ip=${client.ip}`
-      );
+        const socket =
+            new WebSocket(
+                `${protocol}://${window.location.host}/ws/session?ip=${client.ip}`
+            );
 
         socket.onopen = () => {
 
@@ -106,13 +196,15 @@ useEffect(() => {
 
         socket.onmessage = (event) => {
 
-            const data = JSON.parse(event.data);
+            const data =
+                JSON.parse(event.data);
 
             console.log("WS:", data);
 
             switch (data.type) {
 
                 case "session.created":
+
                 case "session.updated":
 
                     localStorage.setItem(
@@ -142,7 +234,7 @@ useEffect(() => {
 
         socket.onerror = (err) => {
 
-            console.error("WebSocket Error", err);
+            console.error(err);
 
         };
 
@@ -159,6 +251,7 @@ useEffect(() => {
         };
 
     }, [client.ip]);
+
 
   return (
     <PortalLayout>
@@ -248,31 +341,17 @@ useEffect(() => {
                 </h1>
               </div>
             </div>
-            <button
-                className={`w-full rounded-xl py-3 text-base font-bold text-white shadow-md transition ${
-                    isConnected
-                        ? "bg-green-600"
-                        : "bg-gradient-to-r from-sky-500 to-blue-600"
-                }`}
-            >
-                {isConnected
-                    ? "✅ Internet Connected"
-                    : "🪙 Insert Coin"}
+            <button className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-98 transition">
+              🪙 Insert Coin
             </button>
 
             <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
               <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
                 OR LOGIN USING VOUCHER
               </p>
-              {!isConnected && (
-                    <VoucherLogin
-                        onLoginSuccess={setSession}
-                    />
-                )}
+              <VoucherLogin onLoginSuccess={setSession} />
             </div>
           </div>
-
-         
         </div>
       </section>
       <Footer />
