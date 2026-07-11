@@ -167,7 +167,7 @@ class FirewallRulesService {
             if (!res) break;
         }
         while (true) {
-            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:3000`);
+            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:80`);
             if (!res) break;
         }
     }
