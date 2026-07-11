@@ -12,10 +12,12 @@ const network_socket_1 = require("./modules/network/websocket/network.socket");
 const firewallRules_service_1 = require("./modules/captive/firewall/firewallRules.service");
 const machine_service_1 = require("./modules/machine/services/machine.service");
 const session_scheduler_1 = require("./modules/captive/session/session.scheduler");
+const captive_socket_1 = require("./modules/captive/websocket/captive.socket");
 const PORT = process.env.PORT || 5000;
 const server = http_1.default.createServer(app_1.default);
 // Initialize WebSocket
 network_socket_1.networkSocket.init(server);
+captive_socket_1.captiveSocket.init(server);
 server.listen(PORT, async () => {
     console.log(`🚀 Server running on ${PORT}`);
     try {

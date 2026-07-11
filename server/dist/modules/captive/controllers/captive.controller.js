@@ -1,14 +1,19 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.allow = allow;
 exports.block = block;
 exports.clients = clients;
-exports.clear = clear;
+exports.getSession = getSession;
+exports.client = client;
 exports.enable = enable;
 exports.disable = disable;
 exports.rules = rules;
 const ipset_service_1 = require("../firewall/ipset.service");
 const firewallRules_service_1 = require("../firewall/firewallRules.service");
+const prisma_1 = __importDefault(require("../../../config/prisma"));
 async function allow(req, res) {
     try {
         const { ip } = req.body;
@@ -57,18 +62,36 @@ async function clients(req, res) {
         });
     }
 }
-async function clear(req, res) {
+async function getSession(req, res) {
     try {
-        await ipset_service_1.ipsetService.clear();
-        res.json({
-            success: true
+        const ip = req.query.ip;
+        if (!ip) {
+            return res.status(400).json({
+                message: "IP is required"
+            });
+        }
+        const session = await prisma_1.default.session.findFirst({
+            where: {
+                ipAddress: ip,
+                isActive: true
+            },
+            include: {
+                package: true
+            }
         });
+        res.json(session);
     }
     catch (err) {
         res.status(500).json({
             message: err.message
         });
     }
+}
+async function client(req, res) {
+    const ip = req.ip?.replace("::ffff:", "") ||
+        req.socket.remoteAddress?.replace("::ffff:", "") ||
+        "";
+    res.json({ ip });
 }
 async function enable(req, res) {
     await firewallRules_service_1.firewallRules.initialize();

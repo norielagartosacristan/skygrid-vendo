@@ -6,8 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sessionService = void 0;
 const child_process_1 = require("child_process");
 const prisma_1 = __importDefault(require("../../../config/prisma"));
-const network_socket_1 = require("../../network/websocket/network.socket");
+//import { networkSocket } from "../../network/websocket/network.socket";
 const ipset_service_1 = require("../firewall/ipset.service");
+//import { machineService } from "../../machine/services/machine.service";
+const captive_socket_1 = require("../websocket/captive.socket");
 class SessionService {
     async createSession(machineId, packageId, clientMac, clientIP, durationMinutes) {
         console.log("========== CREATE SESSION ==========");
@@ -24,6 +26,7 @@ class SessionService {
                 package: true
             }
         });
+        console.log("Existing session:", existing);
         if (existing) {
             const baseTime = existing.expiresAt > new Date()
                 ? existing.expiresAt
@@ -44,7 +47,7 @@ class SessionService {
                 }
             });
             console.log(`➕ Session extended until ${newExpiresAt}`);
-            network_socket_1.networkSocket.broadcast({
+            captive_socket_1.captiveSocket.send(session.ipAddress, {
                 type: "session.updated",
                 payload: session
             });
@@ -64,7 +67,7 @@ class SessionService {
                 package: true
             }
         });
-        network_socket_1.networkSocket.broadcast({
+        captive_socket_1.captiveSocket.send(session.ipAddress, {
             type: "session.created",
             payload: session
         });
@@ -80,6 +83,9 @@ class SessionService {
             }
         });
         await ipset_service_1.ipsetService.block(session.ipAddress);
+        captive_socket_1.captiveSocket.send(session.ipAddress, {
+            type: "session.expired"
+        });
         (0, child_process_1.exec)(`sudo conntrack -D -s ${session.ipAddress} || true`, () => { });
         console.log(`❌ Session expired: ${session.ipAddress}`);
         return session;

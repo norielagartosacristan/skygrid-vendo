@@ -37,12 +37,16 @@ class NetworkMonitor {
                     time: now,
                 });
             }
-            const ipv4 = iface.addresses?.find((a) => a.family === "inet")?.address || "";
+            const ipv4 = iface.addresses?.find((a) => a.family === "inet")?.ip || "";
             return {
                 id: iface.name,
                 displayName: iface.name,
                 name: iface.name,
-                role: "-", // pwede mong lagyan mamaya ng WAN/LAN
+                role: iface.type === "Physical"
+                    ? "WAN"
+                    : iface.type === "VLAN"
+                        ? "LAN"
+                        : "-",
                 type: iface.type,
                 ipAddress: ipv4,
                 macAddress: iface.mac,
