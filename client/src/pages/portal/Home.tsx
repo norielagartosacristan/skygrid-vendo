@@ -27,9 +27,13 @@ useEffect(() => {
 
     if (!clientIP) return;
 
+    console.log("Fetching session for:", clientIP);
+
     fetch(`/api/captive/session?ip=${clientIP}`)
         .then(res => res.json())
         .then(session => {
+
+            console.log("SESSION:", session);
 
             if (!session) return;
 
