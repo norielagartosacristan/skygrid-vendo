@@ -8,6 +8,7 @@ const prisma_1 = __importDefault(require("../../../config/prisma"));
 const session_service_1 = require("../../captive/session/session.service");
 const time_1 = require("../../../utils/time");
 const machine_service_1 = require("../../machine/services/machine.service");
+//import { ipsetService } from "../../captive/firewall/ipset.service";
 class CoinService {
     async insertCoin(data) {
         try {

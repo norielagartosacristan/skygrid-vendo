@@ -6,7 +6,7 @@ import {
     InsertCoinRequest,
     InsertCoinResponse
 } from "./coin.types";
-//import { ipsetService } from "../../captive/firewall/ipset.service";
+
 
 class CoinService {
 
@@ -69,7 +69,6 @@ class CoinService {
             );
             
         console.log("Session:", session);
-           // await ipsetService.allow(clientIP);
         await prisma.coinTransaction.create({
             data: {
                 machineId: machine.id,

@@ -24,14 +24,6 @@ class PaymentService {
             });
 
         /**
-         * First login only.
-         * Do not call this again when extending.
-         */
-        if (!existingSession) {
-            await ipsetService.allow(clientIP);
-        }
-
-        /**
          * SessionService will automatically:
          * - create new session
          * - extend existing session

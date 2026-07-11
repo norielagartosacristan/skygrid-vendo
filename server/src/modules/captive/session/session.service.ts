@@ -2,7 +2,6 @@ import { exec } from "child_process";
 import prisma from "../../../config/prisma";
 import { ipsetService } from "../firewall/ipset.service";
 import { captiveSocket } from "../websocket/captive.socket";
-
 class SessionService {
 
     async createSession(
@@ -53,7 +52,6 @@ class SessionService {
 
             const session =
                 await prisma.session.update({
-
                     where: {
                         id: existing.id
                     },
@@ -68,6 +66,7 @@ class SessionService {
                     }
 
                 });
+                 await ipsetService.allow(clientIP);
 
             console.log(
                 `➕ Session extended until ${newExpiresAt}`
@@ -135,7 +134,6 @@ class SessionService {
 
         const session =
             await prisma.session.update({
-
                 where: {
                     id: sessionId
                 },
@@ -145,6 +143,7 @@ class SessionService {
                 }
 
             });
+             await ipsetService.allow(clientIP);
 
         await ipsetService.block(
             session.ipAddress

@@ -163,7 +163,7 @@ useEffect(() => {
   return (
     <PortalLayout>
       {/* HERO SECTION - REDUCED HEIGHT FOR MOBILE */}
-      <section className="relative w-full h-[350px] sm:h-[220px] lg:h-[400px] overflow-hidden">
+      <section className="relative w-full h-[350px] sm:h-[180px] lg:h-[400px] overflow-hidden">
         <HeroCarousel />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-transparent" />
         <div className="absolute inset-0 flex items-center">
@@ -248,15 +248,27 @@ useEffect(() => {
                 </h1>
               </div>
             </div>
-            <button className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-98 transition">
-              🪙 Insert Coin
+            <button
+                className={`w-full rounded-xl py-3 text-base font-bold text-white shadow-md transition ${
+                    isConnected
+                        ? "bg-green-600"
+                        : "bg-gradient-to-r from-sky-500 to-blue-600"
+                }`}
+            >
+                {isConnected
+                    ? "✅ Internet Connected"
+                    : "🪙 Insert Coin"}
             </button>
 
             <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
               <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
                 OR LOGIN USING VOUCHER
               </p>
-              <VoucherLogin onLoginSuccess={setSession} />
+              {!isConnected && (
+                    <VoucherLogin
+                        onLoginSuccess={setSession}
+                    />
+                )}
             </div>
           </div>
 

@@ -29,11 +29,16 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
                 return;
             }
 
-            setMessage("✅ Connected successfully.");
+            localStorage.setItem(
+    "skygrid_session",
+    JSON.stringify(res.data.session)
+);
 
-            setTimeout(() => {
-                onLoginSuccess(res.data.session);
-            }, 1500);
+onLoginSuccess(res.data.session);
+
+setVoucher("");
+
+setMessage("");
         } catch (err: any) {
             setMessage(
                 err.response?.data?.message ??
