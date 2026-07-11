@@ -69,7 +69,7 @@ class CoinService {
             );
             
         console.log("Session:", session);
-            await ipsetService.allow(clientIP);
+           // await ipsetService.allow(clientIP);
         await prisma.coinTransaction.create({
             data: {
                 machineId: machine.id,

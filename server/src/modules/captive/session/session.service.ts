@@ -23,7 +23,6 @@ class SessionService {
             await prisma.session.findFirst({
 
                 where: {
-                    clientMac,
                     ipAddress: clientIP,
                     isActive: true
                 },
