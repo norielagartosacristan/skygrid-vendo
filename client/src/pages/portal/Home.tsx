@@ -4,10 +4,12 @@ import PortalLayout from "../../layouts/PortalLayout";
 import Footer from "../../components/portal/Footer";
 import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
-
 import { useCountdown } from "../../hooks/useCountdown";
+import InsertCoinModal from "../../components/portal/InsertCoinModal";
 
 export default function Home() {
+
+  const [showCoinModal, setShowCoinModal] = useState(false);
 
     const [client, setClient] = useState({
         ip: "",
@@ -341,10 +343,12 @@ setSession(data);
                 </h1>
               </div>
             </div>
-            <button className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-98 transition">
-              🪙 Insert Coin
-            </button>
-
+            <button
+    onClick={() => setShowCoinModal(true)}
+    className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-95 transition"
+>
+    🪙 Insert Coin
+</button>
             <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
               <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
                 OR LOGIN USING VOUCHER
@@ -355,6 +359,10 @@ setSession(data);
         </div>
       </section>
       <Footer />
+       <InsertCoinModal
+    open={showCoinModal}
+    onClose={() => setShowCoinModal(false)}
+/>
     </PortalLayout>
   );
 }
