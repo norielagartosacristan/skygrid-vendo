@@ -63,29 +63,17 @@ async function clients(req, res) {
     }
 }
 async function getSession(req, res) {
-    try {
-        const ip = req.query.ip;
-        if (!ip) {
-            return res.status(400).json({
-                message: "IP is required"
-            });
+    console.log("========== GET SESSION ==========");
+    const ip = req.query.ip;
+    console.log("IP:", ip);
+    const session = await prisma_1.default.session.findFirst({
+        where: {
+            ipAddress: ip,
+            isActive: true
         }
-        const session = await prisma_1.default.session.findFirst({
-            where: {
-                ipAddress: ip,
-                isActive: true
-            },
-            include: {
-                package: true
-            }
-        });
-        res.json(session);
-    }
-    catch (err) {
-        res.status(500).json({
-            message: err.message
-        });
-    }
+    });
+    console.log(session);
+    res.json(session);
 }
 async function client(req, res) {
     const ip = req.ip?.replace("::ffff:", "") ||

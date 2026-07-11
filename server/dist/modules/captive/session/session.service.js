@@ -6,39 +6,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sessionService = void 0;
 const child_process_1 = require("child_process");
 const prisma_1 = __importDefault(require("../../../config/prisma"));
-//import { networkSocket } from "../../network/websocket/network.socket";
 const ipset_service_1 = require("../firewall/ipset.service");
-//import { machineService } from "../../machine/services/machine.service";
 const captive_socket_1 = require("../websocket/captive.socket");
 class SessionService {
     async createSession(machineId, packageId, clientMac, clientIP, durationMinutes) {
         console.log("========== CREATE SESSION ==========");
-        console.log("machineId:", machineId);
-        console.log("packageId:", packageId);
-        console.log("clientIP:", clientIP);
-        console.log("clientMac:", clientMac);
+        console.log("Machine:", machineId);
+        console.log("Package:", packageId);
+        console.log("Client MAC:", clientMac);
+        console.log("Client IP:", clientIP);
         const existing = await prisma_1.default.session.findFirst({
             where: {
-                clientMac,
+                ipAddress: clientIP,
                 isActive: true
             },
             include: {
                 package: true
             }
         });
-        console.log("Existing session:", existing);
+        /**
+         * EXTEND SESSION
+         */
         if (existing) {
-            const baseTime = existing.expiresAt > new Date()
-                ? existing.expiresAt
-                : new Date();
-            const newExpiresAt = new Date(baseTime.getTime() +
+            const now = Date.now();
+            const baseTime = existing.expiresAt.getTime() > now
+                ? existing.expiresAt.getTime()
+                : now;
+            const newExpiresAt = new Date(baseTime +
                 durationMinutes * 60 * 1000);
             const session = await prisma_1.default.session.update({
                 where: {
                     id: existing.id
                 },
                 data: {
-                    ipAddress: clientIP,
                     packageId,
                     expiresAt: newExpiresAt
                 },
@@ -53,7 +53,11 @@ class SessionService {
             });
             return session;
         }
-        const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
+        /**
+         * CREATE NEW SESSION
+         */
+        const expiresAt = new Date(Date.now() +
+            durationMinutes * 60 * 1000);
         const session = await prisma_1.default.session.create({
             data: {
                 machineId,
@@ -67,6 +71,7 @@ class SessionService {
                 package: true
             }
         });
+        console.log(`✅ New session created until ${expiresAt}`);
         captive_socket_1.captiveSocket.send(session.ipAddress, {
             type: "session.created",
             payload: session
