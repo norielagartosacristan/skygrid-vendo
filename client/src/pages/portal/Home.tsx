@@ -23,6 +23,14 @@ export default function Home() {
 
     const remaining = useCountdown(session?.expiresAt);
 
+  useEffect(() => {
+
+        console.log("SESSION STATE:", session);
+        console.log("EXPIRES:", session?.expiresAt);
+        console.log("REMAINING:", remaining);
+
+    }, [session, remaining]);
+
   
     /**
      * Get client IP
