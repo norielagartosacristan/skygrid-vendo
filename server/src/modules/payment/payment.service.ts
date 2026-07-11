@@ -1,4 +1,5 @@
 import prisma from "../../config/prisma";
+import { ipsetService } from "../captive/firewall/ipset.service";
 import { sessionService } from "../captive/session/session.service";
 
 class PaymentService {
@@ -15,7 +16,7 @@ class PaymentService {
             await prisma.session.findFirst({
 
                 where: {
-
+                    ipAddress: clientIP,
                     clientMac,
                     isActive: true
 
@@ -59,7 +60,7 @@ class PaymentService {
 
                         package: true
 
-                    }
+                    } 
 
                 });
 
@@ -70,6 +71,8 @@ class PaymentService {
 
             };
 
+        } else {
+             await ipsetService.allow(clientIP);
         }
 
         // No session
