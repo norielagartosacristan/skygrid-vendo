@@ -19,39 +19,57 @@ export default function Home() {
 
     const remaining = useCountdown(session?.expiresAt);
 
+
+    useEffect(() => {
+
+    fetch("/api/captive/client")
+        .then(res => res.json())
+        .then(data => {
+            setClientIP(data.ip);
+        });
+
+}, []);
+
     /**
      * Kunin ang client IP
      */
-    useEffect(() => {
+useEffect(() => {
 
-        fetch("/api/captive/client")
-            .then(res => res.json())
-            .then(data => {
+    if (!clientIP) return;
 
-                console.log("Client IP:", data.ip);
+    fetch(`/api/captive/session?ip=${clientIP}`)
+        .then(res => res.json())
+        .then(session => {
 
-                setClientIP(data.ip);
+            if (!session) return;
 
-            })
-            .catch(console.error);
+            setSession(session);
 
-    }, []);
+            localStorage.setItem(
+                "skygrid_session",
+                JSON.stringify(session)
+            );
+
+        });
+
+}, [clientIP]);
 
     /**
      * Listen only to THIS client's session
      */
     useEffect(() => {
 
-        if (!clientIP) return;
+        
+    if (!clientIP) return;
 
-        const protocol =
-            window.location.protocol === "https:"
-                ? "wss"
-                : "ws";
+    const protocol =
+        window.location.protocol === "https:"
+            ? "wss"
+            : "ws";
 
-        const socket = new WebSocket(
-            `${protocol}://${window.location.hostname}:5000/ws/session?ip=${clientIP}`
-        );
+    const socket = new WebSocket(
+        `${protocol}://${window.location.hostname}:5000/ws/session?ip=${clientIP}`
+    );
 
         socket.onopen = () => {
 
