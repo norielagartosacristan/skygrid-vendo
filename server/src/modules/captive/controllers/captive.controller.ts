@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { ipsetService } from "../firewall/ipset.service";
 import { firewallRules } from "../firewall/firewallRules.service";
+import prisma from "../../../config/prisma";
+
 
 export async function allow(
     req: Request,
@@ -86,6 +88,49 @@ export async function clients(
 
 }
 
+export async function getSession(
+    req: Request,
+    res: Response
+) {
+
+    try {
+
+        const ip = req.query.ip as string;
+
+        if (!ip) {
+
+            return res.status(400).json({
+                message: "IP is required"
+            });
+
+        }
+
+        const session =
+            await prisma.session.findFirst({
+
+                where: {
+                    ipAddress: ip,
+                    isActive: true
+                },
+
+                include: {
+                    package: true
+                }
+
+            });
+
+        res.json(session);
+
+    } catch (err: any) {
+
+        res.status(500).json({
+            message: err.message
+        });
+
+    }
+
+}
+
 export async function clear(
     req: Request,
     res: Response
@@ -108,6 +153,8 @@ export async function clear(
     }
 
 }
+
+
 
 
 export async function enable(req: Request, res: Response) {
