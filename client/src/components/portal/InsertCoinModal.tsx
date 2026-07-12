@@ -90,7 +90,7 @@ export default function InsertCoinModal({
                 <div className="border-t p-4">
                     <button
                         onClick={() => {
-                            insertCoin.stop();
+                            stopPopup();
                             onClose();
                         }}
                         className="w-full rounded-xl bg-red-500 py-3 font-semibold text-white hover:bg-red-600 transition"

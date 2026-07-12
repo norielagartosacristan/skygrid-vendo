@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 import PortalLayout from "../../layouts/PortalLayout";
 import Footer from "../../components/portal/Footer";
@@ -17,11 +17,11 @@ export default function Home() {
 const popup = useSound("/sounds/popup.mp3");
 const startup = useSound("/sounds/startup.mp3");
 const insertCoin = useSound("/sounds/insertcoin.mp3");
-const success = useSound("/sounds/success.mp3");
+//const success = useSound("/sounds/success.mp3");
 const warning5 = useSound("/sounds/warning5.mp3");
 const warning1 = useSound("/sounds/warning1.mp3");
 const expired = useSound("/sounds/expired.mp3");
-const thankyou = useSound("/sounds/thankyou.mp3");
+//const thankyou = useSound("/sounds/thankyou.mp3");
 
 
 

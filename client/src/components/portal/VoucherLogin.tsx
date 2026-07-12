@@ -12,11 +12,6 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
     const [message, setMessage] = useState("");
     const success = useSound("/sounds/success.mp3");
 
-success.play();
-
-setTimeout(() => {
-    onLoginSuccess(res.data.session);
-}, 500);
 
     async function handleLogin() {
         if (!voucher.trim()) {
@@ -36,6 +31,19 @@ setTimeout(() => {
                 setMessage(res.data.message);
                 return;
             }
+
+            success.play();
+
+localStorage.setItem(
+    "skygrid_session",
+    JSON.stringify(res.data.session)
+);
+
+setTimeout(() => {
+    onLoginSuccess(res.data.session);
+    setVoucher("");
+    setMessage("");
+}, 500);
 
             localStorage.setItem(
     "skygrid_session",
