@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../../services/api";
+import { useSound } from "../../hooks/useSound";
 
 interface Props {
     onLoginSuccess: (session: any) => void;
@@ -9,6 +10,13 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
     const [voucher, setVoucher] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
+    const success = useSound("/sounds/success.mp3");
+
+success.play();
+
+setTimeout(() => {
+    onLoginSuccess(res.data.session);
+}, 500);
 
     async function handleLogin() {
         if (!voucher.trim()) {

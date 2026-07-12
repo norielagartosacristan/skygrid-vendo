@@ -6,29 +6,22 @@ import HeroCarousel from "../../components/portal/HeroCarousel";
 import VoucherLogin from "../../components/portal/VoucherLogin";
 import { useCountdown } from "../../hooks/useCountdown";
 import InsertCoinModal from "../../components/portal/InsertCoinModal";
+import { useSound } from "../../hooks/useSound";
+
 
 
 
 
 export default function Home() {
 
-const popupSound = useRef(new Audio("/sounds/popup.mp3"));
-const coinSound = new Audio("/sounds/coin.mp3");
-
-const playPopup = () => {
-    popupSound.current.currentTime = 0;
-    popupSound.current.play().catch(() => {});
-};
-
-const stopPopup = () => {
-    popupSound.current.pause();
-    popupSound.current.currentTime = 0;
-};
-
-const playCoin = () => {
-    coinSound.currentTime = 0;
-    coinSound.play().catch(() => {});
-};
+const popup = useSound("/sounds/popup.mp3");
+const startup = useSound("/sounds/startup.mp3");
+const insertCoin = useSound("/sounds/insertcoin.mp3");
+const success = useSound("/sounds/success.mp3");
+const warning5 = useSound("/sounds/warning5.mp3");
+const warning1 = useSound("/sounds/warning1.mp3");
+const expired = useSound("/sounds/expired.mp3");
+const thankyou = useSound("/sounds/thankyou.mp3");
 
 
 
@@ -53,6 +46,61 @@ const playCoin = () => {
 
     const remaining =
         useCountdown(session?.expiresAt);
+
+
+  const [played5, setPlayed5] = useState(false);
+
+useEffect(() => {
+
+    if (!session) return;
+
+    const diff =
+        new Date(session.expiresAt).getTime() - Date.now();
+
+    const mins = Math.floor(diff / 60000);
+
+    if (mins <= 5 && !played5) {
+
+        warning5.play();
+
+        setPlayed5(true);
+
+    }
+
+}, [remaining]);
+
+const [played1, setPlayed1] = useState(false);
+
+useEffect(() => {
+
+    if (!session) return;
+
+    const diff =
+        new Date(session.expiresAt).getTime() - Date.now();
+
+    const mins = Math.floor(diff / 60000);
+
+    if (mins <= 1 && !played1) {
+
+        warning1.play();
+
+        setPlayed1(true);
+
+    }
+
+}, [remaining]);
+    
+        useEffect(() => {
+            startup.play();
+        }, []);
+
+useEffect(() => {
+
+    setPlayed5(false);
+
+    setPlayed1(false);
+
+}, [session?.id]);
 
     /**
      * Restore active session
@@ -243,15 +291,17 @@ setSession(data);
 
                 case "session.expired":
 
-                    console.log("SESSION EXPIRED");
+                console.log("SESSION EXPIRED");
 
-                    localStorage.removeItem(
-                        "skygrid_session"
-                    );
+                expired.play();
 
-                    setSession(null);
+                localStorage.removeItem(
+                    "skygrid_session"
+                );
 
-                    break;
+                setSession(null);
+
+                break;
 
             }
 
@@ -366,15 +416,14 @@ setSession(data);
                 </h1>
               </div>
             </div>
-           <button
+            <button
                 onClick={() => {
-                    playPopup();
-                    playCoin();
+                    insertCoin.play();
                     setShowCoinModal(true);
                 }}
                 className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-95 transition"
             >
-                🪙 Insert Coin
+              🪙 Insert Coin
             </button>
             <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
               <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
@@ -386,11 +435,11 @@ setSession(data);
         </div>
       </section>
       <Footer />
-     <InsertCoinModal
-    open={showCoinModal}
-    onClose={() => setShowCoinModal(false)}
-    stopPopup={stopPopup}
-/>
+    <InsertCoinModal
+        open={showCoinModal}
+        onClose={() => setShowCoinModal(false)}
+        stopPopup={popup.stop}
+    />
     </PortalLayout>
   );
 }
