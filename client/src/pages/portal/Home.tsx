@@ -362,6 +362,7 @@ setSession(data);
            <button
                 onClick={() => {
                     playPopup();
+                    playCoin();
                     setShowCoinModal(true);
                 }}
                 className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-95 transition"
