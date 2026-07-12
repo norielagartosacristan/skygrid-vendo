@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import PortalLayout from "../../layouts/PortalLayout";
 import Footer from "../../components/portal/Footer";
@@ -12,17 +12,17 @@ import InsertCoinModal from "../../components/portal/InsertCoinModal";
 
 export default function Home() {
 
-const popupSound = new Audio("/sounds/popup.mp3");
+const popupSound = useRef(new Audio("/sounds/popup.mp3"));
 const coinSound = new Audio("/sounds/coin.mp3");
 
 const playPopup = () => {
-    popupSound.currentTime = 0;
-    popupSound.play().catch(() => {});
+    popupSound.current.currentTime = 0;
+    popupSound.current.play().catch(() => {});
 };
 
 const stopPopup = () => {
-    popupSound.pause();
-    popupSound.currentTime = 0;
+    popupSound.current.pause();
+    popupSound.current.currentTime = 0;
 };
 
 const playCoin = () => {
