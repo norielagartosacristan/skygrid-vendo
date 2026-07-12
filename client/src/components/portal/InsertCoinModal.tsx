@@ -3,11 +3,13 @@ import { useEffect } from "react";
 interface Props {
     open: boolean;
     onClose: () => void;
+    stopPopup: () => void;
 }
 
 export default function InsertCoinModal({
     open,
     onClose,
+    stopPopup
 }: Props) {
 
     useEffect(() => {
@@ -85,9 +87,11 @@ export default function InsertCoinModal({
                 {/* Footer */}
 
                 <div className="border-t p-4">
-
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            stopPopup();
+                            onClose();
+                        }}
                         className="w-full rounded-xl bg-red-500 py-3 font-semibold text-white hover:bg-red-600 transition"
                     >
                         Cancel

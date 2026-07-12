@@ -20,6 +20,11 @@ const playPopup = () => {
     popupSound.play().catch(() => {});
 };
 
+const stopPopup = () => {
+    popupSound.pause();
+    popupSound.currentTime = 0;
+};
+
 const playCoin = () => {
     coinSound.currentTime = 0;
     coinSound.play().catch(() => {});
@@ -379,9 +384,10 @@ setSession(data);
         </div>
       </section>
       <Footer />
-       <InsertCoinModal
+      <InsertCoinModal
     open={showCoinModal}
     onClose={() => setShowCoinModal(false)}
+    stopPopup={stopPopup}
 />
     </PortalLayout>
   );
