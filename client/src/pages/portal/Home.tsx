@@ -7,7 +7,23 @@ import VoucherLogin from "../../components/portal/VoucherLogin";
 import { useCountdown } from "../../hooks/useCountdown";
 import InsertCoinModal from "../../components/portal/InsertCoinModal";
 
+
+
+
 export default function Home() {
+
+const popupSound = new Audio("/sounds/popup.mp3");
+const coinSound = new Audio("/sounds/coin.mp3");
+
+const playPopup = () => {
+    popupSound.currentTime = 0;
+    popupSound.play().catch(() => {});
+};
+
+const playCoin = () => {
+    coinSound.currentTime = 0;
+    coinSound.play().catch(() => {});
+};
 
   const [showCoinModal, setShowCoinModal] = useState(false);
 
@@ -343,12 +359,15 @@ setSession(data);
                 </h1>
               </div>
             </div>
-            <button
-    onClick={() => setShowCoinModal(true)}
-    className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-95 transition"
->
-    🪙 Insert Coin
-</button>
+           <button
+                onClick={() => {
+                    playPopup();
+                    setShowCoinModal(true);
+                }}
+                className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-95 transition"
+            >
+                🪙 Insert Coin
+            </button>
             <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
               <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
                 OR LOGIN USING VOUCHER
