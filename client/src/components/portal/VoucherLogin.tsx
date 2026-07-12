@@ -32,6 +32,9 @@ export default function VoucherLogin({ onLoginSuccess }: Props) {
                 return;
             }
 
+            ambience.stop();
+
+
             success.play();
 
 localStorage.setItem(
