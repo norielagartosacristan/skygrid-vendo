@@ -30,6 +30,8 @@ const playCoin = () => {
     coinSound.play().catch(() => {});
 };
 
+
+
   const [showCoinModal, setShowCoinModal] = useState(false);
 
     const [client, setClient] = useState({
@@ -384,7 +386,7 @@ setSession(data);
         </div>
       </section>
       <Footer />
-      <InsertCoinModal
+     <InsertCoinModal
     open={showCoinModal}
     onClose={() => setShowCoinModal(false)}
     stopPopup={stopPopup}
