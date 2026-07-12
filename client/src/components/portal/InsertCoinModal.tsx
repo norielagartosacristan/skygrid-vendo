@@ -19,8 +19,9 @@ export default function InsertCoinModal({
         const handleEsc = (e: KeyboardEvent) => {
 
             if (e.key === "Escape") {
-
+                
                 onClose();
+                stopPopup();
 
             }
 
@@ -89,8 +90,8 @@ export default function InsertCoinModal({
                 <div className="border-t p-4">
                     <button
                         onClick={() => {
-                            stopPopup();
                             onClose();
+                             stopPopup();
                         }}
                         className="w-full rounded-xl bg-red-500 py-3 font-semibold text-white hover:bg-red-600 transition"
                     >
