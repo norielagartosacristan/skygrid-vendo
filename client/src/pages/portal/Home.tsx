@@ -21,7 +21,7 @@ const insertCoin = useSound("/sounds/insertcoin.mp3");
 const warning5 = useSound("/sounds/warning5.mp3");
 const warning1 = useSound("/sounds/warning1.mp3");
 const expired = useSound("/sounds/expired.mp3");
-const ambience = useSound("/sounds/ambience.mp3", true);
+const ambience = useSound("/sounds/ambience.mp3");
 //const thankyou = useSound("/sounds/thankyou.mp3");
 
 
