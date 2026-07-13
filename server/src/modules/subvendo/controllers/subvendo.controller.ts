@@ -103,3 +103,29 @@ export async function approve(
     }
 
 }
+
+export async function pending(
+    req: Request,
+    res: Response
+) {
+
+    try {
+
+        const devices =
+            await subVendoService.pending();
+
+        res.json(devices);
+
+    } catch (err: any) {
+
+        res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+}

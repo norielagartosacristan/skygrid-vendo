@@ -25,4 +25,9 @@ router.post(
     controller.approve
 );
 
+router.get(
+    "/pending",
+    controller.pending
+);
+
 export default router;
