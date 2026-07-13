@@ -9,7 +9,7 @@ import networkGeneralRoutes from "./routes/networkGeneral.routes";
 import globalBandwidthRoutes from "./routes/globalBandwidth.routes";
 import clientControlRoutes from "./routes/clientControl.routes";
 import networkInterfaceRoutes from "./routes/networkInterface.routes";
-import subVendoRoutes from "./routes/subVendo.routes";
+//import subVendoRoutes from "./routes/subVendo.routes";
 import networkEngineRoutes from "./routes/networkEngine.routes";
 import networkStatusRoutes from "./routes/networkStatus.routes";
 import linuxRoutes from "./routes/linuxNetwork.routes";
@@ -22,6 +22,7 @@ import machineRoutes from "./modules/machine/routes/machine.routes";
 import { errorHandler } from "./middleware/error.middleware";
 import coinRoutes from "./modules/payment/coin/coin.routes";
 import paymentRoutes from "./modules/payment/payment.routes";
+import subVendoRoutes from "./modules/subvendo/routes/subvendo.routes";
 
 
 
@@ -62,6 +63,10 @@ app.use("/api/packages", packageRoutes);
 app.use("/api/machine", machineRoutes);
 app.use("/api/coin", coinRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use(
+    "/api/subvendo",
+    subVendoRoutes
+);
 
 /* =========================
    STATIC FRONTEND

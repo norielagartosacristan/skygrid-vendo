@@ -6,59 +6,62 @@ import http from "http";
 import { autoProvision } from "./services/networkProvision.service";
 import { networkMonitor } from "./modules/network/services/networkMonitor.service";
 import { networkSocket } from "./modules/network/websocket/network.socket";
-import { firewallRules } from "./modules/captive/firewall/firewallRules.service";
-import { machineService } from "./modules/machine/services/machine.service";
-import { sessionScheduler } from "./modules/captive/session/session.scheduler";
-import { captiveSocket } from "./modules/captive/websocket/captive.socket";
 
-const PORT = process.env.PORT || 5000;
+import { firewallRules } from "./modules/captive/firewall/firewallRules.service";
+import { captiveSocket } from "./modules/captive/websocket/captive.socket";
+import { sessionScheduler } from "./modules/captive/session/session.scheduler";
+
+import { machineService } from "./modules/machine/services/machine.service";
+
+import { subVendoSocket } from "./modules/subvendo/websocket/subvendo.socket";
+
+const PORT = Number(process.env.PORT) || 5000;
+
+// ONE HTTP SERVER ONLY
 const server = http.createServer(app);
 
-// Initialize WebSocket
+// Initialize all websocket modules
 networkSocket.init(server);
 captiveSocket.init(server);
+subVendoSocket.initialize(server);
 
 server.listen(PORT, async () => {
 
-    console.log(`🚀 Server running on ${PORT}`);
+    console.log(`🚀 Backend running on port ${PORT}`);
 
     try {
 
-        // Auto Provision
         await autoProvision();
 
-        // Register Machine
         const machine = await machineService.register();
 
-        console.log("✅ Machine Registered:");
+        console.log("Machine Registered");
         console.log(machine);
 
-        // Update network information
         await networkMonitor.update();
 
         setInterval(async () => {
+
             await networkMonitor.update();
+
         }, 1000);
-        // Initialize firewall
+
         await firewallRules.initialize();
 
-        await firewallRules.configureWAN(
-            "enp2s0"
-        );
+        await firewallRules.configureWAN("enp2s0");
 
         await firewallRules.registerVLAN(
             "enp2s0.22",
             "10.0.0.1"
         );
 
-        // Start automatic session expiration
         sessionScheduler.start();
 
-        console.log("✅ Session Scheduler Started");
+        console.log("Session Scheduler Started");
 
     } catch (err) {
 
-        console.error("Startup Error:", err);
+        console.error(err);
 
     }
 
