@@ -12,7 +12,7 @@ export default function useNetworkSocket() {
                 : "ws";
 
         const socket = new WebSocket(
-            `${protocol}://${window.location.hostname}:5000/ws/network`
+            `${protocol}://${window.location.hostname}/ws/network`
         );
 
         socket.onopen = () => {
