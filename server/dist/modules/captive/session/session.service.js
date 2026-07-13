@@ -46,6 +46,7 @@ class SessionService {
                     package: true
                 }
             });
+            await ipset_service_1.ipsetService.allow(session.ipAddress);
             console.log(`➕ Session extended until ${newExpiresAt}`);
             captive_socket_1.captiveSocket.send(session.ipAddress, {
                 type: "session.updated",
@@ -87,6 +88,7 @@ class SessionService {
                 isActive: false
             }
         });
+        await ipset_service_1.ipsetService.allow(session.ipAddress);
         await ipset_service_1.ipsetService.block(session.ipAddress);
         captive_socket_1.captiveSocket.send(session.ipAddress, {
             type: "session.expired"

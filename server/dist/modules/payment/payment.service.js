@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.paymentService = void 0;
 const prisma_1 = __importDefault(require("../../config/prisma"));
-const ipset_service_1 = require("../captive/firewall/ipset.service");
 const session_service_1 = require("../captive/session/session.service");
 class PaymentService {
     async processPayment(machineId, packageId, clientMac, clientIP, durationMinutes) {
@@ -16,13 +15,6 @@ class PaymentService {
                 isActive: true
             }
         });
-        /**
-         * First login only.
-         * Do not call this again when extending.
-         */
-        if (!existingSession) {
-            await ipset_service_1.ipsetService.allow(clientIP);
-        }
         /**
          * SessionService will automatically:
          * - create new session

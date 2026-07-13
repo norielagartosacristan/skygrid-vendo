@@ -13,7 +13,7 @@ const networkGeneral_routes_1 = __importDefault(require("./routes/networkGeneral
 const globalBandwidth_routes_1 = __importDefault(require("./routes/globalBandwidth.routes"));
 const clientControl_routes_1 = __importDefault(require("./routes/clientControl.routes"));
 const networkInterface_routes_1 = __importDefault(require("./routes/networkInterface.routes"));
-const subVendo_routes_1 = __importDefault(require("./routes/subVendo.routes"));
+//import subVendoRoutes from "./routes/subVendo.routes";
 const networkEngine_routes_1 = __importDefault(require("./routes/networkEngine.routes"));
 const networkStatus_routes_1 = __importDefault(require("./routes/networkStatus.routes"));
 const linuxNetwork_routes_1 = __importDefault(require("./routes/linuxNetwork.routes"));
@@ -26,6 +26,7 @@ const machine_routes_1 = __importDefault(require("./modules/machine/routes/machi
 const error_middleware_1 = require("./middleware/error.middleware");
 const coin_routes_1 = __importDefault(require("./modules/payment/coin/coin.routes"));
 const payment_routes_1 = __importDefault(require("./modules/payment/payment.routes"));
+const subvendo_routes_1 = __importDefault(require("./modules/subvendo/routes/subvendo.routes"));
 const app = (0, express_1.default)();
 const CLIENT_BUILD_PATH = path_1.default.resolve(process.cwd(), "client/dist");
 app.set("trust proxy", true);
@@ -40,7 +41,7 @@ app.use("/api/network/interfaces", networkInterface_routes_1.default);
 app.use("/api/network/general", networkGeneral_routes_1.default);
 app.use("/api/network/bandwidth", globalBandwidth_routes_1.default);
 app.use("/api/client/control", clientControl_routes_1.default);
-app.use("/api/sub-vendo", subVendo_routes_1.default);
+app.use("/api/sub-vendo", subvendo_routes_1.default);
 app.use("/api/network-engine", networkEngine_routes_1.default);
 app.use("/api/network-status", networkStatus_routes_1.default);
 app.use("/api/linux", linuxNetwork_routes_1.default);
@@ -52,6 +53,7 @@ app.use("/api/packages", package_routes_1.default);
 app.use("/api/machine", machine_routes_1.default);
 app.use("/api/coin", coin_routes_1.default);
 app.use("/api/payment", payment_routes_1.default);
+app.use("/api/subvendo", subvendo_routes_1.default);
 /* =========================
    STATIC FRONTEND
 ========================= */
