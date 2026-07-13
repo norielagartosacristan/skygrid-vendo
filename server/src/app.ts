@@ -24,9 +24,6 @@ import paymentRoutes from "./modules/payment/payment.routes";
 import subVendoRoutes from "./modules/subvendo/routes/subvendo.routes";
 
 
-
-
-
 const app = express();
 
 
@@ -61,10 +58,7 @@ app.use("/api/packages", packageRoutes);
 app.use("/api/machine", machineRoutes);
 app.use("/api/coin", coinRoutes);
 app.use("/api/payment", paymentRoutes);
-app.use(
-    "/api/sub-vendo",
-    subVendoRoutes
-);
+app.use("/api/subvendo", subVendoRoutes);
 
 /* =========================
    STATIC FRONTEND
