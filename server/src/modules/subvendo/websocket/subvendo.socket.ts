@@ -1,10 +1,11 @@
-import { Server } from "ws";
+import { Server, WebSocket } from "ws";
+import { subVendoService } from "../services/subvendo.service";
 
 class SubVendoSocket {
 
     private wss?: Server;
 
-    private devices = new Map<string, any>();
+    private devices = new Map<string, WebSocket>();
 
     initialize(server: any) {
 
@@ -16,43 +17,103 @@ class SubVendoSocket {
 
         });
 
-        this.wss.on("connection", (socket) => {
+        this.wss.on("connection", (socket: WebSocket) => {
 
-            console.log("SubVendo connected");
+            console.log("================================");
+            console.log("✅ SubVendo Connected");
+            console.log("================================");
 
-            socket.on("message", (msg) => {
+            socket.on("message", async (msg) => {
 
                 try {
 
+                    console.log("RAW MESSAGE:");
+                    console.log(msg.toString());
+
                     const data = JSON.parse(msg.toString());
 
-                    if (data.type === "register") {
+                    console.log("PARSED DATA:");
+                    console.log(data);
 
-                        this.devices.set(
+                    switch (data.type) {
 
-                            data.chipId,
+                        case "register":
 
-                            socket
+                            await subVendoService.register({
 
-                        );
+                                chipId: data.chipId,
 
-                        console.log(
+                                macAddress: data.macAddress,
 
-                            "Registered",
+                                firmwareVersion: data.firmwareVersion,
 
-                            data.chipId
+                                ipAddress: data.ipAddress
 
-                        );
+                            });
+
+                            this.devices.set(
+
+                                data.chipId,
+
+                                socket
+
+                            );
+
+                            console.log(`✅ Registered: ${data.chipId}`);
+
+                            break;
+
+                        case "heartbeat":
+
+                            await subVendoService.heartbeat({
+
+                                chipId: data.chipId,
+
+                                freeMemory: data.freeMemory,
+
+                                uptime: data.uptime,
+
+                                wifiSignal: data.wifiSignal,
+
+                                temperature: data.temperature ?? 0,
+
+                                connectedClients: data.connectedClients ?? 0
+
+                            });
+
+                            console.log(`💓 Heartbeat: ${data.chipId}`);
+
+                            break;
+
+                        default:
+
+                            console.log("⚠ Unknown message type:", data.type);
 
                     }
 
-                } catch {}
+                } catch (err) {
+
+                    console.error("SubVendo Socket Error:", err);
+
+                }
 
             });
 
             socket.on("close", () => {
 
-                console.log("Disconnected");
+                console.log("❌ SubVendo Disconnected");
+
+                for (const [chipId, ws] of this.devices.entries()) {
+
+                    if (ws === socket) {
+
+                        this.devices.delete(chipId);
+
+                        break;
+
+                    }
+
+                }
 
             });
 
@@ -62,10 +123,15 @@ class SubVendoSocket {
 
     send(chipId: string, payload: any) {
 
-        const socket =
-            this.devices.get(chipId);
+        const socket = this.devices.get(chipId);
 
-        if (!socket) return;
+        if (!socket) {
+
+            console.log(`Device ${chipId} is offline.`);
+
+            return;
+
+        }
 
         socket.send(
 
@@ -77,5 +143,4 @@ class SubVendoSocket {
 
 }
 
-export const subVendoSocket =
-    new SubVendoSocket();
+export const subVendoSocket = new SubVendoSocket();
