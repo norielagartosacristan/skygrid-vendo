@@ -62,7 +62,7 @@ app.use("/api/machine", machineRoutes);
 app.use("/api/coin", coinRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use(
-    "/api/subvendo",
+    "/api/sub-vendo",
     subVendoRoutes
 );
 
