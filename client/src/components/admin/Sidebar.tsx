@@ -32,7 +32,7 @@ const menus = [
   {
     icon: Wifi,
     title: "Sub Vendo",
-    path: "/admin/sub-vendo",
+    path: "/admin/subvendo",
 },
 ];
 
