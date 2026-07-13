@@ -30,4 +30,9 @@ router.get(
     controller.pending
 );
 
+router.get(
+    "/registered",
+    controller.registered
+);
+
 export default router;

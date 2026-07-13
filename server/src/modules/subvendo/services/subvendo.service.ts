@@ -230,6 +230,26 @@ async pending() {
 
 }
 
+async registered() {
+
+    return prisma.subVendo.findMany({
+
+        where: {
+
+            status: "APPROVED"
+
+        },
+
+        orderBy: {
+
+            createdAt: "desc"
+
+        }
+
+    });
+
+}
+
 }
 
 export const subVendoService =

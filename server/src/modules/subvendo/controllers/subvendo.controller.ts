@@ -129,3 +129,29 @@ export async function pending(
     }
 
 }
+
+export async function registered(
+    req: Request,
+    res: Response
+) {
+
+    try {
+
+        const devices =
+            await subVendoService.registered();
+
+        res.json(devices);
+
+    } catch (err: any) {
+
+        res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+}
