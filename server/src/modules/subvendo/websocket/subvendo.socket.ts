@@ -8,6 +8,7 @@ class SubVendoSocket {
     private devices = new Map<string, WebSocket>();
 
    initialize(server: any) {
+        console.log("Initializing SubVendo WebSocket");
 
     this.wss = new Server({
 
@@ -16,6 +17,9 @@ class SubVendoSocket {
         path: "/ws/subvendo"
 
     });
+
+        console.log("SubVendo WebSocket initialized");
+
 
     this.wss.on("connection", (socket: WebSocket) => {
 
