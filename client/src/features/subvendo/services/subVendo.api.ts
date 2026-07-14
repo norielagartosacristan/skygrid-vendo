@@ -1,17 +1,17 @@
 import api from "../../../services/api";
 
 export function registerDevice(data: any) {
-  return api.post("/sub-vendo/register", data);
+  return api.post("/subvendo/register", data);
 }
 
 export function getPendingDevices() {
-  return api.get("/sub-vendo/pending");
+  return api.get("/subvendo/pending");
 }
 
 export function configureDevice(id: string, data: any) {
-  return api.put(`/sub-vendo/${id}`, data);
+  return api.put(`/subvendo/${id}`, data);
 }
 
 export function getRegisteredDevices() {
-  return api.get("/sub-vendo/registered");
+  return api.get("/subvendo/registered");
 }
