@@ -30,9 +30,12 @@ server.on("upgrade", (req) => {
 
 // Initialize all websocket modules
 networkSocket.init(server);
-captiveSocket.init(server);
-subVendoSocket.initialize(server);
+console.log("Network WS Initialized");
 
+captiveSocket.init(server);
+console.log("Captive WS Initialized");
+
+subVendoSocket.initialize(server);
 console.log("SUBVENDO WS INITIALIZED");
 
 server.listen(PORT, async () => {
