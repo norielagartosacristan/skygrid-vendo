@@ -7,119 +7,90 @@ class SubVendoSocket {
 
     private devices = new Map<string, WebSocket>();
 
-    initialize(server: any) {
+   initialize(server: any) {
 
-        this.wss = new Server({
+    this.wss = new Server({
 
-            server,
+        server,
 
-            path: "/ws/subvendo"
+        path: "/ws/subvendo"
 
-        });
+    });
 
-        this.wss.on("connection", (socket: WebSocket) => {
+    this.wss.on("connection", (socket: WebSocket) => {
 
-            console.log("================================");
-            console.log("✅ SubVendo Connected");
-            console.log("================================");
+        console.log("================================");
+        console.log("NEW SUBVENDO SOCKET CONNECTED");
+        console.log("================================");
 
-            socket.on("message", async (msg) => {
+        socket.on("message", async (msg) => {
 
-                try {
+            console.log("RAW:", msg.toString());
 
-                    console.log("RAW MESSAGE:");
-                    console.log(msg.toString());
+            try {
 
-                    const data = JSON.parse(msg.toString());
+                const data = JSON.parse(msg.toString());
 
-                    console.log("PARSED DATA:");
-                    console.log(data);
+                console.log(data);
 
-                    switch (data.type) {
+                switch (data.type) {
 
-                        case "register":
+                    case "register":
 
-                            await subVendoService.register({
+                        await subVendoService.register({
 
-                                chipId: data.chipId,
+                            chipId: data.chipId,
+                            macAddress: data.macAddress,
+                            firmwareVersion: data.firmwareVersion,
+                            ipAddress: data.ipAddress
 
-                                macAddress: data.macAddress,
+                        });
 
-                                firmwareVersion: data.firmwareVersion,
+                        this.devices.set(
+                            data.chipId,
+                            socket
+                        );
 
-                                ipAddress: data.ipAddress
-
-                            });
-
-                            this.devices.set(
-
-                                data.chipId,
-
-                                socket
-
-                            );
-
-                            console.log(`✅ Registered: ${data.chipId}`);
-
-                            break;
-
-                        case "heartbeat":
-
-                            await subVendoService.heartbeat({
-
-                                chipId: data.chipId,
-
-                                freeMemory: data.freeMemory,
-
-                                uptime: data.uptime,
-
-                                wifiSignal: data.wifiSignal,
-
-                                temperature: data.temperature ?? 0,
-
-                                connectedClients: data.connectedClients ?? 0
-
-                            });
-
-                            console.log(`💓 Heartbeat: ${data.chipId}`);
-
-                            break;
-
-                        default:
-
-                            console.log("⚠ Unknown message type:", data.type);
-
-                    }
-
-                } catch (err) {
-
-                    console.error("SubVendo Socket Error:", err);
-
-                }
-
-            });
-
-            socket.on("close", () => {
-
-                console.log("❌ SubVendo Disconnected");
-
-                for (const [chipId, ws] of this.devices.entries()) {
-
-                    if (ws === socket) {
-
-                        this.devices.delete(chipId);
+                        console.log("REGISTER:", data.chipId);
 
                         break;
 
-                    }
+                    case "heartbeat":
+
+                        console.log("HEARTBEAT:", data.chipId);
+
+                        await subVendoService.heartbeat({
+
+                            chipId: data.chipId,
+                            freeMemory: data.freeMemory,
+                            uptime: data.uptime,
+                            wifiSignal: data.wifiSignal,
+                            temperature: data.temperature ?? 0,
+                            connectedClients: data.connectedClients ?? 0
+
+                        });
+
+                        break;
 
                 }
 
-            });
+            } catch (err) {
+
+                console.error(err);
+
+            }
 
         });
 
-    }
+        socket.on("close", () => {
+
+            console.log("SUBVENDO CLOSED");
+
+        });
+
+    });
+
+}
 
     send(chipId: string, payload: any) {
 
