@@ -250,6 +250,50 @@ async registered() {
 
 }
 
+async update(id: string, data: any) {
+
+    return prisma.subVendo.update({
+
+        where: {
+            id
+        },
+
+        data: {
+
+            machineName: data.machineName,
+
+            parentInterface: data.parentInterface,
+
+            vlanId: data.vlanId,
+
+            ipMode: data.ipMode,
+
+            ipAddressStatic: data.ipAddressStatic,
+
+            subnetMask: data.subnetMask,
+
+            gateway: data.gateway,
+
+            dns1: data.dns1,
+
+            dns2: data.dns2,
+
+            clientStartIp: data.clientStartIp,
+
+            clientEndIp: data.clientEndIp,
+
+            bandwidthProfile: data.bandwidthProfile,
+
+            portal: data.portal,
+
+            status: "CONFIGURED"
+
+        }
+
+    });
+
+}
+
 }
 
 export const subVendoService =

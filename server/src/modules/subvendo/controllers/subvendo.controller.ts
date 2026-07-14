@@ -155,3 +155,30 @@ export async function registered(
     }
 
 }
+
+export async function update(
+    req: Request<{ id: string }>,
+    res: Response
+) {
+    try {
+
+        const device =
+            await subVendoService.update(
+                req.params.id,
+                req.body
+            );
+
+        res.json({
+            success: true,
+            device
+        });
+
+    } catch (err: any) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+}

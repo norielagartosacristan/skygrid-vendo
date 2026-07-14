@@ -9,7 +9,7 @@ export function getPendingDevices() {
 }
 
 export function configureDevice(id: string, data: any) {
-  return api.put(`/subvendo/${id}`, data);
+    return api.put(`/subvendo/${id}`, data);
 }
 
 export function getRegisteredDevices() {
