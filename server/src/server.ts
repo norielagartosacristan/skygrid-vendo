@@ -33,6 +33,8 @@ networkSocket.init(server);
 captiveSocket.init(server);
 subVendoSocket.initialize(server);
 
+console.log("SUBVENDO WS INITIALIZED");
+
 server.listen(PORT, async () => {
 
     console.log(`🚀 Backend running on port ${PORT}`);
