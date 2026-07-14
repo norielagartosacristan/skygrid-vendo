@@ -20,6 +20,14 @@ const PORT = Number(process.env.PORT) || 5000;
 // ONE HTTP SERVER ONLY
 const server = http.createServer(app);
 
+server.on("upgrade", (req) => {
+    console.log("================================");
+    console.log("UPGRADE REQUEST");
+    console.log(req.url);
+    console.log(req.headers);
+    console.log("================================");
+});
+
 // Initialize all websocket modules
 networkSocket.init(server);
 captiveSocket.init(server);
