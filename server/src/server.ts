@@ -20,14 +20,19 @@ const PORT = Number(process.env.PORT) || 5000;
 // ONE HTTP SERVER ONLY
 const server = http.createServer(app);
 
-server.on("upgrade", (req, socket) => {
-    console.log("================================");
-    console.log("UPGRADE:", req.url);
-    console.log("================================");
+server.on("upgrade", (req, socket, head) => {
 
-    socket.on("error", (err) => {
-        console.error("UPGRADE SOCKET ERROR:", err);
-    });
+    console.log("UPGRADE:", req.url);
+
+    if (req.url?.startsWith("/ws/subvendo")) {
+
+        console.log("HANDLING SUBVENDO");
+
+        subVendoSocket.handleUpgrade(req, socket, head);
+
+        return;
+    }
+
 });
 
 // Initialize all websocket modules

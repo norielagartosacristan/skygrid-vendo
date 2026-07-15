@@ -12,9 +12,9 @@ class SubVendoSocket {
 
     this.wss = new Server({
 
-        server,
+        noServer: true
 
-        path: "/ws/subvendo"
+        //path: "/ws/subvendo"
 
     });
 
@@ -116,6 +116,20 @@ class SubVendoSocket {
 
     }
 
+    
+handleUpgrade(req: any, socket: any, head: any) {
+
+    this.wss!.handleUpgrade(req, socket, head, (ws) => {
+
+        console.log("NEW SUBVENDO SOCKET CONNECTED");
+
+        this.wss!.emit("connection", ws, req);
+
+    });
+
 }
+
+}
+
 
 export const subVendoSocket = new SubVendoSocket();
