@@ -11,7 +11,14 @@ class SubVendoSocket {
 
         this.wss = new Server({
             server,
-            path: "/ws/subvendo"
+            path: "/ws/subvendo",
+            // FIX 1: Ibalik ang "arduino" protocol para aprubahan ang handshake ng ESP
+            handleProtocols: (protocols) => {
+                if (protocols.has("arduino")) {
+                    return "arduino";
+                }
+                return false;
+            }
         });
 
         console.log("SubVendo WebSocket initialized");
@@ -25,23 +32,21 @@ class SubVendoSocket {
             console.log("Headers:");
             console.log(req.headers);
 
-            // Gagawa tayo ng flag para ma-track kung anong chipId ang hawak ng socket na ito para sa cleanup
             let socketChipId: string | null = null;
 
-            socket.on("message", async (msg) => {
-                console.log("RAW:", msg.toString());
-
+            socket.on("message", async (msg, isBinary) => {
                 try {
-                    const data = JSON.parse(msg.toString());
-                    console.log(data);
+                    // FIX 2: Siguraduhing maayos ang pag-decode kahit binary o text frame ang dumating
+                    const rawMessage = isBinary ? msg : msg.toString();
+                    console.log("RAW RECEIVED:", rawMessage.toString());
+
+                    const data = JSON.parse(rawMessage.toString());
+                    console.log("PARSED DATA:", data);
 
                     switch (data.type) {
 
                         case "register":
                             try {
-                                // 1. Subukan i-register ang device gamit ang iyong service.
-                                // Dapat sa loob ng service na ito, kapag bago ang chipId,
-                                // i-insert ito sa DB na may status: 'pending' at HUWAG mag-throw ng error.
                                 const device = await subVendoService.register({
                                     chipId: data.chipId,
                                     macAddress: data.macAddress,
@@ -49,12 +54,11 @@ class SubVendoSocket {
                                     ipAddress: data.ipAddress
                                 });
 
-                                // 2. I-save ang aktibong socket connection
                                 socketChipId = data.chipId;
                                 this.devices.set(data.chipId, socket);
                                 console.log("REGISTER SUCCESS:", data.chipId);
 
-                                // 3. IMPORTANT: Magpadala ng feedback sa ESP para malaman nitong success ang registration!
+                                // Magpadala ng confirmation sa ESP
                                 socket.send(JSON.stringify({
                                     type: "register_ack",
                                     status: "success",
@@ -62,22 +66,17 @@ class SubVendoSocket {
                                 }));
 
                             } catch (regError: any) {
-                                console.error("Error during sub-vendo registration service:", regError.message);
-                                
-                                // Mag-reply sa ESP na may error para hindi ito mag-hang
+                                console.error("Registration Service Error:", regError.message);
                                 socket.send(JSON.stringify({
                                     type: "register_ack",
                                     status: "error",
-                                    message: regError.message || "Registration failed"
+                                    message: regError.message
                                 }));
-                                
-                                // I-close ang socket kung talagang bawal
-                                socket.close(4001, "Registration Failed");
                             }
                             break;
 
                         case "heartbeat":
-                            console.log("HEARTBEAT:", data.chipId);
+                            console.log("HEARTBEAT RECEIVED:", data.chipId);
 
                             await subVendoService.heartbeat({
                                 chipId: data.chipId,
@@ -88,13 +87,12 @@ class SubVendoSocket {
                                 connectedClients: data.connectedClients ?? 0
                             });
 
-                            // Opsyonal: Mag-reply rin ng heartbeat response
                             socket.send(JSON.stringify({ type: "heartbeat_ack" }));
                             break;
                     }
 
                 } catch (err) {
-                    console.error("JSON Parse or Handling Error:", err);
+                    console.error("Failed to parse message from ESP:", err);
                 }
             });
 
@@ -105,7 +103,6 @@ class SubVendoSocket {
                 console.log("Reason:", reason.toString());
                 console.log("================================");
                 
-                // Burahin sa active devices map kapag nag-disconnect
                 if (socketChipId) {
                     this.devices.delete(socketChipId);
                 }
