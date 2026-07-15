@@ -12,9 +12,9 @@ class SubVendoSocket {
 
     this.wss = new Server({
 
-        noServer: true
+        server,
 
-        //path: "/ws/subvendo"
+        path: "/ws/subvendo"
 
     });
 
