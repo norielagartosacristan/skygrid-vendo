@@ -67,7 +67,7 @@ export async function block(
 }
 
 export async function clients(
-    req: Request,
+    _req: Request,
     res: Response
 ) {
 
@@ -123,7 +123,7 @@ export async function client(
 
 
 
-export async function enable(req: Request, res: Response) {
+export async function enable(_req: Request, res: Response) {
     await firewallRules.initialize();
 
     res.json({
@@ -132,7 +132,7 @@ export async function enable(req: Request, res: Response) {
     });
 }
 
-export async function disable(req: Request, res: Response) {
+export async function disable(_req: Request, res: Response) {
     // Mamaya natin lalagyan ng implementation
     res.json({
         success: true,
@@ -140,7 +140,7 @@ export async function disable(req: Request, res: Response) {
     });
 }
 
-export async function rules(req: Request, res: Response) {
+export async function rules(_req: Request, res: Response) {
     const data = await firewallRules.showRules();
 
     res.send(data);

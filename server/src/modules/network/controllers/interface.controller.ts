@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import * as InterfaceService from "../services/interface.service";
 
 export async function getInterfaces(
-  req: Request,
+  _req: Request,
   res: Response
 ) {
   try {

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import * as NetworkService from "../services/network.service";
 
 export async function getVlans(
-    req:Request,
+    _req:Request,
     res:Response
 ){
 

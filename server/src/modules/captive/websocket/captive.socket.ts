@@ -21,8 +21,8 @@ class CaptiveSocket {
 
         this.wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
             console.log("================================");
-console.log("SESSION SOCKET CONNECTED");
-console.log("================================");
+            console.log("SESSION SOCKET CONNECTED");
+            console.log("================================");
 
             const url = new URL(
                 req.url || "",

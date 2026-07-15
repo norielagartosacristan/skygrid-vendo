@@ -23,7 +23,6 @@ class FirewallRulesService {
 
             return stdout;
         } catch (err: any) {
-            // Huwag mag-alala sa error kapag nagbubura ng rules na wala naman talaga
             return "";
         }
     }
