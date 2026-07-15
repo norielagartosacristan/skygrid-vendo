@@ -21,78 +21,90 @@ class SubVendoSocket {
         console.log("SubVendo WebSocket initialized");
 
 
-    this.wss.on("connection", (socket: WebSocket) => {
+    this.wss.on("connection", (socket: WebSocket, req) => {
 
-        console.log("================================");
-        console.log("NEW SUBVENDO SOCKET CONNECTED");
-        console.log("================================");
+    console.log("================================");
+    console.log("NEW SUBVENDO SOCKET CONNECTED");
+    console.log("================================");
 
-        socket.on("message", async (msg) => {
+    console.log("Headers:");
+    console.log(req.headers);
 
-            console.log("RAW:", msg.toString());
+    socket.on("message", async (msg) => {
 
-            try {
+        console.log("RAW:", msg.toString());
 
-                const data = JSON.parse(msg.toString());
+        try {
 
-                console.log(data);
+            const data = JSON.parse(msg.toString());
 
-                switch (data.type) {
+            console.log(data);
 
-                    case "register":
+            switch (data.type) {
 
-                        await subVendoService.register({
+                case "register":
 
-                            chipId: data.chipId,
-                            macAddress: data.macAddress,
-                            firmwareVersion: data.firmwareVersion,
-                            ipAddress: data.ipAddress
+                    await subVendoService.register({
 
-                        });
+                        chipId: data.chipId,
+                        macAddress: data.macAddress,
+                        firmwareVersion: data.firmwareVersion,
+                        ipAddress: data.ipAddress
 
-                        this.devices.set(
-                            data.chipId,
-                            socket
-                        );
+                    });
 
-                        console.log("REGISTER:", data.chipId);
+                    this.devices.set(data.chipId, socket);
 
-                        break;
+                    console.log("REGISTER:", data.chipId);
 
-                    case "heartbeat":
+                    break;
 
-                        console.log("HEARTBEAT:", data.chipId);
+                case "heartbeat":
 
-                        await subVendoService.heartbeat({
+                    console.log("HEARTBEAT:", data.chipId);
 
-                            chipId: data.chipId,
-                            freeMemory: data.freeMemory,
-                            uptime: data.uptime,
-                            wifiSignal: data.wifiSignal,
-                            temperature: data.temperature ?? 0,
-                            connectedClients: data.connectedClients ?? 0
+                    await subVendoService.heartbeat({
 
-                        });
+                        chipId: data.chipId,
+                        freeMemory: data.freeMemory,
+                        uptime: data.uptime,
+                        wifiSignal: data.wifiSignal,
+                        temperature: data.temperature ?? 0,
+                        connectedClients: data.connectedClients ?? 0
 
-                        break;
+                    });
 
-                }
-
-            } catch (err) {
-
-                console.error(err);
-
+                    break;
             }
 
-        });
+        } catch (err) {
 
-        socket.on("close", () => {
+            console.error(err);
 
-            console.log("SUBVENDO CLOSED");
-
-        });
+        }
 
     });
+
+    socket.on("close", (code, reason) => {
+
+        console.log("================================");
+        console.log("SUBVENDO CLOSED");
+        console.log("Code:", code);
+        console.log("Reason:", reason.toString());
+        console.log("================================");
+
+    });
+
+    socket.on("error", (err) => {
+
+        console.log("================================");
+        console.log("SOCKET ERROR");
+        console.log(err);
+        console.log("================================");
+
+    });
+
+});
 
 }
 
