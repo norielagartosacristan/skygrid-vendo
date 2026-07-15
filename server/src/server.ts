@@ -22,10 +22,16 @@ const server = http.createServer(app);
 
 server.on("upgrade", (req, socket, head) => {
 
-    if (req.url?.startsWith("/ws/subvendo")) {
+    console.log("UPGRADE:", req.url);
+
+    if (req.url === "/ws/subvendo") {
+
         subVendoSocket.handleUpgrade(req, socket, head);
+
         return;
     }
+
+    socket.destroy();
 
 });
 

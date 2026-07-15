@@ -6,12 +6,12 @@ class SubVendoSocket {
     private wss?: Server;
     private devices = new Map<string, WebSocket>();
 
-    initialize(server: any) {
+    initialize(_server: any) {
         console.log("Initializing SubVendo WebSocket");
 
         this.wss = new Server({
-            server,
-            path: "/ws/subvendo"
+            noServer: true,
+            //path: "/ws/subvendo"
         });
 
         console.log("SubVendo WebSocket initialized");
