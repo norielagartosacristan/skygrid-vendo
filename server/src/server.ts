@@ -28,7 +28,7 @@ server.on("upgrade", (req, socket, head) => {
 
         console.log("HANDLING SUBVENDO");
 
-        subVendoSocket.handleUpgrade(req, socket, head);
+       // subVendoSocket.handleUpgrade(req, socket, head);
 
         return;
     }
