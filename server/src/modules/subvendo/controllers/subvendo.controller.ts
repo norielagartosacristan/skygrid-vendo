@@ -3,27 +3,30 @@ import { subVendoService } from "../services/subvendo.service";
 
 export async function register(req: Request, res: Response) {
 
+    console.log("================================");
+    console.log("REGISTER REQUEST");
+    console.log(req.body);
+    console.log("================================");
+
     try {
 
-        const machine =
-            await subVendoService.register(req.body);
+        const machine = await subVendoService.register(req.body);
+
+        console.log("REGISTER SUCCESS");
 
         res.json({
-
             success: true,
-
             machine
-
         });
 
     } catch (err: any) {
 
+        console.error("REGISTER ERROR");
+        console.error(err);
+
         res.status(500).json({
-
             success: false,
-
             message: err.message
-
         });
 
     }
