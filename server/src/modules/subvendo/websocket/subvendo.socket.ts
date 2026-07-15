@@ -10,7 +10,8 @@ class SubVendoSocket {
 
         // FIX: Gumamit ng standalone port para iwas salpukan sa ibang routes ng port 5000
         this.wss = new Server({
-            port: 5001,
+
+            noServer: true,
             path: "/ws/subvendo",
             handleProtocols: (protocols) => {
                 // Awtomatikong tanggapin ang 'arduino' sub-protocol ng NodeMCU

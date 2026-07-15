@@ -12,7 +12,7 @@ class CaptiveSocket {
     init(server: Server) {
 
         this.wss = new WebSocketServer({
-
+            port: 5000,
             server,
 
             path: "/ws/session",
