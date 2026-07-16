@@ -138,16 +138,21 @@ class SubVendoService {
         });
     }
 
-    async registered() {
-        return prisma.subVendo.findMany({
-            where: {
-                status: "APPROVED"
-            },
-            orderBy: {
-                createdAt: "desc"
+async registered() {
+    return prisma.subVendo.findMany({
+        where: {
+            status: {
+                in: [
+                    "APPROVED",
+                    "CONFIGURED"
+                ]
             }
-        });
-    }
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+}
 
     async update(id: string, data: any) {
         return prisma.subVendo.update({
@@ -172,6 +177,23 @@ class SubVendoService {
             }
         });
     }
+
+    async coin(data: any)
+{
+    console.log("COIN RECEIVED");
+
+    console.log(data);
+
+    return {
+
+        success: true,
+
+        message: "Coin Received"
+
+    };
 }
+}
+
+
 
 export const subVendoService = new SubVendoService();

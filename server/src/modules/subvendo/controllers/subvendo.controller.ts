@@ -185,3 +185,24 @@ export async function update(
 
     }
 }
+
+export async function coin(
+    req: Request,
+    res: Response
+)
+{
+    try
+    {
+        const result =
+            await subVendoService.coin(req.body);
+
+        res.json(result);
+    }
+    catch(err: any)
+    {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+}

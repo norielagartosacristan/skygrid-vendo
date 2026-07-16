@@ -40,4 +40,9 @@ router.put(
     controller.update
 );
 
+router.post(
+    "/coin",
+    controller.coin
+);
+
 export default router;
