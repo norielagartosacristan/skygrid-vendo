@@ -71,44 +71,44 @@ class SubVendoService {
     }
 
     async getConfig(chipId: string) {
-        const device = await prisma.subVendo.findUnique({
-            where: {
-                chipId
-            }
-        });
 
-        if (!device) {
-            throw new Error("Device not found.");
+    const device = await prisma.subVendo.findUnique({
+        where: {
+            chipId
         }
+    });
 
-        if (
-            device.status !== "APPROVED" ||
-            !device.enabled
-        ) {
-            return {
-                ready: false,
-                message: "Waiting for approval."
-            };
-        }
+    if (!device) {
+        throw new Error("Device not found.");
+    }
 
+    if (
+        !["APPROVED", "CONFIGURED"].includes(device.status) ||
+        !device.enabled
+    ) {
         return {
-            ready: true,
-            machineName: device.machineName,
-            parentInterface: device.parentInterface,
-            vlanId: device.vlanId,
-            ipMode: device.ipMode,
-            ipAddress: device.ipAddressStatic,
-            subnetMask: device.subnetMask,
-            gateway: device.gateway,
-            dns1: device.dns1,
-            dns2: device.dns2,
-            clientStartIp: device.clientStartIp,
-            clientEndIp: device.clientEndIp,
-            bandwidthProfile: device.bandwidthProfile,
-            portal: device.portal
+            ready: false,
+            message: "Waiting for approval."
         };
     }
 
+    return {
+        ready: true,
+        machineName: device.machineName,
+        parentInterface: device.parentInterface,
+        vlanId: device.vlanId,
+        ipMode: device.ipMode,
+        ipAddress: device.ipAddressStatic,
+        subnetMask: device.subnetMask,
+        gateway: device.gateway,
+        dns1: device.dns1,
+        dns2: device.dns2,
+        clientStartIp: device.clientStartIp,
+        clientEndIp: device.clientEndIp,
+        bandwidthProfile: device.bandwidthProfile,
+        portal: device.portal
+    };
+}
     async approve(id: string) {
         const device = await prisma.subVendo.update({
             where: {
@@ -155,28 +155,30 @@ async registered() {
 }
 
     async update(id: string, data: any) {
-        return prisma.subVendo.update({
-            where: {
-                id
-            },
-            data: {
-                machineName: data.machineName,
-                parentInterface: data.parentInterface,
-                vlanId: data.vlanId,
-                ipMode: data.ipMode,
-                ipAddressStatic: data.ipAddressStatic,
-                subnetMask: data.subnetMask,
-                gateway: data.gateway,
-                dns1: data.dns1,
-                dns2: data.dns2,
-                clientStartIp: data.clientStartIp,
-                clientEndIp: data.clientEndIp,
-                bandwidthProfile: data.bandwidthProfile,
-                portal: data.portal,
-                status: "CONFIGURED"
-            }
-        });
-    }
+    return prisma.subVendo.update({
+        where: {
+            id
+        },
+        data: {
+            machineName: data.machineName,
+            parentInterface: data.parentInterface,
+            vlanId: data.vlanId,
+            ipMode: data.ipMode,
+            ipAddressStatic: data.ipAddressStatic,
+            subnetMask: data.subnetMask,
+            gateway: data.gateway,
+            dns1: data.dns1,
+            dns2: data.dns2,
+            clientStartIp: data.clientStartIp,
+            clientEndIp: data.clientEndIp,
+            bandwidthProfile: data.bandwidthProfile,
+            portal: data.portal,
+
+            status: "CONFIGURED",
+            enabled: true
+        }
+    });
+}
 
     async coin(data: any)
 {
