@@ -14,6 +14,8 @@ import { sessionScheduler } from "./modules/captive/session/session.scheduler";
 import { machineService } from "./modules/machine/services/machine.service";
 
 import { subVendoSocket } from "./modules/subvendo/websocket/subvendo.socket";
+import { startDeviceMonitor } from "./modules/subvendo/services/device-monitor.service";
+
 
 const PORT = Number(process.env.PORT) || 5000;
 
@@ -39,6 +41,8 @@ console.log("Captive WS Initialized");
 
 subVendoSocket.initialize(server);
 console.log("SUBVENDO WS INITIALIZED");
+
+startDeviceMonitor();
 
 server.listen(PORT, async () => {
 
