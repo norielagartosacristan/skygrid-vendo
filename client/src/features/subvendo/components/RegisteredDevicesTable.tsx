@@ -5,16 +5,19 @@ export default function RegisteredDevicesTable() {
   const [devices, setDevices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadDevices() {
-    try {
-      const res = await getRegisteredDevices();
-      setDevices(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+ async function loadDevices() {
+  try {
+    const res = await getRegisteredDevices();
+
+    console.log(res.data);
+
+    setDevices(res.data);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
     loadDevices();
@@ -104,7 +107,7 @@ export default function RegisteredDevicesTable() {
 </td>
 <td className="p-3">
 
-  {device.enabled ? (
+  {device.online ? (
 
     <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
       🟢 Online
