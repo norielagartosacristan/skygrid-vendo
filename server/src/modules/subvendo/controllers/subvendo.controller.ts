@@ -36,6 +36,9 @@ export async function register(req: Request, res: Response) {
 
 export async function heartbeat(req: Request, res: Response) {
 
+    console.log("========== HEARTBEAT ==========");
+    console.log(req.body);
+
     try {
 
         await subVendoService.heartbeat(req.body);
@@ -45,6 +48,8 @@ export async function heartbeat(req: Request, res: Response) {
         });
 
     } catch (err: any) {
+
+        console.error(err);
 
         res.status(500).json({
             success: false,

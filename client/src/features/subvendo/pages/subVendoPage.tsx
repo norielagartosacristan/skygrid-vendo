@@ -3,7 +3,7 @@ import PendingDevicesTable from "../components/PendingDevicesTable";
 import RegisteredDevicesTable from "../components/RegisteredDevicesTable";
 
 export default function SubVendoPage() {
-  const [tab, setTab] = useState<"pending" | "registered">("pending");
+  const [tab, setTab] = useState<"registered" | "pending">("registered");
 
   return (
     <div className="space-y-6">
@@ -47,10 +47,8 @@ export default function SubVendoPage() {
         </button>
 
       </div>
-
-      {tab === "pending" && <PendingDevicesTable />}
-
       {tab === "registered" && <RegisteredDevicesTable />}
+      {tab === "pending" && <PendingDevicesTable />}
 
     </div>
   );
