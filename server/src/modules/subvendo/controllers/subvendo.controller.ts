@@ -33,6 +33,7 @@ export async function register(req: Request, res: Response) {
 
 }
 
+
 export async function heartbeat(req: Request, res: Response) {
 
     try {
@@ -40,19 +41,14 @@ export async function heartbeat(req: Request, res: Response) {
         await subVendoService.heartbeat(req.body);
 
         res.json({
-
             success: true
-
         });
 
     } catch (err: any) {
 
         res.status(500).json({
-
             success: false,
-
             message: err.message
-
         });
 
     }
