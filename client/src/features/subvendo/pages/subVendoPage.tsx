@@ -24,6 +24,18 @@ export default function SubVendoPage() {
 
       <div className="flex gap-2">
 
+         <button
+          onClick={() => setTab("registered")}
+          className={`px-5 py-2 rounded-lg ${
+            tab === "registered"
+              ? "bg-sky-600 text-white"
+              : "bg-white border"
+          }`}
+        >
+          Registered Devices
+        </button>
+
+
         <button
           onClick={() => setTab("pending")}
           className={`px-5 py-2 rounded-lg ${
@@ -33,17 +45,6 @@ export default function SubVendoPage() {
           }`}
         >
           Pending Devices
-        </button>
-
-        <button
-          onClick={() => setTab("registered")}
-          className={`px-5 py-2 rounded-lg ${
-            tab === "registered"
-              ? "bg-sky-600 text-white"
-              : "bg-white border"
-          }`}
-        >
-          Registered Devices
         </button>
 
       </div>
