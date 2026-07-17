@@ -308,3 +308,60 @@ model CoinCredit {
   updatedAt DateTime @updatedAt
 
 }
+
+model Bridge {
+
+  id          String   @id @default(cuid())
+
+  name        String   @unique
+
+  enabled     Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+
+  updatedAt   DateTime @updatedAt
+
+  members     BridgeMember[]
+
+  vlans       Vlan[]
+}
+
+model BridgeMember {
+
+  id          String   @id @default(cuid())
+
+  bridgeId    String
+
+  interface   String
+
+  bridge      Bridge   @relation(fields: [bridgeId], references: [id], onDelete: Cascade)
+}
+
+model Vlan {
+
+  id          String   @id @default(cuid())
+
+  name        String
+
+  parent      String
+
+  bridgeId    String?
+
+  vlanId      Int
+
+  gateway     String
+
+  subnetMask  String
+
+  enabled     Boolean  @default(true)
+
+  portal      String?
+
+  dhcp        Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+
+  updatedAt   DateTime @updatedAt
+
+  bridge      Bridge? @relation(fields: [bridgeId], references: [id])
+}

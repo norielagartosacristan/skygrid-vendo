@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { configureDevice } from "../services/subVendo.api";
+import { getAssignableInterfaces } from "../services/networkInterface.api";
 
 interface Props {
   open: boolean;
@@ -31,17 +32,16 @@ export default function ConfigureDeviceModal({
     enabled: true,
   });
 
-  useEffect(() => {
-    if (!open) return;
+const [interfaces, setInterfaces] = useState<any[]>([]);
+useEffect(()=>{
 
-    const vlan = Number(form.vlanId);
+    if(!open)
+        return;
 
-    setForm((prev) => ({
-      ...prev,
-      ipAddress: `10.10.${vlan}.1`,
-      gateway: `10.10.${vlan}.254`,
-    }));
-  }, [form.vlanId, open]);
+    loadInterfaces();
+
+},[open]);
+
 
   if (!open) return null;
 
@@ -87,6 +87,43 @@ export default function ConfigureDeviceModal({
   }
 }
 
+async function loadInterfaces() {
+  try {
+    const res = await getAssignableInterfaces();
+
+    setInterfaces(res.data);
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function handleInterfaceChange(name: string) {
+
+  const iface = interfaces.find(
+    (i: any) => i.name === name
+  );
+
+  if (!iface) return;
+
+  setForm(prev => ({
+
+    ...prev,
+
+    parentInterface: iface.name,
+
+    vlanId: iface.vlanId,
+
+    ipAddress: iface.ipAddress || "",
+
+    gateway: iface.gateway || "",
+
+    subnetMask: iface.subnetMask || "255.255.255.0",
+
+  }));
+
+}
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
@@ -116,21 +153,28 @@ export default function ConfigureDeviceModal({
           <div>
             <label>Parent Interface</label>
 
-            <select
-              className="w-full border rounded-lg p-2 mt-1"
-              value={form.parentInterface}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  parentInterface: e.target.value,
-                })
-              }
-            >
-              <option>eth0</option>
-              <option>eth1</option>
-              <option>wlan0</option>
-              <option>bridge0</option>
-            </select>
+           <select
+    className="w-full border rounded-lg p-2 mt-1"
+    value={form.parentInterface}
+    onChange={(e) =>
+        handleInterfaceChange(e.target.value)
+    }
+>
+
+    {interfaces.map((i: any) => (
+
+        <option
+            key={i.name}
+            value={i.name}
+        >
+
+            {i.displayName}
+
+        </option>
+
+    ))}
+
+</select>
           </div>
 
           <div>
@@ -214,19 +258,6 @@ export default function ConfigureDeviceModal({
                 })
               }
             />
-          </div>
-
-          <div>
-            <label>Bandwidth Profile</label>
-
-            <select
-              className="w-full border rounded-lg p-2 mt-1"
-            >
-              <option>10 Mbps</option>
-              <option>20 Mbps</option>
-              <option>30 Mbps</option>
-              <option>50 Mbps</option>
-            </select>
           </div>
 
           <div>

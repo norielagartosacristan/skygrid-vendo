@@ -16,16 +16,13 @@ export const updateInterface = async (
   id: string,
   data: any
 ) => {
-  return await api.put(
-    `/network/interfaces/${id}`,
-    data
-  );
+  return await api.put(`/network/interfaces/${id}`, data);
 };
 
-export const deleteInterface = async (
-  id: string
-) => {
-  return await api.delete(
-    `/network/interfaces/${id}`
-  );
+export const deleteInterface = async (id: string) => {
+  return await api.delete(`/network/interfaces/${id}`);
+};
+
+export const getAssignableInterfaces = async () => {
+  return await api.get("/network/interfaces/assignable");
 };

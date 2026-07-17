@@ -1,18 +1,44 @@
 import prisma from "../../../config/prisma";
 
 export async function getVlans() {
+
     return prisma.networkVlan.findMany({
-        orderBy:{
-            vlanId:"asc"
+
+        orderBy: {
+            vlanId: "asc"
         }
+
     });
+
 }
 
-export async function createVlan(data:any){
+export async function createVlan(data: any) {
 
     return prisma.networkVlan.create({
 
         data
+
+    });
+
+}
+
+export async function assignableInterfaces() {
+
+    return prisma.networkInterface.findMany({
+
+        where: {
+
+            role: "LAN",
+
+            status: "UP"
+
+        },
+
+        orderBy: {
+
+            displayName: "asc"
+
+        }
 
     });
 
