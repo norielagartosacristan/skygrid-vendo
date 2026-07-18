@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import { Request, Response } from "express";
 import * as NetworkInterfaceService from "../services/networkInterface.service";
 import * as networkService from "../services/networkInterface.service";
 
@@ -126,13 +126,13 @@ await NetworkInterfaceService.deleteInterface(id);
 }
 
 export async function getAssignableInterfaces(
-    _req,
-    res
+    _req: Request,
+    res: Response
 ) {
     try {
 
         const interfaces =
-            await networkService.getAssignableInterfaces();
+            await networkInterfaceService.getAssignableInterfaces();
 
         res.json(interfaces);
 
