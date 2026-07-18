@@ -11,7 +11,7 @@ router.get(
 
 router.get(
     "/assignable",
-    networkController.getAssignableInterfaces
+    networkInterfaceController.getAssignableInterfaces
 );
 
 // Get single interface
