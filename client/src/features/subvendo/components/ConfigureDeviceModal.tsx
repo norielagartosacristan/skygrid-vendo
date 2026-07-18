@@ -166,11 +166,13 @@ function handleInterfaceChange(name: string) {
     {interfaces.map((i: any) => (
 
         <option
-    key={i.name}
-    value={i.name}
->
-    VLAN {i.vlanId}
-</option>
+            key={i.name}
+            value={i.name}
+        >
+
+            {i.displayName}
+
+        </option>
 
     ))}
 
