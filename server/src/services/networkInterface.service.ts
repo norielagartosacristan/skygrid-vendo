@@ -80,3 +80,24 @@ export async function deleteInterface(id: string) {
     },
   });
 }
+
+export async function getAssignableInterfaces() {
+
+  return prisma.networkInterface.findMany({
+
+    where: {
+
+      enabled: true,
+      role: "LAN"
+
+    },
+
+    orderBy: {
+
+      displayName: "asc"
+
+    }
+
+  });
+
+}
