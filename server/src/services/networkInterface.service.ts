@@ -83,21 +83,17 @@ export async function deleteInterface(id: string) {
 
 export async function getAssignableInterfaces() {
 
-  return prisma.networkInterface.findMany({
+    return prisma.networkInterface.findMany({
 
-    where: {
+        where: {
+            role: "LAN",
+            enabled: true
+        },
 
-      enabled: true,
-      role: "LAN"
+        orderBy: {
+            displayName: "asc"
+        }
 
-    },
-
-    orderBy: {
-
-      displayName: "asc"
-
-    }
-
-  });
+    });
 
 }

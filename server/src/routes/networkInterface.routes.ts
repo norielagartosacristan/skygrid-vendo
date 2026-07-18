@@ -9,6 +9,11 @@ router.get(
   NetworkInterfaceController.getInterfaces
 );
 
+router.get(
+    "/assignable",
+    networkController.getAssignableInterfaces
+);
+
 // Get single interface
 router.get(
   "/:id",

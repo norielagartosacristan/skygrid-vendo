@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import * as NetworkInterfaceService from "../services/networkInterface.service";
+import * as networkService from "../services/networkInterface.service";
 
 export async function getInterfaces(
   req: Request,
@@ -122,4 +123,26 @@ await NetworkInterfaceService.deleteInterface(id);
     });
 
   }
+}
+
+export async function getAssignableInterfaces(
+    _req,
+    res
+) {
+    try {
+
+        const interfaces =
+            await networkService.getAssignableInterfaces();
+
+        res.json(interfaces);
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            message: "Unable to load interfaces."
+        });
+
+    }
 }
