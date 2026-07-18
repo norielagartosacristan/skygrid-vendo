@@ -132,7 +132,7 @@ export async function getAssignableInterfaces(
     try {
 
         const interfaces =
-            await networkInterfaceService.getAssignableInterfaces();
+            await NetworkInterfaceService.getAssignableInterfaces();
 
         res.json(interfaces);
 
