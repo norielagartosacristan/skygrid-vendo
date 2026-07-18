@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { configureDevice } from "../services/subVendo.api";
-import { getAssignableInterfaces } from "../services/networkInterface.api";
+import { getAssignableInterfaces } from "../../network/services/networkInterface.api";
 
 interface Props {
   open: boolean;
