@@ -21,25 +21,3 @@ export async function createVlan(data: any) {
     });
 
 }
-
-export async function assignableInterfaces() {
-
-    return prisma.networkInterface.findMany({
-
-        where: {
-
-            role: "LAN",
-
-            status: "UP"
-
-        },
-
-        orderBy: {
-
-            displayName: "asc"
-
-        }
-
-    });
-
-}

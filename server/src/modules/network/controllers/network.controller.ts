@@ -25,17 +25,3 @@ export async function createVlan(
 
 }
 
-export async function assignableInterfaces(req, res) {
-
-    const interfaces =
-        await networkService.assignableInterfaces();
-
-    res.json({
-
-        success: true,
-
-        data: interfaces
-
-    });
-
-}
