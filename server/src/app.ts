@@ -22,11 +22,7 @@ import { errorHandler } from "./middleware/error.middleware";
 import coinRoutes from "./modules/payment/coin/coin.routes";
 import paymentRoutes from "./modules/payment/payment.routes";
 import subVendoRoutes from "./modules/subvendo/routes/subvendo.routes";
-import bridgeRoutes
-from "./modules/network/bridges/bridges.routes";
 
-import vlanRoutes
-from "./modules/network/vlans/vlans.routes";
 
 
 const app = express();
@@ -64,15 +60,7 @@ app.use("/api/machine", machineRoutes);
 app.use("/api/coin", coinRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/subvendo", subVendoRoutes);
-app.use(
-    "/api/bridges",
-    bridgeRoutes
-);
 
-app.use(
-    "/api/vlans",
-    vlanRoutes
-);
 
 /* =========================
    STATIC FRONTEND
