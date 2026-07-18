@@ -91,6 +91,8 @@ async function loadInterfaces() {
   try {
     const res = await getAssignableInterfaces();
 
+    console.log(res.data);
+
     setInterfaces(res.data);
 
   } catch (err) {
