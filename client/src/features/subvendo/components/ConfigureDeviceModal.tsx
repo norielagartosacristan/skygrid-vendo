@@ -169,7 +169,7 @@ function handleInterfaceChange(name: string) {
     key={i.name}
     value={i.name}
 >
-    {i.name}
+    VLAN {i.vlanId}
 </option>
 
     ))}
