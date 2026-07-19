@@ -18,40 +18,123 @@ export default function InterfaceModal({
   onSaved,
 }: Props) {
   const [loading, setLoading] = useState(false);
+  const [physicalInterfaces, setPhysicalInterfaces] =
+useState<any[]>([]);
 
-  const [form, setForm] = useState({
+const [form, setForm] = useState({
     name: "",
     displayName: "",
-    type: "WAN",
-    enabled: true,
-    ipMode: "DHCP",
-    ipAddress: "",
-    subnetMask: "",
-    gateway: "",
-    dns1: "8.8.8.8",
-    dns2: "1.1.1.1",
-    mtu: 1500,
-  });
+    type: "VLAN",
 
-  useEffect(() => {
-    if (interfaceData) {
-      setForm(interfaceData);
-    } else {
-      setForm({
-        name: "",
-        displayName: "",
-        type: "WAN",
-        enabled: true,
-        ipMode: "DHCP",
-        ipAddress: "",
-        subnetMask: "",
-        gateway: "",
-        dns1: "8.8.8.8",
-        dns2: "1.1.1.1",
-        mtu: 1500,
-      });
+    parentInterface: "",
+
+    vlanId: 22,
+
+    role: "LAN",
+
+    enabled: true,
+
+    ipMode: "STATIC",
+
+    ipAddress: "",
+
+    subnetMask: "255.255.255.0",
+
+    gateway: "",
+
+    dns1: "8.8.8.8",
+
+    dns2: "1.1.1.1",
+
+    mtu: 1500,
+});
+
+useEffect(() => {
+
+    loadPhysicalInterfaces();
+
+}, []);
+
+async function loadPhysicalInterfaces() {
+
+    try {
+
+        const res = await getInterfaces();
+
+        const items = res.data.filter((i:any)=>
+
+            !i.name.includes(".")
+        );
+
+        setPhysicalInterfaces(items);
+
+    } catch(err){
+
+        console.log(err);
+
     }
-  }, [interfaceData]);
+
+}
+
+useEffect(() => {
+  if (form.type !== "VLAN") return;
+
+  if (!form.parentInterface || !form.vlanId) return;
+
+  setForm((prev) => ({
+    ...prev,
+
+    displayName: `VLAN${prev.vlanId}`,
+
+    name: `${prev.parentInterface}.${prev.vlanId}`,
+
+    ipAddress: "10.0.0.1",
+
+    subnetMask: "255.255.255.0",
+  }));
+}, [
+  form.parentInterface,
+  form.vlanId,
+  form.type,
+]);
+
+
+useEffect(() => {
+  if (interfaceData) {
+    setForm({
+      displayName: interfaceData.displayName ?? "",
+      type: interfaceData.type ?? "VLAN",
+      parentInterface: interfaceData.parentInterface ?? "",
+      vlanId: interfaceData.vlanId ?? 22,
+      role: interfaceData.role ?? "LAN",
+      enabled: interfaceData.enabled ?? true,
+      ipMode: interfaceData.ipMode ?? "STATIC",
+      ipAddress: interfaceData.ipAddress ?? "",
+      subnetMask:
+        interfaceData.subnetMask ?? "255.255.255.0",
+      gateway: interfaceData.gateway ?? "",
+      dns1: interfaceData.dns1 ?? "8.8.8.8",
+      dns2: interfaceData.dns2 ?? "1.1.1.1",
+      mtu: interfaceData.mtu ?? 1500,
+    });
+  } else {
+    setForm({
+      displayName: "",
+      type: "VLAN",
+      parentInterface: "",
+      vlanId: 22,
+      role: "LAN",
+      enabled: true,
+      ipMode: "STATIC",
+      ipAddress: "",
+      subnetMask: "255.255.255.0",
+      gateway: "",
+      dns1: "8.8.8.8",
+      dns2: "1.1.1.1",
+      mtu: 1500,
+    });
+  }
+}, [interfaceData]);
 
   async function handleSubmit(
     e: React.FormEvent
@@ -109,41 +192,24 @@ export default function InterfaceModal({
 
             <div>
 
-              <label className="block mb-2">
-                Display Name
-              </label>
+<label>
 
-              <input
-                className="w-full border rounded-lg p-3"
-                value={form.displayName}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    displayName: e.target.value,
-                  })
-                }
-              />
+Display Name
 
-            </div>
+</label>
 
-            <div>
+<input
 
-              <label className="block mb-2">
-                Interface Name
-              </label>
+readOnly
 
-              <input
-                className="w-full border rounded-lg p-3"
-                value={form.name}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    name: e.target.value,
-                  })
-                }
-              />
+value={form.displayName}
 
-            </div>
+className="w-full border rounded-lg p-3 bg-gray-100"
+
+/>
+
+</div>
+
 
           </div>
 
@@ -156,31 +222,40 @@ export default function InterfaceModal({
               </label>
 
               <select
-                className="w-full border rounded-lg p-3"
-                value={form.type}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    type: e.target.value,
-                  })
-                }
+
+              value={form.type}
+
+              onChange={(e)=>
+
+              setForm({
+
+              ...form,
+
+              type:e.target.value
+
+              })
+
+              }
+
               >
 
-                <option value="WAN">
-                  WAN
-                </option>
+              <option value="ETHERNET">
 
-                <option value="LAN">
-                  LAN
-                </option>
+              Ethernet
 
-                <option value="WIRELESS">
-                  Wireless
-                </option>
+              </option>
 
-                <option value="VLAN">
-                  VLAN
-                </option>
+              <option value="WIRELESS">
+
+              Wireless
+
+              </option>
+
+              <option value="VLAN">
+
+              VLAN
+
+              </option>
 
               </select>
 
