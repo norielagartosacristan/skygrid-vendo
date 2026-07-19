@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import {
   createInterface,
   updateInterface,
+  getInterfaces,
 } from "../services/networkInterface.api";
+
 
 type Props = {
   open: boolean;
@@ -22,6 +24,7 @@ export default function InterfaceModal({
 useState<any[]>([]);
 
   const [form, setForm] = useState({
+    name: "",
     displayName: "",
     type: "VLAN",
 
@@ -49,31 +52,26 @@ useState<any[]>([]);
 });
 
 useEffect(() => {
-
-    loadPhysicalInterfaces();
-
+  loadPhysicalInterfaces();
 }, []);
 
 async function loadPhysicalInterfaces() {
+  try {
+    const res = await getInterfaces();
 
-    try {
+    const items = res.data.filter(
+      (i: any) =>
+        !i.name.includes(".") &&
+        i.type === "ETHERNET"
+    );
 
-        const res = await getInterfaces();
+    setPhysicalInterfaces(items);
 
-        const items = res.data.filter((i:any)=>
-
-            !i.name.includes(".")
-        );
-
-        setPhysicalInterfaces(items);
-
-    } catch(err){
-
-        console.log(err);
-
-    }
-
+  } catch (err) {
+    console.error(err);
+  }
 }
+
 
 useEffect(() => {
   if (form.type !== "VLAN") return;
@@ -101,6 +99,7 @@ useEffect(() => {
 useEffect(() => {
   if (interfaceData) {
     setForm({
+      name: "",
       displayName: interfaceData.displayName ?? "",
       type: interfaceData.type ?? "VLAN",
       parentInterface: interfaceData.parentInterface ?? "",
@@ -118,6 +117,7 @@ useEffect(() => {
     });
   } else {
     setForm({
+      name: "",
       displayName: "",
       type: "VLAN",
       parentInterface: "",
@@ -214,148 +214,118 @@ className="w-full border rounded-lg p-3 bg-gray-100"
 
           <div className="grid grid-cols-2 gap-5">
 
-            <div>
+    <div>
 
-              <label className="block mb-2">
-                Type
-              </label>
+        <label className="block mb-2">
+            Type
+        </label>
 
-              <select
+        <select
+            className="w-full border rounded-lg p-3"
+            value={form.type}
+            onChange={(e) =>
+                setForm({
+                    ...form,
+                    type: e.target.value,
+                })
+            }
+        >
+            <option value="ETHERNET">Ethernet</option>
+            <option value="WIRELESS">Wireless</option>
+            <option value="VLAN">VLAN</option>
+        </select>
 
-              value={form.type}
+    </div>
 
-              onChange={(e)=>
+    <div>
 
-              setForm({
+        <label className="block mb-2">
+            IP Mode
+        </label>
 
-              ...form,
-
-              type:e.target.value
-
-              })
-
-              }
-
-              >
-
-              <option value="ETHERNET">
-
-              Ethernet
-
-              </option>
-
-              <option value="WIRELESS">
-
-              Wireless
-
-              </option>
-
-              <option value="VLAN">
-
-              VLAN
-
-              </option>
-
-              </select>
-
-            </div>
-
-            <div>
-
-              <label className="block mb-2">
-                IP Mode
-              </label>
-
-              <select
-                className="w-full border rounded-lg p-3"
-                value={form.ipMode}
-                onChange={(e) =>
-                  setForm({
+        <select
+            className="w-full border rounded-lg p-3"
+            value={form.ipMode}
+            onChange={(e) =>
+                setForm({
                     ...form,
                     ipMode: e.target.value,
-                  })
-                }
-              >
+                })
+            }
+        >
+            <option value="DHCP">DHCP</option>
+            <option value="STATIC">Static</option>
+        </select>
 
-                <option value="DHCP">
-                  DHCP
+    </div>
+
+</div>
+
+         {form.type === "VLAN" && (
+
+<div className="grid grid-cols-2 gap-5">
+
+    <div>
+
+        <label className="block mb-2">
+            Parent Interface
+        </label>
+
+        <select
+            className="w-full border rounded-lg p-3"
+            value={form.parentInterface}
+            onChange={(e) =>
+                setForm({
+                    ...form,
+                    parentInterface: e.target.value,
+                })
+            }
+        >
+
+            <option value="">
+                Select Interface
+            </option>
+
+            {physicalInterfaces.map((iface: any) => (
+
+                <option
+                    key={iface.name}
+                    value={iface.name}
+                >
+                    {iface.name}
                 </option>
 
-                <option value="STATIC">
-                  Static
-                </option>
+            ))}
 
-              </select>
+        </select>
 
-            </div>
+    </div>
 
-          </div>
+    <div>
 
-          {form.ipMode === "STATIC" && (
+        <label className="block mb-2">
+            VLAN ID
+        </label>
 
-            <div className="grid grid-cols-3 gap-5">
+        <input
+            type="number"
+            className="w-full border rounded-lg p-3"
+            value={form.vlanId}
+            onChange={(e)=>
+                setForm({
+                    ...form,
+                    vlanId:Number(e.target.value),
+                    displayName:`VLAN${e.target.value}`,
+                    name:`${form.parentInterface}.${e.target.value}`,
+                })
+            }
+        />
 
-              <div>
+    </div>
 
-                <label className="block mb-2">
-                  IP Address
-                </label>
+</div>
 
-                <input
-                  className="w-full border rounded-lg p-3"
-                  value={form.ipAddress}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      ipAddress: e.target.value,
-                    })
-                  }
-                />
-
-              </div>
-
-              <div>
-
-                <label className="block mb-2">
-                  Subnet Mask
-                </label>
-
-                <input
-                  className="w-full border rounded-lg p-3"
-                  value={form.subnetMask}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      subnetMask: e.target.value,
-                    })
-                  }
-                />
-
-              </div>
-
-              <div>
-
-                <label className="block mb-2">
-                  Gateway
-                </label>
-
-                <input
-                  className="w-full border rounded-lg p-3"
-                  value={form.gateway}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      gateway: e.target.value,
-                    })
-                  }
-                />
-
-              </div>
-
-            </div>
-
-          )}
-
+)}
           <div className="grid grid-cols-3 gap-5">
 
             <div>
