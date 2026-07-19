@@ -58,6 +58,7 @@ useEffect(()=>{
 
     // 👇 IDAGDAG MO ITO
     console.log("FORM =", form);
+    console.log("Parent Interface:", form.parentInterface);
 
     console.log("SENDING =", {
       machineName: form.machineName,
@@ -105,6 +106,7 @@ useEffect(()=>{
 
 async function loadInterfaces() {
   try {
+
     const res = await getAssignableInterfaces();
 
     console.log(res.data);
@@ -112,36 +114,25 @@ async function loadInterfaces() {
     setInterfaces(res.data);
 
     if (res.data.length > 0) {
-    handleInterfaceChange(res.data[0].name);
-}
+
+      const iface = res.data[0];
+
+      setForm(prev => ({
+        ...prev,
+        parentInterface: iface.name,
+        vlanId: iface.vlanId ?? 0,
+        ipAddress: iface.ipAddress ?? "",
+        gateway: iface.gateway ?? "",
+        subnetMask: iface.subnetMask ?? "255.255.255.0",
+      }));
+
+    }
 
   } catch (err) {
     console.error(err);
   }
 }
 
-function handleInterfaceChange(name: string) {
-
-  const iface = interfaces.find(
-    (i: any) => i.name === name
-  );
-
-  if (!iface) return;
-
-  setForm(prev => ({
-    ...prev,
-
-    parentInterface: iface.name,
-
-    vlanId: iface.vlanId ?? 0,
-
-    ipAddress: iface.ipAddress || "",
-
-    gateway: iface.gateway || "",
-
-    subnetMask: iface.subnetMask || "255.255.255.0",
-  }));
-}
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
