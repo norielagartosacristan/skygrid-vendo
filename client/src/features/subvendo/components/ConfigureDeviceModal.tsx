@@ -54,27 +54,35 @@ useEffect(()=>{
   if (!device) return;
 
   try {
-    await configureDevice(device.id, {
-      machineName: form.machineName,
-      parentInterface: form.parentInterface,
-      vlanId: form.vlanId,
+        await configureDevice(device.id, {
+        machineName: form.machineName,
 
-      ipMode: "STATIC",
-      ipAddressStatic: form.ipAddress,
+        parentInterface: form.parentInterface,
 
-      subnetMask: form.subnetMask,
-      gateway: form.gateway,
+        vlanId: form.vlanId,
 
-      dns1: "8.8.8.8",
-      dns2: "1.1.1.1",
+        ipMode: "STATIC",
 
-      clientStartIp: form.clientStartIp,
-      clientEndIp: form.clientEndIp,
+        // Portal IP (pare-pareho sa lahat)
+        ipAddressStatic: "10.0.0.1",
 
-      bandwidthProfile: form.bandwidthProfile,
-      portal: form.portal,
+        subnetMask: form.subnetMask,
 
-      enabled: true,
+        gateway: form.gateway,
+
+        dns1: "8.8.8.8",
+
+        dns2: "1.1.1.1",
+
+        clientStartIp: form.clientStartIp,
+
+        clientEndIp: form.clientEndIp,
+
+        bandwidthProfile: form.bandwidthProfile,
+
+        portal: form.portal,
+
+        enabled: true,
     });
 
     alert("Device configured successfully.");
@@ -156,26 +164,31 @@ function handleInterfaceChange(name: string) {
           <div>
             <label>Parent Interface</label>
 
-           <select
-    className="w-full border rounded-lg p-2 mt-1"
-    value={form.parentInterface}
-    onChange={(e) =>
-        handleInterfaceChange(e.target.value)
-    }
->
+          <select
+            className="w-full border rounded-lg p-2 mt-1"
+            value={form.parentInterface}
+            onChange={(e) => {
+              const iface = interfaces.find(
+                (i: any) => i.name === e.target.value
+              );
 
-    {interfaces.map((i: any) => (
+              if (!iface) return;
 
-        <option
-    key={i.name}
-    value={i.name}
->
-    VLAN {i.vlanId}
-</option>
-
-    ))}
-
-</select>
+              setForm((prev) => ({
+                ...prev,
+                parentInterface: iface.name,
+                vlanId: iface.vlanId ?? 0,
+                gateway: iface.gateway ?? "",
+                subnetMask: iface.subnetMask ?? "255.255.255.0",
+              }));
+            }}
+          >
+            {interfaces.map((iface: any) => (
+              <option key={iface.id} value={iface.name}>
+                {iface.displayName}
+              </option>
+            ))}
+          </select>
           </div>
 
           <div>
