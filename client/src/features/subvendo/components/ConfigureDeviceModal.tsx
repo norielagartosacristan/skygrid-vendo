@@ -95,6 +95,10 @@ async function loadInterfaces() {
 
     setInterfaces(res.data);
 
+    if (res.data.length > 0) {
+    handleInterfaceChange(res.data[0].name);
+}
+
   } catch (err) {
     console.error(err);
   }

@@ -91,7 +91,7 @@ export default function RegisteredDevicesTable() {
                 </td>
 
                 <td className="p-3">
-                  {device.ipAddressStatic}
+                  {device.ipAddress}
                 </td>
 
                 <td className="p-3">
