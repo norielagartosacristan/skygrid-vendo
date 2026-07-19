@@ -21,8 +21,7 @@ export default function InterfaceModal({
   const [physicalInterfaces, setPhysicalInterfaces] =
 useState<any[]>([]);
 
-const [form, setForm] = useState({
-    name: "",
+  const [form, setForm] = useState({
     displayName: "",
     type: "VLAN",
 
