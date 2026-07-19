@@ -148,3 +148,20 @@ export async function configuration(
   }
 }
 
+export async function testCoin(req: Request, res: Response) {
+
+    const chipId = req.params.chipId;
+
+    const pulses = Number(req.body.pulses ?? 1);
+
+    console.log("TEST COIN:", chipId, pulses);
+
+    // tawagin ang parehong function na ginagamit ng coinService
+    // halimbawa:
+    // await CoinService.coinInserted(chipId, pulses);
+
+    res.json({
+        success: true
+    });
+}
+

@@ -42,4 +42,9 @@ router.get(
   SubVendoController.configuration
 );
 
+router.post(
+    "/:chipId/test-coin",
+    SubVendoController.testCoin
+);
+
 export default router;
