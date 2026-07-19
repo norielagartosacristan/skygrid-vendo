@@ -15,7 +15,7 @@ export default function ConfigureDeviceModal({
 }: Props) {
   const [form, setForm] = useState({
     machineName: "",
-    parentInterface: "eth0",
+    parentInterface: "",
     vlanId: 100,
 
     ipAddress: "",
@@ -109,21 +109,18 @@ function handleInterfaceChange(name: string) {
   if (!iface) return;
 
   setForm(prev => ({
-
     ...prev,
 
     parentInterface: iface.name,
 
-    vlanId: iface.vlanId,
+    vlanId: iface.vlanId ?? 0,
 
     ipAddress: iface.ipAddress || "",
 
     gateway: iface.gateway || "",
 
     subnetMask: iface.subnetMask || "255.255.255.0",
-
   }));
-
 }
 
   return (
