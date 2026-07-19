@@ -45,6 +45,7 @@ export async function configure(req: Request, res: Response) {
         message: "Device ID is required.",
       });
     }
+        console.log(req.body);
 
     const device = await SubVendoService.configureDevice(
       id,
