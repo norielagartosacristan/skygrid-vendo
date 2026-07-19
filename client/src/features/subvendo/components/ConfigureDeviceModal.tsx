@@ -47,42 +47,50 @@ useEffect(()=>{
 
   async function handleSave() {
 
-    if (!form.machineName.trim()) {
-  alert("Machine Name is required.");
-  return;
-}
+  if (!form.machineName.trim()) {
+    alert("Machine Name is required.");
+    return;
+  }
+
   if (!device) return;
 
   try {
-        await configureDevice(device.id, {
-        machineName: form.machineName,
 
-        parentInterface: form.parentInterface,
+    // 👇 IDAGDAG MO ITO
+    console.log("FORM =", form);
 
-        vlanId: form.vlanId,
+    console.log("SENDING =", {
+      machineName: form.machineName,
+      parentInterface: form.parentInterface,
+      vlanId: form.vlanId,
+      ipMode: "STATIC",
+      ipAddressStatic: "10.0.0.1",
+      subnetMask: form.subnetMask,
+      gateway: form.gateway,
+      dns1: "8.8.8.8",
+      dns2: "1.1.1.1",
+      clientStartIp: form.clientStartIp,
+      clientEndIp: form.clientEndIp,
+      bandwidthProfile: form.bandwidthProfile,
+      portal: form.portal,
+      enabled: true,
+    });
 
-        ipMode: "STATIC",
-
-        // Portal IP (pare-pareho sa lahat)
-        ipAddressStatic: "10.0.0.1",
-
-        subnetMask: form.subnetMask,
-
-        gateway: form.gateway,
-
-        dns1: "8.8.8.8",
-
-        dns2: "1.1.1.1",
-
-        clientStartIp: form.clientStartIp,
-
-        clientEndIp: form.clientEndIp,
-
-        bandwidthProfile: form.bandwidthProfile,
-
-        portal: form.portal,
-
-        enabled: true,
+    await configureDevice(device.id, {
+      machineName: form.machineName,
+      parentInterface: form.parentInterface,
+      vlanId: form.vlanId,
+      ipMode: "STATIC",
+      ipAddressStatic: "10.0.0.1",
+      subnetMask: form.subnetMask,
+      gateway: form.gateway,
+      dns1: "8.8.8.8",
+      dns2: "1.1.1.1",
+      clientStartIp: form.clientStartIp,
+      clientEndIp: form.clientEndIp,
+      bandwidthProfile: form.bandwidthProfile,
+      portal: form.portal,
+      enabled: true,
     });
 
     alert("Device configured successfully.");
