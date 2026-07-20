@@ -20,7 +20,7 @@ const insertCoin = useSound("/sounds/insertcoin.mp3");
 //const success = useSound("/sounds/success.mp3");
 const warning5 = useSound("/sounds/warning5.mp3");
 const warning1 = useSound("/sounds/warning1.mp3");
-const expired = useSound("/sounds/expired.mp3");
+//const expired = useSound("/sounds/expired.mp3");
 const ambience = useSound("/sounds/ambience.mp3");
 //const thankyou = useSound("/sounds/thankyou.mp3");
 
@@ -240,90 +240,6 @@ setSession(data);
                 "visibilitychange",
                 handleVisibility
             );
-
-        };
-
-    }, [client.ip]);
-
-    /**
-     * WebSocket realtime updates
-     */
-    useEffect(() => {
-
-        if (!client.ip)
-            return;
-
-        const protocol =
-            window.location.protocol === "https:"
-                ? "wss"
-                : "ws";
-
-        const socket =
-            new WebSocket(
-                `${protocol}://${window.location.host}/ws/session?ip=${client.ip}`
-            );
-
-        socket.onopen = () => {
-
-            console.log("✅ Session WebSocket Connected");
-
-        };
-
-        socket.onmessage = (event) => {
-
-            const data =
-                JSON.parse(event.data);
-
-            console.log("WS:", data);
-
-            switch (data.type) {
-
-                case "session.created":
-
-                case "session.updated":
-
-                    localStorage.setItem(
-                        "skygrid_session",
-                        JSON.stringify(data.payload)
-                    );
-
-                    setSession(data.payload);
-
-                    break;
-
-                case "session.expired":
-
-                console.log("SESSION EXPIRED");
-
-                expired.play();
-
-                localStorage.removeItem(
-                    "skygrid_session"
-                );
-
-                setSession(null);
-
-                break;
-
-            }
-
-        };
-
-        socket.onerror = (err) => {
-
-            console.error(err);
-
-        };
-
-        socket.onclose = () => {
-
-            console.log("❌ Session WebSocket Closed");
-
-        };
-
-        return () => {
-
-            socket.close();
 
         };
 
