@@ -206,28 +206,17 @@ const session =
 
     private async getCurrentMachine() {
 
-    const subVendo = await prisma.subVendo.findFirst({
-
+    const machine = await prisma.machine.findFirst({
         where: {
-            enabled: true
-        },
-
-        include: {
-            machine: true
+            status: "ONLINE" // o isActive:true kung meron
         }
-
     });
 
-    if (!subVendo) {
-        throw new Error("No active SubVendo.");
+    if (!machine) {
+        throw new Error("No active machine.");
     }
 
-    if (!subVendo.machine) {
-        throw new Error("SubVendo is not linked to a Machine.");
-    }
-
-    return subVendo.machine;
-
+    return machine;
 }
 
 }
