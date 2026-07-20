@@ -13,7 +13,7 @@ import { sessionScheduler } from "./modules/captive/session/session.scheduler";
 
 import { machineService } from "./modules/machine/services/machine.service";
 
-import { subVendoSocket } from "./modules/subvendo/websocket/subvendo.socket";
+//import { subVendoSocket } from "./modules/subvendo/websocket/subvendo.socket";
 import { startDeviceMonitor } from "./modules/subvendo/services/device-monitor.service";
 
 
@@ -39,8 +39,8 @@ console.log("Network WS Initialized");
 captiveSocket.init(server);
 console.log("Captive WS Initialized");
 
-subVendoSocket.initialize(server);
-console.log("SUBVENDO WS INITIALIZED");
+//subVendoSocket.initialize(server);
+//console.log("SUBVENDO WS INITIALIZED");
 
 startDeviceMonitor();
 
