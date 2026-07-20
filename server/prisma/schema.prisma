@@ -368,15 +368,17 @@ model Vlan {
 }
 
 model WaitingClient {
+
   id String @id @default(cuid())
 
   machineId String
 
   clientIP String
 
-  clientMac String?
+  clientMac String
 
   createdAt DateTime @default(now())
 
   machine Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
 }

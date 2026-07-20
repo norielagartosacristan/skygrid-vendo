@@ -138,23 +138,27 @@ class CoinService {
             throw new Error(`No package configured for ₱${amount}`);
         }
 
-        const session =
-            await sessionService.createSession(
+        if (!waiting.clientMac) {
+    throw new Error("Waiting client has no MAC address.");
+}
 
-                machine.id,
+const session =
+    await sessionService.createSession(
 
-                pkg.id,
+        machine.id,
 
-                waiting.clientMac,
+        pkg.id,
 
-                waiting.clientIP,
+        waiting.clientMac,
 
-                convertToMinutes(
-                    pkg.duration,
-                    pkg.durationUnit
-                )
+        waiting.clientIP,
 
-            );
+        convertToMinutes(
+            pkg.duration,
+            pkg.durationUnit
+        )
+
+    );
 
         await prisma.coinTransaction.create({
 
