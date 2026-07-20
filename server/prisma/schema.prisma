@@ -34,6 +34,7 @@ model Vendor {
 model Machine {
   id               String            @id @default(cuid())
   vendorId         String
+  subVendos SubVendo[]
   name             String
   ipAddress        String
   macAddress       String
@@ -154,6 +155,10 @@ model NetworkInterface {
 model SubVendo {
   id               String    @id @default(cuid())
   chipId           String    @unique
+   machineId        String?
+
+  machine          Machine? @relation(fields: [machineId], references: [id])
+
   macAddress       String    @unique
   firmwareVersion  String
   ipAddress        String
