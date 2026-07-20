@@ -71,6 +71,7 @@ export async function configureDevice(
     enabled: boolean;
   }
 ) {
+  console.log("CONFIGURE DATA:", data);
   await prisma.subVendo.update({
     where: {
         id
