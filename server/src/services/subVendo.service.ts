@@ -76,7 +76,7 @@ export async function configureDevice(
     },
     data: {
       ...data,
-      status: "REGISTERED",
+      status: "CONFIGURED",
     },
   });
 }
@@ -84,7 +84,7 @@ export async function configureDevice(
 export async function getRegisteredDevices() {
   return prisma.subVendo.findMany({
     where: {
-      status: "REGISTERED",
+      status: "CONFIGURED",
     },
     orderBy: {
       machineName: "asc",
