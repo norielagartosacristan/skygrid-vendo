@@ -35,53 +35,47 @@ class CoinService {
     /**
      * Portal -> Waiting for coin
      */
-    async waitClient(data: any) {
+    async waitClient(data:any){
 
-        const {
-            chipId,
-            clientIP,
-            clientMac
-        } = data;
+    const {
 
-        const machine =
-            await this.getMachineFromChipId(chipId);
+        machineId,
 
-        await prisma.waitingClient.deleteMany({
+        clientIP,
 
-            where: {
+        clientMac
 
-                machineId: machine.id,
+    } = data;
 
-                clientIP
+    await prisma.waitingClient.deleteMany({
 
+        where:{
+            machineId,
+            clientIP
+        }
+
+    });
+
+    const waiting =
+        await prisma.waitingClient.create({
+
+            data:{
+                machineId,
+                clientIP,
+                clientMac
             }
 
         });
 
-        const waiting =
-            await prisma.waitingClient.create({
+    return {
 
-                data: {
+        success:true,
 
-                    machineId: machine.id,
+        waiting
 
-                    clientIP,
+    };
 
-                    clientMac
-
-                }
-
-            });
-
-        return {
-
-            success: true,
-
-            waiting
-
-        };
-
-    }
+}
 
     /**
      * ESP8266 -> Coin inserted
