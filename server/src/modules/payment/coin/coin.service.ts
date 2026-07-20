@@ -1,99 +1,195 @@
 import prisma from "../../../config/prisma";
 import { sessionService } from "../../captive/session/session.service";
 import { convertToMinutes } from "../../../utils/time";
-import { machineService } from "../../machine/services/machine.service";
-import {
-    InsertCoinRequest,
-    InsertCoinResponse
-} from "./coin.types";
-
 
 class CoinService {
 
-   async insertCoin(
-    data: InsertCoinRequest
-): Promise<InsertCoinResponse> {
+    /**
+     * Load SubVendo + Machine
+     */
+    private async getMachineFromChipId(chipId: string) {
 
-    try {
+        const subVendo = await prisma.subVendo.findUnique({
+
+            where: {
+                chipId
+            },
+
+            include: {
+                machine: true
+            }
+
+        });
+
+        if (!subVendo) {
+            throw new Error("SubVendo not found.");
+        }
+
+        if (!subVendo.machine) {
+            throw new Error("Machine not found.");
+        }
+
+        return subVendo.machine;
+    }
+
+    /**
+     * Portal -> Waiting for coin
+     */
+    async waitClient(data: any) {
 
         const {
-            clientMac,
+            chipId,
             clientIP,
+            clientMac
+        } = data;
+
+        const machine =
+            await this.getMachineFromChipId(chipId);
+
+        await prisma.waitingClient.deleteMany({
+
+            where: {
+
+                machineId: machine.id,
+
+                clientIP
+
+            }
+
+        });
+
+        const waiting =
+            await prisma.waitingClient.create({
+
+                data: {
+
+                    machineId: machine.id,
+
+                    clientIP,
+
+                    clientMac
+
+                }
+
+            });
+
+        return {
+
+            success: true,
+
+            waiting
+
+        };
+
+    }
+
+    /**
+     * ESP8266 -> Coin inserted
+     */
+    async insertCoin(data: any) {
+
+        const {
+            chipId,
             amount
         } = data;
 
-        console.log("========== COIN INSERTED ==========");
-        console.log("Client:", clientIP);
-        console.log("Amount:", amount);
-
-        console.log("Looking for package...");
-
-        const pkg = await prisma.package.findFirst({
-            where: {
-                price: Number(amount),
-                isActive: true
-            }
-        });
-
-        console.log("Package:", pkg);
-
-        if (!pkg) {
-            throw new Error(
-                `No package configured for ₱${amount}`
-            );
-        }
-
-        console.log("Loading current machine...");
+        console.log("========== COIN ==========");
+        console.log("Chip :", chipId);
+        console.log("Amount :", amount);
 
         const machine =
-            await machineService.getCurrentMachine();
+            await this.getMachineFromChipId(chipId);
 
-        console.log("Machine:", machine);
+        const waiting =
+            await prisma.waitingClient.findFirst({
 
-        if (!machine) {
-            throw new Error("Machine not registered.");
+                where: {
+
+                    machineId: machine.id
+
+                },
+
+                orderBy: {
+
+                    createdAt: "asc"
+
+                }
+
+            });
+
+        if (!waiting) {
+            throw new Error("No waiting client.");
         }
 
-        console.log("Creating session...");
+        const pkg =
+            await prisma.package.findFirst({
+
+                where: {
+
+                    price: Number(amount),
+
+                    isActive: true
+
+                }
+
+            });
+
+        if (!pkg) {
+            throw new Error(`No package configured for ₱${amount}`);
+        }
 
         const session =
             await sessionService.createSession(
+
                 machine.id,
+
                 pkg.id,
-                clientMac,
-                clientIP,
+
+                waiting.clientMac,
+
+                waiting.clientIP,
+
                 convertToMinutes(
                     pkg.duration,
                     pkg.durationUnit
                 )
+
             );
-            
-        console.log("Session:", session);
+
         await prisma.coinTransaction.create({
+
             data: {
+
                 machineId: machine.id,
+
                 sessionId: session.id,
+
                 amount: pkg.price
+
             }
+
         });
 
-        console.log("Coin transaction saved.");
+        await prisma.waitingClient.delete({
+
+            where: {
+
+                id: waiting.id
+
+            }
+
+        });
 
         return {
+
             success: true,
+
             session
+
         };
-
-    } catch (err) {
-
-        console.error("COIN ERROR:", err);
-
-        throw err;
 
     }
 
 }
-}
 
-export const coinService =
-    new CoinService();
+export const coinService = new CoinService();

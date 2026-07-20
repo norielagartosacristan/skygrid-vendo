@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import * as SubVendoService from "../services/subVendo.service";
+import prisma from "../config/prisma";
+
 
 
 export async function register(req: Request, res: Response) {
@@ -163,5 +165,36 @@ export async function testCoin(req: Request, res: Response) {
     res.json({
         success: true
     });
+}
+
+export async function wait(req: Request, res: Response) {
+
+    const {
+        machineId,
+        clientIP,
+        clientMac
+    } = req.body;
+
+    await prisma.waitingClient.deleteMany({
+        where: {
+            clientIP
+        }
+    });
+
+    const waiting =
+        await prisma.waitingClient.create({
+
+            data: {
+
+                machineId,
+                clientIP,
+                clientMac
+
+            }
+
+        });
+
+    res.json(waiting);
+
 }
 

@@ -45,6 +45,7 @@ model Machine {
   hostname         String?
   vendor           Vendor            @relation(fields: [vendorId], references: [id])
   sessions         Session[]
+  waitingClients WaitingClient[]
   transactions     Transaction[]
   coinTransactions CoinTransaction[]
 }
@@ -364,4 +365,19 @@ model Vlan {
   updatedAt   DateTime @updatedAt
 
   bridge      Bridge? @relation(fields: [bridgeId], references: [id])
+}
+
+model WaitingClient {
+
+  id         String   @id @default(cuid())
+
+  machineId  String
+
+  clientIP   String
+
+  clientMac  String?
+
+  createdAt  DateTime @default(now())
+
+  machine Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
 }

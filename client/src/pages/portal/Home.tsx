@@ -28,10 +28,12 @@ const ambience = useSound("/sounds/ambience.mp3");
 
   const [showCoinModal, setShowCoinModal] = useState(false);
 
-    const [client, setClient] = useState({
-        ip: "",
-        mac: ""
-    });
+
+  const [client, setClient] = useState({
+    ip: "",
+    mac: "",
+    chipId: ""
+});
 
     const [session, setSession] = useState<any>(() => {
 
@@ -139,7 +141,6 @@ useEffect(() => {
             );
 
 setSession(data);
-setSession(data);
 
         } catch (err) {
 
@@ -152,24 +153,25 @@ setSession(data);
     /**
      * Get current client
      */
-    useEffect(() => {
+  useEffect(() => {
 
-        fetch("/api/captive/client")
-            .then(res => res.json())
-            .then(data => {
+    fetch("/api/captive/client")
+        .then(res => res.json())
+        .then(data => {
 
-                console.log("CLIENT:", data);
+            console.log("CLIENT:", data);
 
-                setClient({
+            setClient({
 
-                    ip: data.ip,
-                    mac: data.mac
-
-                });
+                ip: data.ip,
+                mac: data.mac ?? "",
+                chipId: data.chipId ?? ""
 
             });
 
-    }, []);
+        });
+
+}, []);
 
     /**
      * Restore session when IP becomes available
@@ -244,6 +246,47 @@ setSession(data);
         };
 
     }, [client.ip]);
+
+
+    async function handleInsertCoin() {
+
+    try {
+
+        const res = await fetch("/api/coin/wait", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                chipId: client.chipId,
+                clientIP: client.ip,
+                clientMac: client.mac
+
+            })
+
+        });
+
+        const data = await res.json();
+
+        console.log("WAIT CLIENT:", data);
+
+        insertCoin.play();
+
+        setShowCoinModal(true);
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Unable to prepare coin payment.");
+
+    }
+
+}
 
 
   return (
@@ -334,15 +377,14 @@ setSession(data);
                 </h1>
               </div>
             </div>
+
             <button
-                onClick={() => {
-                    insertCoin.play();
-                    setShowCoinModal(true);
-                }}
+                onClick={handleInsertCoin}
                 className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-95 transition"
             >
-              🪙 Insert Coin
+                Insert Coin
             </button>
+        
             <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
               <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
                 OR LOGIN USING VOUCHER
