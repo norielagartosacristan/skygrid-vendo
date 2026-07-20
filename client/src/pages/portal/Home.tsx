@@ -29,7 +29,6 @@ const ambience = useSound("/sounds/ambience.mp3");
   const [client, setClient] = useState({
     ip: "",
     mac: "",
-    chipId: ""
 });
 
     const [session, setSession] = useState<any>(() => {
@@ -162,7 +161,6 @@ setSession(data);
 
                 ip: data.ip,
                 mac: data.mac ?? "",
-                chipId: data.chipId ?? ""
 
             });
 
