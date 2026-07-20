@@ -79,28 +79,6 @@ class CoinController {
 
     }
 
-    async wait(req: Request, res: Response) {
-
-    try {
-
-        const result =
-            await coinService.waitClient(req.body);
-
-        return res.json(result);
-
-    } catch (err: any) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message: err.message
-
-        });
-
-    }
-
-}
 
 }
 
