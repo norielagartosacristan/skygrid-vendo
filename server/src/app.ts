@@ -21,7 +21,7 @@ import machineRoutes from "./modules/machine/routes/machine.routes";
 import { errorHandler } from "./middleware/error.middleware";
 import coinRoutes from "./modules/payment/coin/coin.routes";
 import paymentRoutes from "./modules/payment/payment.routes";
-//import subVendoRoutes from "./modules/subvendo/routes/subvendo.routes";
+import subVendoRoutes from "./routes/subVendo.routes";
 
 
 
@@ -59,7 +59,7 @@ app.use("/api/packages", packageRoutes);
 app.use("/api/machine", machineRoutes);
 app.use("/api/coin", coinRoutes);
 app.use("/api/payment", paymentRoutes);
-//app.use("/api/subvendo", subVendoRoutes);
+app.use("/api/subvendo", subVendoRoutes);
 
 
 /* =========================
