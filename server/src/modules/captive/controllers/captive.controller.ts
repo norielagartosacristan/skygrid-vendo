@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ipsetService } from "../firewall/ipset.service";
 import { firewallRules } from "../firewall/firewallRules.service";
 import prisma from "../../../config/prisma";
+import { macService } from "../network/mac.service";
 
 
 export async function allow(
@@ -112,12 +113,20 @@ export async function client(
     req: Request,
     res: Response
 ) {
+
     const ip =
         req.ip?.replace("::ffff:", "") ||
         req.socket.remoteAddress?.replace("::ffff:", "") ||
         "";
 
-    res.json({ ip });
+    const mac =
+        macService.getMac(ip);
+
+    res.json({
+        ip,
+        mac
+    });
+
 }
 
 
