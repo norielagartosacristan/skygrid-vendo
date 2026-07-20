@@ -245,6 +245,10 @@ setSession(data);
 
     async function handleInsertCoin() {
 
+    console.log("CLIENT =", client);
+    console.log("CLIENT IP =", client.ip);
+    console.log("CLIENT MAC =", client.mac);
+
     try {
 
         const res = await fetch("/api/coin/wait", {
@@ -256,6 +260,7 @@ setSession(data);
             },
 
             body: JSON.stringify({
+
                 clientIP: client.ip,
                 clientMac: client.mac
 
@@ -266,6 +271,7 @@ setSession(data);
         const data = await res.json();
 
         console.log("WAIT CLIENT:", data);
+
         if (!data.success) {
             alert(data.message);
             return;

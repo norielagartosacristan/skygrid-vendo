@@ -1,5 +1,5 @@
 import prisma from "../../config/prisma";
-import { ipsetService } from "../captive/firewall/ipset.service";
+//import { ipsetService } from "../captive/firewall/ipset.service";
 import { sessionService } from "../captive/session/session.service";
 
 class PaymentService {

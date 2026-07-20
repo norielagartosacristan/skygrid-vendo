@@ -40,6 +40,7 @@ export async function pending(_req: Request, res: Response) {
 
 export async function configure(req: Request, res: Response) {
   try {
+    console.log(req.body);
     const id = req.params.id as string;
 
     if (!id) {
