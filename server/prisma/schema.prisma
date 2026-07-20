@@ -45,7 +45,7 @@ model Machine {
   hostname         String?
   vendor           Vendor            @relation(fields: [vendorId], references: [id])
   sessions         Session[]
-  waitingClients WaitingClient[]
+  waitingClients   WaitingClient[]
   transactions     Transaction[]
   coinTransactions CoinTransaction[]
 }
@@ -296,88 +296,82 @@ model CoinTransaction {
 }
 
 model CoinCredit {
-
   id String @id @default(cuid())
 
   clientMac String @unique
 
   clientIP String
 
-  credit Decimal @default(0) @db.Decimal(10,2)
+  credit Decimal @default(0) @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 }
 
 model Bridge {
+  id String @id @default(cuid())
 
-  id          String   @id @default(cuid())
+  name String @unique
 
-  name        String   @unique
+  enabled Boolean @default(true)
 
-  enabled     Boolean  @default(true)
+  createdAt DateTime @default(now())
 
-  createdAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  updatedAt   DateTime @updatedAt
+  members BridgeMember[]
 
-  members     BridgeMember[]
-
-  vlans       Vlan[]
+  vlans Vlan[]
 }
 
 model BridgeMember {
+  id String @id @default(cuid())
 
-  id          String   @id @default(cuid())
+  bridgeId String
 
-  bridgeId    String
+  interface String
 
-  interface   String
-
-  bridge      Bridge   @relation(fields: [bridgeId], references: [id], onDelete: Cascade)
+  bridge Bridge @relation(fields: [bridgeId], references: [id], onDelete: Cascade)
 }
 
 model Vlan {
+  id String @id @default(cuid())
 
-  id          String   @id @default(cuid())
+  name String
 
-  name        String
+  parent String
 
-  parent      String
+  bridgeId String?
 
-  bridgeId    String?
+  vlanId Int
 
-  vlanId      Int
+  gateway String
 
-  gateway     String
+  subnetMask String
 
-  subnetMask  String
+  enabled Boolean @default(true)
 
-  enabled     Boolean  @default(true)
+  portal String?
 
-  portal      String?
+  dhcp Boolean @default(true)
 
-  dhcp        Boolean  @default(true)
+  createdAt DateTime @default(now())
 
-  createdAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  updatedAt   DateTime @updatedAt
-
-  bridge      Bridge? @relation(fields: [bridgeId], references: [id])
+  bridge Bridge? @relation(fields: [bridgeId], references: [id])
 }
 
 model WaitingClient {
+  id String @id @default(cuid())
 
-  id         String   @id @default(cuid())
+  machineId String
 
-  machineId  String
+  clientIP String
 
-  clientIP   String
+  clientMac String?
 
-  clientMac  String?
-
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   machine Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
 }
