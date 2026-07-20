@@ -54,6 +54,7 @@ export async function getPendingDevices() {
 export async function configureDevice(
   id: string,
   data: {
+    machineId: string;
     machineName: string;
     parentInterface: string;
     vlanId: number;
@@ -70,15 +71,16 @@ export async function configureDevice(
     enabled: boolean;
   }
 ) {
-  return prisma.subVendo.update({
+  await prisma.subVendo.update({
     where: {
-      id,
+        id
     },
     data: {
-      ...data,
-      status: "CONFIGURED",
-    },
-  });
+        ...data,
+        machineId: data.machineId,
+        status: "CONFIGURED"
+    }
+});
 }
 
 export async function getRegisteredDevices() {
