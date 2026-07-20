@@ -35,41 +35,57 @@ class CoinService {
     /**
      * Portal -> Waiting for coin
      */
-    async waitClient(data:any){
+    async waitClient(data: any) {
 
     const {
 
-        machineId,
-
         clientIP,
-
         clientMac
 
     } = data;
 
+    const machine =
+        await this.getCurrentMachine();
+
+    // Remove previous waiting request
     await prisma.waitingClient.deleteMany({
 
-        where:{
-            machineId,
+        where: {
+
+            machineId: machine.id,
+
             clientIP
+
         }
 
     });
 
+    // Create new waiting client
     const waiting =
         await prisma.waitingClient.create({
 
-            data:{
-                machineId,
+            data: {
+
+                machineId: machine.id,
+
                 clientIP,
+
                 clientMac
+
             }
 
         });
 
+    console.log("========== WAIT CLIENT ==========");
+    console.log("Machine :", machine.name);
+    console.log("Machine ID :", machine.id);
+    console.log("Client IP :", clientIP);
+    console.log("Client MAC :", clientMac);
+    console.log("=================================");
+
     return {
 
-        success:true,
+        success: true,
 
         waiting
 
@@ -187,6 +203,32 @@ const session =
         };
 
     }
+
+    private async getCurrentMachine() {
+
+    const subVendo = await prisma.subVendo.findFirst({
+
+        where: {
+            enabled: true
+        },
+
+        include: {
+            machine: true
+        }
+
+    });
+
+    if (!subVendo) {
+        throw new Error("No active SubVendo.");
+    }
+
+    if (!subVendo.machine) {
+        throw new Error("SubVendo is not linked to a Machine.");
+    }
+
+    return subVendo.machine;
+
+}
 
 }
 
