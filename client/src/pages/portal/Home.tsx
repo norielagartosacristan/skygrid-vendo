@@ -250,7 +250,7 @@ setSession(data);
     console.log("CLIENT MAC =", client.mac);
 
     try {
-
+console.log("CLIENT FULL:", client);
         const res = await fetch("/api/coin/wait", {
 
             method: "POST",
