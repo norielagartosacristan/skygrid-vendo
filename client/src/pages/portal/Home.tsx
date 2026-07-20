@@ -9,9 +9,6 @@ import InsertCoinModal from "../../components/portal/InsertCoinModal";
 import { useSound } from "../../hooks/useSound";
 
 
-
-
-
 export default function Home() {
 
 const popup = useSound("/sounds/popup.mp3");
@@ -261,8 +258,6 @@ setSession(data);
             },
 
             body: JSON.stringify({
-
-                chipId: client.chipId,
                 clientIP: client.ip,
                 clientMac: client.mac
 
@@ -273,6 +268,10 @@ setSession(data);
         const data = await res.json();
 
         console.log("WAIT CLIENT:", data);
+        if (!data.success) {
+            alert(data.message);
+            return;
+        }
 
         insertCoin.play();
 

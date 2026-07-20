@@ -24,7 +24,7 @@ export async function register(req: Request, res: Response) {
 }
 
 
-export async function pending(req: Request, res: Response) {
+export async function pending(_req: Request, res: Response) {
   try {
     const devices = await SubVendoService.getPendingDevices();
 
