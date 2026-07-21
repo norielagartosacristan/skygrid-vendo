@@ -47,38 +47,50 @@ class CoinController {
      */
     async insert(req: Request, res: Response) {
 
-        try {
+    console.log("========== INSERT COIN REQUEST ==========");
+    console.log("BODY:", req.body);
 
-            const {
+    try {
+
+        const {
+            chipId,
+            amount
+        } = req.body;
+
+        console.log("Chip ID:", chipId);
+        console.log("Amount:", amount);
+
+        const result =
+            await coinService.insertCoin({
 
                 chipId,
-                amount
 
-            } = req.body;
-
-            const result =
-                await coinService.insertCoin({
-
-                    chipId,
-                    amount: Number(amount)
-
-                });
-
-            return res.json(result);
-
-        } catch (err: any) {
-
-            return res.status(400).json({
-
-                success: false,
-                message: err.message
+                amount: Number(amount)
 
             });
 
-        }
+        console.log("INSERT RESULT:", result);
+
+        return res.json(result);
+
+    } catch (err: any) {
+
+        console.error(
+            "INSERT COIN ERROR:",
+            err
+        );
+
+        return res.status(400).json({
+
+            success: false,
+
+            message: err.message
+
+        });
 
     }
 
+}
 
 }
 
