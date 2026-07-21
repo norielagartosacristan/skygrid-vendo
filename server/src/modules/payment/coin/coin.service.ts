@@ -111,25 +111,39 @@ class CoinService {
             await this.getMachineFromChipId(chipId);
 
         const waiting =
-            await prisma.waitingClient.findFirst({
+    await prisma.waitingClient.findFirst({
 
-                where: {
+        where: {
 
-                    machineId: machine.id
+            machineId: machine.id,
 
-                },
+            clientMac: {
+                not: ""
+            }
 
-                orderBy: {
+        },
 
-                    createdAt: "asc"
+        orderBy: {
 
-                }
+            createdAt: "desc"
 
-            });
-
-        if (!waiting) {
-            throw new Error("No waiting client.");
         }
+
+    });
+
+if (!waiting) {
+
+    throw new Error(
+        "No waiting client with valid MAC address."
+    );
+
+}
+
+console.log("========== WAITING CLIENT ==========");
+console.log("ID:", waiting.id);
+console.log("IP:", waiting.clientIP);
+console.log("MAC:", waiting.clientMac);
+console.log("====================================");
 
         const pkg =
             await prisma.package.findFirst({
