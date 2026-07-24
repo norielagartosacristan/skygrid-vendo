@@ -714,83 +714,109 @@ export default function Home() {
    * Start checking for newly-created
    * session after coin insertion.
    */
-  function startCoinPolling() {
+  function startCoinPolling(
+  previousExpiresAt?: string
+) {
 
-    stopCoinPolling();
+  stopCoinPolling();
 
+  let attempts = 0;
 
-    let attempts = 0;
+  const maxAttempts = 60;
 
-    const maxAttempts = 60;
+  coinPollingRef.current =
+    setInterval(
+      async () => {
 
+        attempts++;
 
-    coinPollingRef.current =
-      setInterval(
-        async () => {
+        console.log(
+          `Checking coin session... ${attempts}/${maxAttempts}`
+        );
 
-          attempts++;
-
-
-          console.log(
-            `Checking coin session... ${attempts}/${maxAttempts}`
+        const result =
+          await refreshSession(
+            client.ip
           );
 
+        if (!result) {
+          return;
+        }
 
-          const result =
-            await refreshSession(
-              client.ip
-            );
+        /**
+         * Existing session before coin
+         *
+         * We must NOT close the modal
+         * just because an active session exists.
+         */
+        if (
+          previousExpiresAt &&
+          result.expiresAt === previousExpiresAt
+        ) {
 
+          console.log(
+            "⏳ Existing session still active. Waiting for coin..."
+          );
 
-          /**
-           * Session created
-           */
-          if (
-            result?.isActive
-          ) {
+          return;
 
-            console.log(
-              "✅ COIN SESSION DETECTED"
-            );
+        }
 
+        /**
+         * New or extended session detected
+         *
+         * expiresAt changed.
+         */
+        if (
+          result.isActive &&
+          result.expiresAt &&
+          result.expiresAt !== previousExpiresAt
+        ) {
 
-            stopCoinPolling();
+          console.log(
+            "✅ COIN SESSION CREATED OR EXTENDED"
+          );
 
+          console.log(
+            "Previous expiresAt:",
+            previousExpiresAt
+          );
 
-            setShowCoinModal(
-              false
-            );
+          console.log(
+            "New expiresAt:",
+            result.expiresAt
+          );
 
+          stopCoinPolling();
 
-            popup.play();
+          setShowCoinModal(false);
 
-            return;
+          popup.play();
 
-          }
+          return;
 
+        }
 
-          /**
-           * Timeout after 60 seconds
-           */
-          if (
-            attempts >= maxAttempts
-          ) {
+        /**
+         * Timeout
+         */
+        if (
+          attempts >= maxAttempts
+        ) {
 
-            console.log(
-              "Coin session polling timeout."
-            );
+          console.log(
+            "Coin session polling timeout."
+          );
 
+          stopCoinPolling();
 
-            stopCoinPolling();
+        }
 
-          }
+      },
+      1000
+    );
 
-        },
-        1000
-      );
-
-  }
-
+}
 
   /**
    * Insert Coin
@@ -877,18 +903,24 @@ export default function Home() {
 
       insertCoin.play();
 
+/**
+ * Save current session expiration
+ * BEFORE waiting for coin.
+ */
+const previousExpiresAt =
+  session?.expiresAt;
 
-      setShowCoinModal(
-        true
-      );
+/**
+ * Keep coin modal open.
+ */
+setShowCoinModal(true);
 
-
-      /**
-       * Start HTTP polling
-       * immediately after waiting
-       * for coin.
-       */
-      startCoinPolling();
+/**
+ * Wait for a NEW or EXTENDED session.
+ */
+startCoinPolling(
+  previousExpiresAt
+);
 
 
     } catch (err) {
