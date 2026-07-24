@@ -89,24 +89,202 @@ export async function clients(
 
 }
 
-export async function getSession(req: Request, res: Response) {
+export async function getSession(
+    req: Request,
+    res: Response
+) {
 
-    console.log("========== GET SESSION ==========");
+    try {
 
-    const ip = req.query.ip as string;
+        console.log("========== GET SESSION STATUS ==========");
 
-    console.log("IP:", ip);
+        const ip =
+            req.query.ip as string;
 
-    const session = await prisma.session.findFirst({
-        where: {
-            ipAddress: ip,
-            isActive: true
+        console.log("Client IP:", ip);
+
+        if (!ip) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "IP address is required"
+
+            });
+
         }
-    });
 
-    console.log(session);
+        /**
+         * Find active session
+         */
+        const session =
+            await prisma.session.findFirst({
 
-    res.json(session);
+                where: {
+
+                    ipAddress: ip,
+
+                    isActive: true
+
+                },
+
+                orderBy: {
+
+                    createdAt: "desc"
+
+                }
+
+            });
+
+        /**
+         * No active session
+         */
+        if (!session) {
+
+            return res.json({
+
+                success: true,
+
+                isActive: false,
+
+                internet: false,
+
+                remainingSeconds: 0,
+
+                remainingTime: "00:00:00"
+
+            });
+
+        }
+
+        /**
+         * Calculate remaining time
+         */
+        const now =
+            Date.now();
+
+        const expiresAt =
+            session.expiresAt.getTime();
+
+        const remainingSeconds =
+            Math.max(
+                0,
+                Math.floor(
+                    (expiresAt - now) / 1000
+                )
+            );
+
+        /**
+         * Check if client is actually
+         * allowed by firewall.
+         */
+        const internet =
+            await ipsetService.exists(ip);
+
+        /**
+         * Session already expired
+         */
+        if (remainingSeconds <= 0) {
+
+            return res.json({
+
+                success: true,
+
+                isActive: false,
+
+                internet: false,
+
+                remainingSeconds: 0,
+
+                remainingTime: "00:00:00"
+
+            });
+
+        }
+
+        /**
+         * Format HH:MM:SS
+         */
+        const hours =
+            Math.floor(
+                remainingSeconds / 3600
+            );
+
+        const minutes =
+            Math.floor(
+                (remainingSeconds % 3600) / 60
+            );
+
+        const seconds =
+            remainingSeconds % 60;
+
+        const remainingTime =
+            [
+                hours,
+                minutes,
+                seconds
+            ]
+                .map(
+                    value =>
+                        String(value)
+                            .padStart(2, "0")
+                )
+                .join(":");
+
+        console.log({
+
+            ip,
+
+            sessionId:
+                session.id,
+
+            remainingSeconds,
+
+            remainingTime,
+
+            internet
+
+        });
+
+        return res.json({
+
+            success: true,
+
+            isActive: true,
+
+            internet,
+
+            remainingSeconds,
+
+            remainingTime,
+
+            expiresAt:
+                session.expiresAt,
+
+            sessionId:
+                session.id
+
+        });
+
+    } catch (err: any) {
+
+        console.error(
+            "GET SESSION STATUS ERROR:",
+            err
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                err.message
+
+        });
+
+    }
+
 }
 
 export async function client(
