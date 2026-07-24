@@ -485,19 +485,17 @@ export default function Home() {
     const updateCountdown =
       () => {
 
-        const diff =
-          Math.max(
-            0,
-            Math.floor(
-              (
-                new Date(
-                  session.expiresAt
-                ).getTime() -
-                Date.now()
-              ) / 1000
-            )
-          );
-
+        const diff = session.expiresAt
+  ? Math.max(
+      0,
+      Math.floor(
+        (
+          new Date(session.expiresAt).getTime() -
+          Date.now()
+        ) / 1000
+      )
+    )
+  : 0;
 
         setRemainingSeconds(
           diff
