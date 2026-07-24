@@ -1,6 +1,7 @@
 import prisma from "../../../config/prisma";
 import { sessionService } from "../../captive/session/session.service";
-import { convertToMinutes } from "../../../utils/time";
+import { Prisma } from "@prisma/client";
+
 
 class CoinService {
 
@@ -144,283 +145,202 @@ class CoinService {
      */
     async insertCoin(data: any) {
 
-        const {
-
-            chipId,
-
-            amount
-
-        } = data;
-
-
-        console.log(
-            "========== COIN =========="
-        );
-
-        console.log(
-            "Chip:",
-            chipId
-        );
-
-        console.log(
-            "Amount:",
-            amount
-        );
-
-
-        /**
-         * Verify that the Subvendo exists.
-         */
-        const subVendo =
-            await prisma.subVendo.findUnique({
-
-                where: {
-
-                    chipId
-
-                }
-
-            });
-
-
-        if (!subVendo) {
-
-            throw new Error(
-                "Subvendo not registered."
-            );
-
-        }
-
-
-        /**
-         * Optional safety check:
-         * only configured and enabled Subvendo
-         * devices can insert coins.
-         */
-        if (
-            subVendo.status !==
-                "CONFIGURED" ||
-
-            !subVendo.enabled
-        ) {
-
-            throw new Error(
-                "Subvendo is not authorized."
-            );
-
-        }
-
-
-        /**
-         * Find the current Main Vendo machine.
-         */
-        const machine =
-            await this.getCurrentMachine();
-
-
-        console.log(
-            "Subvendo:",
-            subVendo.chipId
-        );
-
-        console.log(
-            "Main Vendo Machine:",
-            machine.id
-        );
-
-
-        /**
-         * Find the latest waiting client
-         * assigned to the Main Vendo.
-         */
-        const waiting =
-            await prisma.waitingClient.findFirst({
-
-                where: {
-
-                    machineId:
-                        machine.id,
-
-                    clientMac: {
-
-                        not: ""
-
-                    }
-
-                },
-
-                orderBy: {
-
-                    createdAt:
-                        "desc"
-
-                }
-
-            });
-
-
-        if (!waiting) {
-
-            throw new Error(
-                "No waiting client with valid MAC address."
-            );
-
-        }
-
-
-        console.log(
-            "========== WAITING CLIENT =========="
-        );
-
-        console.log(
-            "ID:",
-            waiting.id
-        );
-
-        console.log(
-            "IP:",
-            waiting.clientIP
-        );
-
-        console.log(
-            "MAC:",
-            waiting.clientMac
-        );
-
-        console.log(
-            "===================================="
-        );
-
-
-        /**
-         * Find package based on inserted coin amount.
-         */
-        const pkg =
-            await prisma.package.findFirst({
-
-                where: {
-
-                    price:
-                        Number(amount),
-
-                    isActive:
-                        true
-
-                }
-
-            });
-
-
-        if (!pkg) {
-
-            throw new Error(
-                `No package configured for ₱${amount}`
-            );
-
-        }
-
-
-        /**
-         * Create internet session.
-         */
-        const session =
-            await sessionService.createSession(
-
-                machine.id,
-
-                pkg.id,
-
-                waiting.clientMac,
-
-                waiting.clientIP,
-
-                convertToMinutes(
-
-                    pkg.duration,
-
-                    pkg.durationUnit
-
-                )
-
-            );
-
-
-        /**
-         * Record coin transaction.
-         */
-        await prisma.coinTransaction.create({
-
-            data: {
-
-                machineId:
-                    machine.id,
-
-                sessionId:
-                    session.id,
-
-                amount:
-                    pkg.price
-
-            }
-
-        });
-
-
-        /**
-         * Remove waiting client after
-         * successful session creation.
-         */
-        await prisma.waitingClient.delete({
+    const {
+        chipId,
+        amount
+    } = data;
+
+    console.log("========== COIN ==========");
+    console.log("Chip:", chipId);
+    console.log("Amount:", amount);
+
+    const machine =
+        await this.getMachineFromChipId(chipId);
+
+    console.log(
+        "Machine ID:",
+        machine.id
+    );
+
+    /**
+     * Find latest waiting client
+     */
+    const waiting =
+        await prisma.waitingClient.findFirst({
 
             where: {
 
-                id:
-                    waiting.id
+                machineId: machine.id,
+
+                clientMac: {
+                    not: ""
+                }
+
+            },
+
+            orderBy: {
+
+                createdAt: "desc"
 
             }
 
         });
 
+    if (!waiting) {
 
-        console.log(
-            "========== COIN SUCCESS =========="
+        throw new Error(
+            "No waiting client with valid MAC address."
         );
-
-        console.log(
-            "Subvendo:",
-            subVendo.chipId
-        );
-
-        console.log(
-            "Machine:",
-            machine.id
-        );
-
-        console.log(
-            "Session:",
-            session.id
-        );
-
-        console.log(
-            "Package:",
-            pkg.name
-        );
-
-        console.log(
-            "=================================="
-        );
-
-
-        return {
-
-            success:
-                true,
-
-            session
-
-        };
 
     }
+
+    console.log(
+        "========== WAITING CLIENT =========="
+    );
+
+    console.log(
+        "ID:",
+        waiting.id
+    );
+
+    console.log(
+        "IP:",
+        waiting.clientIP
+    );
+
+    console.log(
+        "MAC:",
+        waiting.clientMac
+    );
+
+    /**
+     * Find Coin Rate
+     */
+    const rate =
+    await prisma.coinRate.findUnique({
+
+        where: {
+
+            amount:
+                new Prisma.Decimal(amount)
+
+        }
+
+    });
+    
+    if (!rate || !rate.enabled) {
+
+        throw new Error(
+            `No coin rate configured for ₱${amount}`
+        );
+
+    }
+
+    /**
+     * Convert duration to minutes
+     */
+    let durationMinutes = 0;
+
+    switch (rate.durationUnit) {
+
+        case "MINUTE":
+
+            durationMinutes =
+                rate.duration;
+
+            break;
+
+        case "HOUR":
+
+            durationMinutes =
+                rate.duration * 60;
+
+            break;
+
+        case "DAY":
+
+            durationMinutes =
+                rate.duration * 24 * 60;
+
+            break;
+
+        default:
+
+            throw new Error(
+                "Unsupported coin rate duration unit."
+            );
+
+    }
+
+    console.log(
+        "Coin Rate:",
+        rate.amount.toString()
+    );
+
+    console.log(
+        "Duration:",
+        durationMinutes,
+        "minutes"
+    );
+
+    /**
+     * Create or extend session
+     */
+    const session =
+        await sessionService.createSession(
+
+            machine.id,
+
+            waiting.clientMac,
+
+            waiting.clientIP,
+
+            durationMinutes
+
+        );
+
+    /**
+     * Record coin transaction
+     */
+    await prisma.coinTransaction.create({
+
+        data: {
+
+            machineId:
+                machine.id,
+
+            sessionId:
+                session.id,
+
+            amount:
+                rate.amount
+
+        }
+
+    });
+
+    /**
+     * Remove waiting client
+     */
+    await prisma.waitingClient.delete({
+
+        where: {
+
+            id: waiting.id
+
+        }
+
+    });
+
+    return {
+
+        success: true,
+
+        session
+
+    };
+
+}
 
 }
 

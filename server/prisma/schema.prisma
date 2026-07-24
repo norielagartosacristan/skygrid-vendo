@@ -261,15 +261,13 @@ model Session {
   machineId String
   machine   Machine @relation(fields: [machineId], references: [id])
 
-  packageId String
-  package   Package @relation(fields: [packageId], references: [id])
+  packageId String?
+  package   Package? @relation(fields: [packageId], references: [id])
 
   clientMac String
-
   ipAddress String
 
   startedAt DateTime @default(now())
-
   expiresAt DateTime
 
   isActive Boolean @default(true)
