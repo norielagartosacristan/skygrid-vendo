@@ -154,8 +154,14 @@ class CoinService {
     console.log("Chip:", chipId);
     console.log("Amount:", amount);
 
+    /**
+     * Main Vendo owns the captive portal.
+     * SubVendo identifies itself through chipId,
+     * but currently the active Main Vendo machine
+     * is used for sessions and waiting clients.
+     */
     const machine =
-    await this.getCurrentMachine();
+        await this.getCurrentMachine();
 
     console.log(
         "Machine ID:",
@@ -170,7 +176,8 @@ class CoinService {
 
             where: {
 
-                machineId: machine.id,
+                machineId:
+                    machine.id,
 
                 clientMac: {
                     not: ""
@@ -217,16 +224,16 @@ class CoinService {
      * Find Coin Rate
      */
     const rate =
-    await prisma.coinRate.findUnique({
+        await prisma.coinRate.findUnique({
 
-        where: {
+            where: {
 
-            amount:
-                new Prisma.Decimal(amount)
+                amount:
+                    new Prisma.Decimal(amount)
 
-        }
+            }
 
-    });
+        });
 
     if (!rate || !rate.enabled) {
 
@@ -237,7 +244,7 @@ class CoinService {
     }
 
     /**
-     * Convert duration to minutes
+     * Convert Coin Rate duration to minutes
      */
     let durationMinutes = 0;
 
@@ -283,44 +290,56 @@ class CoinService {
         "minutes"
     );
 
+    /**
+     * Get default active package.
+     *
+     * Temporary technical compatibility
+     * because Session.packageId is required.
+     *
+     * Actual coin duration comes from CoinRate.
+     */
     const defaultPackage =
-    await prisma.package.findFirst({
+        await prisma.package.findFirst({
 
-        where: {
-            isActive: true
-        },
+            where: {
 
-        orderBy: {
-            price: "asc"
-        }
+                isActive: true
 
-    });
+            },
 
-if (!defaultPackage) {
+            orderBy: {
 
-    throw new Error(
-        "No active package configured."
-    );
+                price: "asc"
 
-}
+            }
+
+        });
+
+    if (!defaultPackage) {
+
+        throw new Error(
+            "No active package configured."
+        );
+
+    }
 
     /**
      * Create or extend session
      */
     const session =
-    await sessionService.createSession(
+        await sessionService.createSession(
 
-        machine.id,
+            machine.id,
 
-        defaultPackage.id,
+            defaultPackage.id,
 
-        waiting.clientMac,
+            waiting.clientMac,
 
-        waiting.clientIP,
+            waiting.clientIP,
 
-        durationMinutes
+            durationMinutes
 
-    );
+        );
 
     /**
      * Record coin transaction
@@ -349,11 +368,27 @@ if (!defaultPackage) {
 
         where: {
 
-            id: waiting.id
+            id:
+                waiting.id
 
         }
 
     });
+
+    console.log(
+        "✅ COIN SESSION CREATED"
+    );
+
+    console.log(
+        "Client IP:",
+        waiting.clientIP
+    );
+
+    console.log(
+        "Duration:",
+        durationMinutes,
+        "minutes"
+    );
 
     return {
 
@@ -364,7 +399,6 @@ if (!defaultPackage) {
     };
 
 }
-
 }
 
 
