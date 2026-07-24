@@ -6,7 +6,7 @@ class SessionService {
 
    async createSession(
     machineId: string,
-    packageId: string | null,
+    packageId: string,
     clientMac: string,
     clientIP: string,
     durationMinutes: number

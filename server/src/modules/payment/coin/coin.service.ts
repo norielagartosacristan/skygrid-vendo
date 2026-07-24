@@ -155,7 +155,7 @@ class CoinService {
     console.log("Amount:", amount);
 
     const machine =
-        await this.getMachineFromChipId(chipId);
+    await this.getCurrentMachine();
 
     console.log(
         "Machine ID:",
@@ -227,7 +227,7 @@ class CoinService {
         }
 
     });
-    
+
     if (!rate || !rate.enabled) {
 
         throw new Error(
@@ -283,21 +283,44 @@ class CoinService {
         "minutes"
     );
 
+    const defaultPackage =
+    await prisma.package.findFirst({
+
+        where: {
+            isActive: true
+        },
+
+        orderBy: {
+            price: "asc"
+        }
+
+    });
+
+if (!defaultPackage) {
+
+    throw new Error(
+        "No active package configured."
+    );
+
+}
+
     /**
      * Create or extend session
      */
     const session =
-        await sessionService.createSession(
+    await sessionService.createSession(
 
-            machine.id,
+        machine.id,
 
-            waiting.clientMac,
+        defaultPackage.id,
 
-            waiting.clientIP,
+        waiting.clientMac,
 
-            durationMinutes
+        waiting.clientIP,
 
-        );
+        durationMinutes
+
+    );
 
     /**
      * Record coin transaction
