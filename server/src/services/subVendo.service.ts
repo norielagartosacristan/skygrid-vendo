@@ -1,169 +1,325 @@
 import prisma from "../config/prisma";
 
-
-export async function registerDevice(data: {
-  chipId: string;
-  macAddress: string;
-  firmwareVersion: string;
-  ipAddress: string;
-}) {
-    console.log("SERVICE DATA:", data);
-
-  const existing = await prisma.subVendo.findUnique({
-    where: {
-      macAddress: data.macAddress,
-    },
-  });
-
-  if (existing) {
-    return prisma.subVendo.update({
-      where: {
-        id: existing.id,
-      },
-      data: {
-        firmwareVersion: data.firmwareVersion,
-        ipAddress: data.ipAddress,
-        lastSeen: new Date(),
-      },
-    });
-  }
-
-  return prisma.subVendo.create({
-    data: {
-      chipId: data.chipId,
-      macAddress: data.macAddress,
-      firmwareVersion: data.firmwareVersion,
-      ipAddress: data.ipAddress,
-      status: "PENDING",
-      lastSeen: new Date(),
-    },
-  });
+interface RegisterSubVendoData {
+    chipId: string;
+    macAddress: string;
+    firmwareVersion: string;
+    ipAddress: string;
 }
 
-export async function getPendingDevices() {
-  return prisma.subVendo.findMany({
-    where: {
-      status: "PENDING",
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-}
-
-export async function configureDevice(
-  id: string,
-  data: {
-    machineId: string;
-    machineName: string;
-    parentInterface: string;
-    vlanId: number;
-    ipMode: string;
-    ipAddressStatic: string;
-    subnetMask: string;
-    gateway: string;
-    dns1: string;
-    dns2: string;
-    clientStartIp: number;
-    clientEndIp: number;
-    bandwidthProfile: string;
-    portal: string;
-    enabled: boolean;
-  }
+/**
+ * Register or update SubVendo.
+ *
+ * Ang chipId ang unique identity ng SubVendo.
+ * Walang machineId na kailangan sa registration.
+ */
+export async function registerDevice(
+    data: RegisterSubVendoData
 ) {
-  console.log("CONFIGURE DATA:", data);
-  await prisma.subVendo.update({
-    where: {
-        id
-    },
-    data: {
-        ...data,
-        machineId: data.machineId,
-        status: "CONFIGURED"
+    console.log("========== SUBVENDO REGISTER ==========");
+    console.log("Chip ID:", data.chipId);
+    console.log("MAC:", data.macAddress);
+    console.log("IP:", data.ipAddress);
+    console.log("Firmware:", data.firmwareVersion);
+    console.log("=======================================");
+
+    const existing =
+        await prisma.subVendo.findUnique({
+            where: {
+                chipId: data.chipId,
+            },
+        });
+
+    /**
+     * Existing SubVendo
+     *
+     * Update lang ang dynamic information.
+     */
+    if (existing) {
+
+        return prisma.subVendo.update({
+            where: {
+                chipId: data.chipId,
+            },
+
+            data: {
+                macAddress:
+                    data.macAddress,
+
+                firmwareVersion:
+                    data.firmwareVersion,
+
+                ipAddress:
+                    data.ipAddress,
+
+                lastSeen:
+                    new Date(),
+
+                online:
+                    true,
+            },
+        });
     }
-});
+
+    /**
+     * New SubVendo
+     *
+     * Automatic registration.
+     * Walang machineId.
+     */
+    return prisma.subVendo.create({
+        data: {
+            chipId:
+                data.chipId,
+
+            macAddress:
+                data.macAddress,
+
+            firmwareVersion:
+                data.firmwareVersion,
+
+            ipAddress:
+                data.ipAddress,
+
+            status:
+                "PENDING",
+
+            enabled:
+                false,
+
+            online:
+                true,
+
+            lastSeen:
+                new Date(),
+        },
+    });
 }
 
-export async function getRegisteredDevices() {
-  return prisma.subVendo.findMany({
-    where: {
-      status: "CONFIGURED",
-    },
-    orderBy: {
-      machineName: "asc",
-    },
-  });
+
+/**
+ * Get all pending SubVendo devices.
+ */
+export async function getPendingDevices() {
+
+    return prisma.subVendo.findMany({
+
+        where: {
+            status: "PENDING",
+        },
+
+        orderBy: {
+            createdAt: "desc",
+        },
+
+    });
 }
 
-export async function heartbeat(
-  chipId: string,
-  data: {
-    uptime: number;
-    connectedClients: number;
-    freeMemory: number;
-    wifiSignal: number;
-    temperature: number;
-  }
-) {
-  return prisma.subVendo.update({
-    where: {
-      chipId,
-    },
+
+/**
+ * Configure / approve SubVendo.
+ *
+ * Hindi na kailangan ng machineId.
+ */
+export async function configureDevice(
+    id: string,
     data: {
-      online: true,
+        machineName?: string;
+        parentInterface?: string;
+        vlanId?: number;
+        ipMode?: string;
+        ipAddressStatic?: string;
+        subnetMask?: string;
+        gateway?: string;
+        dns1?: string;
+        dns2?: string;
+        clientStartIp?: number;
+        clientEndIp?: number;
+        bandwidthProfile?: string;
+        portal?: string;
+        enabled?: boolean;
+    }
+) {
 
-      uptime: data.uptime,
+    console.log(
+        "========== CONFIGURE SUBVENDO =========="
+    );
 
-      connectedClients: data.connectedClients,
+    console.log(
+        "SubVendo ID:",
+        id
+    );
 
-      freeMemory: data.freeMemory,
+    console.log(
+        "Configuration:",
+        data
+    );
 
-      wifiSignal: data.wifiSignal,
+    console.log(
+        "========================================="
+    );
 
-      temperature: data.temperature,
+    return prisma.subVendo.update({
 
-      lastSeen: new Date(),
-    },
-  });
+        where: {
+            id,
+        },
+
+        data: {
+
+            ...data,
+
+            status:
+                "CONFIGURED",
+
+            enabled:
+                data.enabled ?? true,
+
+        },
+
+    });
 }
 
-export async function getConfiguration(chipId: string) {
-  return prisma.subVendo.findUnique({
-    where: {
-      chipId,
-    },
-    select: {
-      chipId: true,
 
-      machineName: true,
+/**
+ * Get configured SubVendo devices.
+ */
+export async function getRegisteredDevices() {
 
-      parentInterface: true,
+    return prisma.subVendo.findMany({
 
-      vlanId: true,
+        where: {
+            status: "CONFIGURED",
+        },
 
-      ipMode: true,
+        orderBy: [
+            {
+                online: "desc",
+            },
+            {
+                createdAt: "desc",
+            },
+        ],
 
-      ipAddressStatic: true,
+    });
+}
 
-      subnetMask: true,
 
-      gateway: true,
+/**
+ * Heartbeat from ESP8266.
+ */
+export async function heartbeat(
+    chipId: string,
+    data: {
+        uptime: number;
+        connectedClients: number;
+        freeMemory: number;
+        wifiSignal: number;
+        temperature: number;
+    }
+) {
 
-      dns1: true,
+    return prisma.subVendo.update({
 
-      dns2: true,
+        where: {
+            chipId,
+        },
 
-      clientStartIp: true,
+        data: {
 
-      clientEndIp: true,
+            online:
+                true,
 
-      bandwidthProfile: true,
+            uptime:
+                data.uptime,
 
-      portal: true,
+            connectedClients:
+                data.connectedClients,
 
-      enabled: true,
+            freeMemory:
+                data.freeMemory,
 
-      status: true,
-    },
-  });
+            wifiSignal:
+                data.wifiSignal,
+
+            temperature:
+                data.temperature,
+
+            lastSeen:
+                new Date(),
+
+        },
+
+    });
+}
+
+
+/**
+ * Get configuration for ESP8266.
+ *
+ * ESP8266 uses chipId as identity.
+ */
+export async function getConfiguration(
+    chipId: string
+) {
+
+    return prisma.subVendo.findUnique({
+
+        where: {
+            chipId,
+        },
+
+        select: {
+
+            chipId:
+                true,
+
+            machineName:
+                true,
+
+            parentInterface:
+                true,
+
+            vlanId:
+                true,
+
+            ipMode:
+                true,
+
+            ipAddressStatic:
+                true,
+
+            subnetMask:
+                true,
+
+            gateway:
+                true,
+
+            dns1:
+                true,
+
+            dns2:
+                true,
+
+            clientStartIp:
+                true,
+
+            clientEndIp:
+                true,
+
+            bandwidthProfile:
+                true,
+
+            portal:
+                true,
+
+            enabled:
+                true,
+
+            status:
+                true,
+
+        },
+
+    });
 }

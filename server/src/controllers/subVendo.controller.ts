@@ -38,34 +38,68 @@ export async function pending(_req: Request, res: Response) {
   }
 }
 
-export async function configure(req: Request, res: Response) {
-  try {
-    console.log(req.body);
-    const id = req.params.id as string;
+export async function configure(
+    req: Request,
+    res: Response
+) {
+    try {
 
-    if (!id) {
-      return res.status(400).json({
-        message: "Device ID is required.",
-      });
+        const chipId =
+            req.params.chipId as string;
+
+        if (!chipId) {
+            return res.status(400).json({
+                message:
+                    "Chip ID is required.",
+            });
+        }
+
+        console.log(
+            "CONFIGURE SUBVENDO:",
+            chipId
+        );
+
+        const existing =
+            await prisma.subVendo.findUnique({
+                where: {
+                    chipId,
+                },
+            });
+
+        if (!existing) {
+            return res.status(404).json({
+                message:
+                    "SubVendo not found.",
+            });
+        }
+
+        const device =
+            await SubVendoService.configureDevice(
+                existing.id,
+                req.body
+            );
+
+        res.json({
+            message:
+                "SubVendo configured successfully.",
+
+            data:
+                device,
+        });
+
+    } catch (err) {
+
+        console.error(
+            "CONFIGURE SUBVENDO ERROR:",
+            err
+        );
+
+        res.status(500).json({
+            message:
+                "Unable to configure SubVendo.",
+        });
+
     }
-        console.log(req.body);
-
-    const device = await SubVendoService.configureDevice(
-      id,
-      req.body
-    );
-
-    res.json({
-      message: "Device configured successfully.",
-      data: device,
-    });
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      message: "Unable to configure device.",
-    });
-  }
 }
 
 export async function registered(req: Request, res: Response) {

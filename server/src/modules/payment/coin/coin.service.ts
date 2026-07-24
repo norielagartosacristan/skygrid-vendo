@@ -5,240 +5,425 @@ import { convertToMinutes } from "../../../utils/time";
 class CoinService {
 
     /**
-     * Load SubVendo + Machine
+     * Get the active Main Vendo machine.
+     *
+     * Subvendo no longer has a machineId relation.
+     * The Main Vendo server itself is the machine that owns
+     * the captive portal, sessions, and coin transactions.
      */
-    private async getMachineFromChipId(chipId: string) {
+    private async getCurrentMachine() {
 
-        const subVendo = await prisma.subVendo.findUnique({
+        const machine =
+            await prisma.machine.findFirst({
 
-            where: {
-                chipId
-            },
+                where: {
 
-            include: {
-                machine: true
-            }
+                    status: "ONLINE"
 
-        });
+                }
 
-        if (!subVendo) {
-            throw new Error("SubVendo not found.");
+            });
+
+        if (!machine) {
+
+            throw new Error(
+                "No active Main Vendo machine found."
+            );
+
         }
 
-        if (!subVendo.machine) {
-            throw new Error("Machine not found.");
-        }
+        return machine;
 
-        return subVendo.machine;
     }
+
 
     /**
      * Portal -> Waiting for coin
+     *
+     * Called when a client opens the coin portal.
      */
     async waitClient(data: any) {
 
-    const {
+        const {
 
-        clientIP,
-        clientMac
+            clientIP,
+            clientMac
 
-    } = data;
+        } = data;
 
-    const machine =
-        await this.getCurrentMachine();
 
-    // Remove previous waiting request
-    await prisma.waitingClient.deleteMany({
+        const machine =
+            await this.getCurrentMachine();
 
-        where: {
 
-            machineId: machine.id,
+        /**
+         * Remove previous waiting request
+         * from the same client.
+         */
+        await prisma.waitingClient.deleteMany({
 
-            clientIP
+            where: {
 
-        }
+                machineId:
+                    machine.id,
 
-    });
-
-    // Create new waiting client
-    const waiting =
-        await prisma.waitingClient.create({
-
-            data: {
-
-                machineId: machine.id,
-
-                clientIP,
-
-                clientMac
+                clientIP
 
             }
 
         });
 
-    console.log("========== WAIT CLIENT ==========");
-    console.log("Machine :", machine.name);
-    console.log("Machine ID :", machine.id);
-    console.log("Client IP :", clientIP);
-    console.log("Client MAC :", clientMac);
-    console.log("=================================");
 
-    return {
+        /**
+         * Create new waiting client.
+         */
+        const waiting =
+            await prisma.waitingClient.create({
 
-        success: true,
+                data: {
 
-        waiting
+                    machineId:
+                        machine.id,
 
-    };
+                    clientIP,
 
-}
+                    clientMac
+
+                }
+
+            });
+
+
+        console.log(
+            "========== WAIT CLIENT =========="
+        );
+
+        console.log(
+            "Machine:",
+            machine.name
+        );
+
+        console.log(
+            "Machine ID:",
+            machine.id
+        );
+
+        console.log(
+            "Client IP:",
+            clientIP
+        );
+
+        console.log(
+            "Client MAC:",
+            clientMac
+        );
+
+        console.log(
+            "================================="
+        );
+
+
+        return {
+
+            success:
+                true,
+
+            waiting
+
+        };
+
+    }
+
 
     /**
      * ESP8266 -> Coin inserted
+     *
+     * Subvendo identifies itself using chipId.
+     * The actual Main Vendo machine is automatically
+     * resolved using getCurrentMachine().
      */
-   async insertCoin(data: any) {
+    async insertCoin(data: any) {
 
-    const {
-        chipId,
-        amount
-    } = data;
+        const {
 
-    console.log("========== COIN ==========");
-    console.log("Chip :", chipId);
-    console.log("Amount :", amount);
+            chipId,
 
-    const machine =
-        await this.getMachineFromChipId(chipId);
+            amount
 
-    console.log("Machine ID:", machine.id);
+        } = data;
 
-    // DITO ILAGAY
-    const waiting =
-        await prisma.waitingClient.findFirst({
 
-            where: {
+        console.log(
+            "========== COIN =========="
+        );
 
-                machineId: machine.id,
+        console.log(
+            "Chip:",
+            chipId
+        );
 
-                clientMac: {
-                    not: ""
+        console.log(
+            "Amount:",
+            amount
+        );
+
+
+        /**
+         * Verify that the Subvendo exists.
+         */
+        const subVendo =
+            await prisma.subVendo.findUnique({
+
+                where: {
+
+                    chipId
+
                 }
 
-            },
+            });
 
-            orderBy: {
 
-                createdAt: "desc"
+        if (!subVendo) {
+
+            throw new Error(
+                "Subvendo not registered."
+            );
+
+        }
+
+
+        /**
+         * Optional safety check:
+         * only configured and enabled Subvendo
+         * devices can insert coins.
+         */
+        if (
+            subVendo.status !==
+                "CONFIGURED" ||
+
+            !subVendo.enabled
+        ) {
+
+            throw new Error(
+                "Subvendo is not authorized."
+            );
+
+        }
+
+
+        /**
+         * Find the current Main Vendo machine.
+         */
+        const machine =
+            await this.getCurrentMachine();
+
+
+        console.log(
+            "Subvendo:",
+            subVendo.chipId
+        );
+
+        console.log(
+            "Main Vendo Machine:",
+            machine.id
+        );
+
+
+        /**
+         * Find the latest waiting client
+         * assigned to the Main Vendo.
+         */
+        const waiting =
+            await prisma.waitingClient.findFirst({
+
+                where: {
+
+                    machineId:
+                        machine.id,
+
+                    clientMac: {
+
+                        not: ""
+
+                    }
+
+                },
+
+                orderBy: {
+
+                    createdAt:
+                        "desc"
+
+                }
+
+            });
+
+
+        if (!waiting) {
+
+            throw new Error(
+                "No waiting client with valid MAC address."
+            );
+
+        }
+
+
+        console.log(
+            "========== WAITING CLIENT =========="
+        );
+
+        console.log(
+            "ID:",
+            waiting.id
+        );
+
+        console.log(
+            "IP:",
+            waiting.clientIP
+        );
+
+        console.log(
+            "MAC:",
+            waiting.clientMac
+        );
+
+        console.log(
+            "===================================="
+        );
+
+
+        /**
+         * Find package based on inserted coin amount.
+         */
+        const pkg =
+            await prisma.package.findFirst({
+
+                where: {
+
+                    price:
+                        Number(amount),
+
+                    isActive:
+                        true
+
+                }
+
+            });
+
+
+        if (!pkg) {
+
+            throw new Error(
+                `No package configured for ₱${amount}`
+            );
+
+        }
+
+
+        /**
+         * Create internet session.
+         */
+        const session =
+            await sessionService.createSession(
+
+                machine.id,
+
+                pkg.id,
+
+                waiting.clientMac,
+
+                waiting.clientIP,
+
+                convertToMinutes(
+
+                    pkg.duration,
+
+                    pkg.durationUnit
+
+                )
+
+            );
+
+
+        /**
+         * Record coin transaction.
+         */
+        await prisma.coinTransaction.create({
+
+            data: {
+
+                machineId:
+                    machine.id,
+
+                sessionId:
+                    session.id,
+
+                amount:
+                    pkg.price
 
             }
 
         });
 
-    if (!waiting) {
 
-        throw new Error(
-            "No waiting client with valid MAC address."
-        );
-
-    }
-
-    console.log("========== WAITING CLIENT ==========");
-    console.log("ID:", waiting.id);
-    console.log("IP:", waiting.clientIP);
-    console.log("MAC:", waiting.clientMac);
-    console.log("====================================");
-
-    // Hanapin ang package
-    const pkg =
-        await prisma.package.findFirst({
+        /**
+         * Remove waiting client after
+         * successful session creation.
+         */
+        await prisma.waitingClient.delete({
 
             where: {
 
-                price: Number(amount),
-
-                isActive: true
+                id:
+                    waiting.id
 
             }
 
         });
 
-    if (!pkg) {
 
-        throw new Error(
-            `No package configured for ₱${amount}`
+        console.log(
+            "========== COIN SUCCESS =========="
         );
+
+        console.log(
+            "Subvendo:",
+            subVendo.chipId
+        );
+
+        console.log(
+            "Machine:",
+            machine.id
+        );
+
+        console.log(
+            "Session:",
+            session.id
+        );
+
+        console.log(
+            "Package:",
+            pkg.name
+        );
+
+        console.log(
+            "=================================="
+        );
+
+
+        return {
+
+            success:
+                true,
+
+            session
+
+        };
 
     }
 
-    // Gumawa ng session
-    const session =
-        await sessionService.createSession(
-
-            machine.id,
-
-            pkg.id,
-
-            waiting.clientMac,
-
-            waiting.clientIP,
-
-            convertToMinutes(
-                pkg.duration,
-                pkg.durationUnit
-            )
-
-        );
-
-    // Record transaction
-    await prisma.coinTransaction.create({
-
-        data: {
-
-            machineId: machine.id,
-
-            sessionId: session.id,
-
-            amount: pkg.price
-
-        }
-
-    });
-
-    // Alisin na ang waiting client
-    await prisma.waitingClient.delete({
-
-        where: {
-
-            id: waiting.id
-
-        }
-
-    });
-
-    return {
-
-        success: true,
-
-        session
-
-    };
-
-}
-    private async getCurrentMachine() {
-
-    const machine = await prisma.machine.findFirst({
-        where: {
-            status: "ONLINE" // o isActive:true kung meron
-        }
-    });
-
-    if (!machine) {
-        throw new Error("No active machine.");
-    }
-
-    return machine;
 }
 
-}
 
-export const coinService = new CoinService();
+export const coinService =
+    new CoinService();

@@ -17,8 +17,8 @@ router.get(
 
 // Configure device
 router.put(
-  "/:id",
-  SubVendoController.configure
+    "/:chipId",
+    SubVendoController.configure
 );
 
 // Get registered devices

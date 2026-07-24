@@ -34,7 +34,6 @@ model Vendor {
 model Machine {
   id               String            @id @default(cuid())
   vendorId         String
-  subVendos SubVendo[]
   name             String
   ipAddress        String
   macAddress       String
@@ -153,16 +152,16 @@ model NetworkInterface {
 }
 
 model SubVendo {
-  id               String    @id @default(cuid())
-  chipId           String    @unique
-   machineId        String?
+  id     String @id @default(cuid())
+  chipId String @unique
 
-  machine          Machine? @relation(fields: [machineId], references: [id])
+  macAddress      String @unique
+  ipAddress       String
+  firmwareVersion String
 
-  macAddress       String    @unique
-  firmwareVersion  String
-  ipAddress        String
-  status           String    @default("PENDING")
+  status  String  @default("PENDING")
+  enabled Boolean @default(false)
+
   machineName      String?
   parentInterface  String?
   vlanId           Int?
@@ -176,16 +175,17 @@ model SubVendo {
   clientEndIp      Int?
   bandwidthProfile String?
   portal           String?
-  enabled          Boolean   @default(false)
+
   lastSeen         DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  online           Boolean   @default(false)
   connectedClients Int       @default(0)
   freeMemory       Int       @default(0)
-  online           Boolean   @default(false)
   temperature      Float     @default(0)
   uptime           Int       @default(0)
   wifiSignal       Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Package {
@@ -368,7 +368,6 @@ model Vlan {
 }
 
 model WaitingClient {
-
   id String @id @default(cuid())
 
   machineId String
@@ -380,5 +379,4 @@ model WaitingClient {
   createdAt DateTime @default(now())
 
   machine Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
-
 }
