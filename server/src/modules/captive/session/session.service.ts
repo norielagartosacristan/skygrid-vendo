@@ -6,7 +6,6 @@ class SessionService {
 
    async createSession(
     machineId: string,
-    packageId: string,
     clientMac: string,
     clientIP: string,
     durationMinutes: number
@@ -14,7 +13,6 @@ class SessionService {
 
     console.log("========== CREATE SESSION ==========");
     console.log("Machine:", machineId);
-    console.log("Package:", packageId);
     console.log("Client MAC:", clientMac);
     console.log("Client IP:", clientIP);
     console.log("Duration:", durationMinutes, "minutes");
@@ -36,13 +34,6 @@ class SessionService {
                     true
 
             },
-
-            include: {
-
-                package:
-                    true
-
-            }
 
         });
 
@@ -178,8 +169,6 @@ class SessionService {
             data: {
 
                 machineId,
-
-                packageId,
 
                 clientMac,
 
