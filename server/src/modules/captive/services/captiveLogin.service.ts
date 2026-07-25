@@ -111,13 +111,10 @@ class CaptiveLoginService {
 
     // 4. Convert voucher duration
     const durationMinutes =
-        convertToMinutes(
-            voucherData.package.duration,
-            voucherData.package.durationUnit,
-            0,
-            0
-        );
-
+    convertToMinutes(
+        voucherData.package.duration,
+        voucherData.package.durationUnit
+    );
 
     console.log(
         "Duration:",
