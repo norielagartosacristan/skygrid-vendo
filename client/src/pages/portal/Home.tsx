@@ -37,6 +37,9 @@ export default function Home() {
   const [showCoinModal, setShowCoinModal] =
     useState(false);
 
+  const [amountInserted, setAmountInserted] =
+  useState(0);
+
   const [client, setClient] =
     useState<ClientInfo>({
       ip: "",
@@ -953,49 +956,12 @@ function startCoinPolling(
 
   try {
 
-    /**
-     * =================================================
-     * 1. GET CURRENT SESSION FIRST
-     * =================================================
-     *
-     * This is our baseline.
-     * We need to know the exact expiresAt BEFORE
-     * the user inserts a new coin.
-     */
-    const currentSession =
-      await refreshSession(
-        client.ip,
-        true
-      );
+    setAmountInserted(0);
 
-    const previousExpiresAt =
-      currentSession?.expiresAt;
-
-    console.log(
-      "========== COIN PAYMENT START =========="
-    );
-
-    console.log(
-      "Current server session:",
-      currentSession
-    );
-
-    console.log(
-      "Baseline expiresAt:",
-      previousExpiresAt
-    );
-
-
-    /**
-     * =================================================
-     * 2. REGISTER CLIENT AS WAITING FOR COIN
-     * =================================================
-     */
     const res =
       await fetch(
         "/api/coin/wait",
         {
-
           method: "POST",
 
           headers: {
@@ -1016,20 +982,14 @@ function startCoinPolling(
         }
       );
 
-
     const data =
       await res.json();
-
 
     console.log(
       "WAIT CLIENT:",
       data
     );
 
-
-    /**
-     * Waiting client registration failed.
-     */
     if (
       !res.ok ||
       !data.success
@@ -1044,40 +1004,11 @@ function startCoinPolling(
 
     }
 
-
-    /**
-     * =================================================
-     * 3. PLAY COIN SOUND
-     * =================================================
-     */
     insertCoin.play();
 
+    setShowCoinModal(true);
 
-    /**
-     * =================================================
-     * 4. OPEN COIN MODAL
-     * =================================================
-     *
-     * The modal must stay open while waiting
-     * for the actual coin insertion.
-     */
-    setShowCoinModal(
-      true
-    );
-
-
-    /**
-     * =================================================
-     * 5. START POLLING
-     * =================================================
-     *
-     * The modal will only close when the server
-     * reports that expiresAt has increased.
-     */
-    startCoinPolling(
-      previousExpiresAt
-    );
-
+    startCoinPolling();
 
   } catch (err) {
 
@@ -1358,21 +1289,25 @@ function startCoinPolling(
       <Footer />
 
 
-      <InsertCoinModal
-        open={showCoinModal}
-        onClose={() => {
+     <InsertCoinModal
+  open={showCoinModal}
 
-          setShowCoinModal(
-            false
-          );
+  amountInserted={
+    amountInserted
+  }
 
-          stopCoinPolling();
+  onClose={() => {
 
-        }}
-        stopPopup={
-          popup.stop
-        }
-      />
+    setShowCoinModal(false);
+
+    stopCoinPolling();
+
+  }}
+
+  stopPopup={
+    popup.stop
+  }
+/>
 
     </PortalLayout>
 

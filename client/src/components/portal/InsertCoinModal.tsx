@@ -2,12 +2,14 @@ import { useEffect } from "react";
 
 interface Props {
     open: boolean;
+    amountInserted: number;
     onClose: () => void;
     stopPopup: () => void;
 }
 
 export default function InsertCoinModal({
     open,
+    amountInserted,
     onClose,
     stopPopup
 }: Props) {
@@ -19,25 +21,37 @@ export default function InsertCoinModal({
         const handleEsc = (e: KeyboardEvent) => {
 
             if (e.key === "Escape") {
-                
-                onClose();
+
                 stopPopup();
+                onClose();
 
             }
 
         };
 
-        window.addEventListener("keydown", handleEsc);
+        window.addEventListener(
+            "keydown",
+            handleEsc
+        );
 
         return () => {
 
-            window.removeEventListener("keydown", handleEsc);
+            window.removeEventListener(
+                "keydown",
+                handleEsc
+            );
 
         };
 
-    }, [open, onClose]);
+    }, [
+        open,
+        onClose,
+        stopPopup
+    ]);
 
-    if (!open) return null;
+    if (!open) {
+        return null;
+    }
 
     return (
 
@@ -55,6 +69,7 @@ export default function InsertCoinModal({
 
                 </div>
 
+
                 {/* Body */}
 
                 <div className="p-8 text-center">
@@ -63,40 +78,68 @@ export default function InsertCoinModal({
                         🪙
                     </div>
 
+
                     <h3 className="mt-6 text-2xl font-bold text-slate-800">
-                        Waiting for coin...
+
+                        {amountInserted > 0
+                            ? "Coin Received!"
+                            : "Waiting for coin..."
+                        }
+
                     </h3>
 
+
                     <p className="mt-2 text-slate-500">
-                        Please insert coin into the machine.
+
+                        {amountInserted > 0
+                            ? "You may insert another coin."
+                            : "Please insert coin into the machine."
+                        }
+
                     </p>
+
+
+                    {/* Amount */}
 
                     <div className="mt-8 rounded-2xl bg-slate-100 p-5">
 
                         <p className="text-xs uppercase tracking-widest text-slate-400">
+
                             Amount Inserted
+
                         </p>
 
+
                         <h1 className="mt-2 text-4xl font-black text-green-600">
-                            ₱0.00
+
+                            ₱{amountInserted.toFixed(2)}
+
                         </h1>
 
                     </div>
 
                 </div>
 
+
                 {/* Footer */}
 
                 <div className="border-t p-4">
+
                     <button
                         onClick={() => {
+
                             stopPopup();
+
                             onClose();
+
                         }}
                         className="w-full rounded-xl bg-red-500 py-3 font-semibold text-white hover:bg-red-600 transition"
                     >
+
                         Cancel
+
                     </button>
+
                 </div>
 
             </div>
