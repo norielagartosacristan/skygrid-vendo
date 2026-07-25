@@ -331,6 +331,8 @@ class CoinService {
 
         machine.id,
 
+        defaultPackage.id,
+
         waiting.clientMac,
 
         waiting.clientIP,
@@ -338,7 +340,6 @@ class CoinService {
         durationMinutes
 
     );
-
     /**
      * Record coin transaction
      */
