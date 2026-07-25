@@ -26,6 +26,7 @@ interface SessionInfo {
 }
 
 export default function Home() {
+
   const popup = useSound("/sounds/popup.mp3");
   const startup = useSound("/sounds/startup.mp3");
   const insertCoin = useSound("/sounds/insertcoin.mp3");
@@ -33,439 +34,1059 @@ export default function Home() {
   const warning1 = useSound("/sounds/warning1.mp3");
   const ambience = useSound("/sounds/ambience.mp3");
 
-  const [showCoinModal, setShowCoinModal] = useState(false);
-  const [amountInserted, setAmountInserted] = useState(0);
+  const [showCoinModal, setShowCoinModal] =
+    useState(false);
 
-  const [client, setClient] = useState<ClientInfo>({
-    ip: "",
-    mac: "",
-  });
+  const [amountInserted, setAmountInserted] =
+  useState(0);
 
-  const [session, setSession] = useState<SessionInfo | null>(() => {
-    try {
-      const saved = localStorage.getItem("skygrid_session");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [client, setClient] =
+    useState<ClientInfo>({
+      ip: "",
+      mac: "",
+    });
 
-  const [remainingSeconds, setRemainingSeconds] = useState(0);
-  const [remainingTime, setRemainingTime] = useState("00:00:00");
-  const [checkingSession, setCheckingSession] = useState(false);
+  const [session, setSession] =
+    useState<SessionInfo | null>(() => {
 
-  const [played5, setPlayed5] = useState(false);
-  const [played1, setPlayed1] = useState(false);
+      try {
 
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const coinPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+        const saved =
+          localStorage.getItem(
+            "skygrid_session"
+          );
+
+        return saved
+          ? JSON.parse(saved)
+          : null;
+
+      } catch {
+
+        return null;
+
+      }
+
+    });
+
+  const [remainingSeconds, setRemainingSeconds] =
+    useState(0);
+
+  const [remainingTime, setRemainingTime] =
+    useState("00:00:00");
+
+  const [checkingSession, setCheckingSession] =
+    useState(false);
+
+  const [played5, setPlayed5] =
+    useState(false);
+
+  const [played1, setPlayed1] =
+    useState(false);
+
+  const pollingRef =
+    useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const coinPollingRef =
+    useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   /**
-   * Format seconds to HH:MM:SS
+   * Format seconds
    */
   function formatTime(totalSeconds: number) {
+
     if (totalSeconds <= 0) {
       return "00:00:00";
     }
 
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+    const hours =
+      Math.floor(
+        totalSeconds / 3600
+      );
 
-    return [hours, minutes, seconds]
-      .map((value) => String(value).padStart(2, "0"))
+    const minutes =
+      Math.floor(
+        (totalSeconds % 3600) / 60
+      );
+
+    const seconds =
+      totalSeconds % 60;
+
+    return [
+      hours,
+      minutes,
+      seconds,
+    ]
+      .map(
+        value =>
+          String(value).padStart(2, "0")
+      )
       .join(":");
+
   }
+
 
   /**
    * Apply session returned by server
    */
-  function applySession(data: SessionInfo | null) {
+  function applySession(
+    data: SessionInfo | null
+  ) {
+
+    /**
+     * No active session
+     */
     if (
       !data ||
       data.isActive === false ||
       data.internet === false ||
       !data.expiresAt
     ) {
+
       setSession(null);
+
       setRemainingSeconds(0);
-      setRemainingTime("00:00:00");
-      localStorage.removeItem("skygrid_session");
+
+      setRemainingTime(
+        "00:00:00"
+      );
+
+      localStorage.removeItem(
+        "skygrid_session"
+      );
+
       return;
+
     }
 
+
+    /**
+     * Save session
+     */
     setSession(data);
-    localStorage.setItem("skygrid_session", JSON.stringify(data));
 
-    if (typeof data.remainingSeconds === "number") {
-      setRemainingSeconds(data.remainingSeconds);
-      setRemainingTime(formatTime(data.remainingSeconds));
-      return;
-    }
-
-    const diff = Math.max(
-      0,
-      Math.floor((new Date(data.expiresAt).getTime() - Date.now()) / 1000)
+    localStorage.setItem(
+      "skygrid_session",
+      JSON.stringify(data)
     );
 
+
+    /**
+     * Use server remainingSeconds
+     * when available
+     */
+    if (
+      typeof data.remainingSeconds ===
+      "number"
+    ) {
+
+      setRemainingSeconds(
+        data.remainingSeconds
+      );
+
+      setRemainingTime(
+        formatTime(
+          data.remainingSeconds
+        )
+      );
+
+      return;
+
+    }
+
+
+    /**
+     * Fallback:
+     * calculate using expiresAt
+     */
+    const diff =
+      Math.max(
+        0,
+        Math.floor(
+          (
+            new Date(
+              data.expiresAt
+            ).getTime() -
+            Date.now()
+          ) / 1000
+        )
+      );
+
     setRemainingSeconds(diff);
-    setRemainingTime(formatTime(diff));
+
+    setRemainingTime(
+      formatTime(diff)
+    );
+
   }
+
 
   /**
    * Get session from server
    */
-  async function refreshSession(ip: string, silent = true) {
-    if (!ip) return null;
+  async function refreshSession(
+    ip: string,
+    silent = true
+  ) {
+
+    if (!ip) {
+      return null;
+    }
 
     try {
+
       if (!silent) {
         setCheckingSession(true);
       }
 
-      const res = await fetch(`/api/captive/session?ip=${encodeURIComponent(ip)}`, {
-        cache: "no-store",
-      });
+      const res =
+        await fetch(
+          `/api/captive/session?ip=${encodeURIComponent(ip)}`,
+          {
+            cache: "no-store",
+          }
+        );
 
       if (!res.ok) {
-        throw new Error(`Session request failed: ${res.status}`);
+
+        throw new Error(
+          `Session request failed: ${res.status}`
+        );
+
       }
 
-      const data = await res.json();
-      console.log("SESSION STATUS:", data);
+      const data =
+        await res.json();
 
-      if (data?.success === false) {
+
+      console.log(
+        "SESSION STATUS:",
+        data
+      );
+
+
+      /**
+       * API returns success false
+       */
+      if (
+        data?.success === false
+      ) {
+
         applySession(null);
+
         return null;
+
       }
 
-      if (data?.isActive && data?.expiresAt) {
+
+      /**
+       * API returned active session
+       */
+      if (
+        data?.isActive &&
+        data?.expiresAt
+      ) {
+
         applySession(data);
+
         return data;
+
       }
 
+
+      /**
+       * No active session
+       */
       applySession(null);
+
       return null;
+
     } catch (err) {
-      console.error("SESSION CHECK ERROR:", err);
+
+      console.error(
+        "SESSION CHECK ERROR:",
+        err
+      );
+
       return null;
+
     } finally {
+
       if (!silent) {
         setCheckingSession(false);
       }
+
     }
+
   }
+
 
   /**
    * Get current client IP/MAC
    */
   async function loadClient() {
+
     try {
-      const res = await fetch("/api/captive/client", { cache: "no-store" });
+
+      const res =
+        await fetch(
+          "/api/captive/client",
+          {
+            cache: "no-store",
+          }
+        );
+
       if (!res.ok) {
-        throw new Error("Unable to detect client.");
+        throw new Error(
+          "Unable to detect client."
+        );
       }
 
-      const data = await res.json();
-      console.log("CLIENT:", data);
+      const data =
+        await res.json();
+
+
+      console.log(
+        "CLIENT:",
+        data
+      );
+
 
       const newClient = {
         ip: data.ip || "",
         mac: data.mac || "",
       };
 
-      setClient(newClient);
+
+      setClient(
+        newClient
+      );
+
+
       return newClient;
+
     } catch (err) {
-      console.error("CLIENT DETECTION ERROR:", err);
+
+      console.error(
+        "CLIENT DETECTION ERROR:",
+        err
+      );
+
       return null;
+
     }
+
   }
+
 
   /**
    * Initial startup
    */
   useEffect(() => {
+
     startup.play();
+
     ambience.play();
+
     loadClient();
+
   }, []);
 
-  /**
-   * Regular session polling (PAUSED when Coin Modal is OPEN)
-   */
-  useEffect(() => {
-    if (!client.ip) return;
-
-    if (showCoinModal) {
-      console.log("[SESSION POLL] Paused because coin modal is open.");
-      return;
-    }
-
-    console.log("[SESSION POLL] Starting regular session polling.");
-    refreshSession(client.ip);
-
-    pollingRef.current = setInterval(() => {
-      refreshSession(client.ip);
-    }, 2000);
-
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-  }, [client.ip, showCoinModal]);
 
   /**
-   * Real-time Amount Inserted Polling (Runs ONLY when Coin Modal is OPEN)
+   * Restore session once client IP is known
    */
-  useEffect(() => {
-    if (!showCoinModal || !client.ip) return;
+useEffect(() => {
 
-    const amountInterval = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `/api/coin/current?ip=${encodeURIComponent(client.ip)}&_t=${Date.now()}`,
-          { cache: "no-store" }
-        );
-
-        if (res.ok) {
-          const data = await res.json();
-          if (typeof data.amount === "number") {
-            setAmountInserted(data.amount);
-          } else if (typeof data.amountInserted === "number") {
-            setAmountInserted(data.amountInserted);
-          }
-        }
-      } catch (err) {
-        console.error("LIVE AMOUNT CHECK ERROR:", err);
-      }
-    }, 500);
-
-    return () => {
-      clearInterval(amountInterval);
-    };
-  }, [showCoinModal, client.ip]);
-
-  /**
-   * Local countdown timer display
-   */
-  useEffect(() => {
-    if (!session?.expiresAt) {
-      setRemainingSeconds(0);
-      setRemainingTime("00:00:00");
-      return;
-    }
-
-    const updateCountdown = () => {
-      const diff = session.expiresAt
-        ? Math.max(
-            0,
-            Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000)
-          )
-        : 0;
-
-      setRemainingSeconds(diff);
-      setRemainingTime(formatTime(diff));
-
-      if (diff <= 0) {
-        refreshSession(client.ip);
-      }
-    };
-
-    updateCountdown();
-    const timer = setInterval(updateCountdown, 1000);
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, [session?.expiresAt, client.ip]);
-
-  /**
-   * Warning audio sounds
-   */
-  useEffect(() => {
-    if (remainingSeconds <= 0) return;
-
-    const minutes = Math.floor(remainingSeconds / 60);
-
-    if (minutes <= 5 && minutes > 1 && !played5) {
-      warning5.play();
-      setPlayed5(true);
-    }
-
-    if (minutes <= 1 && !played1) {
-      warning1.play();
-      setPlayed1(true);
-    }
-  }, [remainingSeconds, played5, played1]);
-
-  /**
-   * Reset warning audio triggers on new session
-   */
-  useEffect(() => {
-    setPlayed5(false);
-    setPlayed1(false);
-  }, [session?.sessionId, session?.id, session?.expiresAt]);
-
-  /**
-   * Tab Focus / Network Reconnect detection
-   */
-  useEffect(() => {
-    if (!client.ip) return;
-
-    const reconnect = () => {
-      console.log("Rechecking session...");
-      refreshSession(client.ip);
-    };
-
-    const handleVisibility = () => {
-      if (!document.hidden) {
-        reconnect();
-      }
-    };
-
-    window.addEventListener("focus", reconnect);
-    window.addEventListener("online", reconnect);
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      window.removeEventListener("focus", reconnect);
-      window.removeEventListener("online", reconnect);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [client.ip]);
-
-  /**
-   * Stop coin detection polling
-   */
-  function stopCoinPolling() {
-    if (coinPollingRef.current) {
-      clearInterval(coinPollingRef.current);
-      coinPollingRef.current = null;
-    }
+  if (!client.ip) {
+    return;
   }
 
-  /**
-   * Start checking for newly created/extended session after inserting coin
-   */
-  function startCoinPolling(previousExpiresAt?: string) {
-    stopCoinPolling();
+  if (showCoinModal) {
+    console.log(
+      "[SESSION POLL] Paused because coin modal is open."
+    );
 
-    let attempts = 0;
-    const maxAttempts = 120;
-    const previousExpiry = previousExpiresAt
+    return;
+  }
+
+  console.log(
+    "[SESSION POLL] Starting regular session polling."
+  );
+
+  refreshSession(
+    client.ip
+  );
+
+  pollingRef.current =
+    setInterval(() => {
+
+      refreshSession(
+        client.ip
+      );
+
+    }, 2000);
+
+  return () => {
+
+    if (
+      pollingRef.current
+    ) {
+
+      clearInterval(
+        pollingRef.current
+      );
+
+      pollingRef.current =
+        null;
+
+    }
+
+  };
+
+}, [
+  client.ip,
+  showCoinModal
+]);
+
+
+  /**
+   * Regular HTTP session polling
+   *
+   * This replaces the need for
+   * WebSocket session updates.
+   */
+  useEffect(() => {
+
+    if (!client.ip) {
+      return;
+    }
+
+
+    /**
+     * Check immediately
+     */
+    refreshSession(
+      client.ip
+    );
+
+
+    /**
+     * Check every 2 seconds
+     */
+    pollingRef.current =
+      setInterval(() => {
+
+        refreshSession(
+          client.ip
+        );
+
+      }, 2000);
+
+
+    return () => {
+
+      if (
+        pollingRef.current
+      ) {
+
+        clearInterval(
+          pollingRef.current
+        );
+
+        pollingRef.current =
+          null;
+
+      }
+
+    };
+
+  }, [client.ip]);
+
+
+  /**
+   * Local countdown
+   *
+   * Server remains source of truth.
+   * This only makes the display smooth.
+   */
+  useEffect(() => {
+
+    if (!session?.expiresAt) {
+
+      setRemainingSeconds(0);
+
+      setRemainingTime(
+        "00:00:00"
+      );
+
+      return;
+
+    }
+
+
+    const updateCountdown =
+      () => {
+
+        const diff = session.expiresAt
+  ? Math.max(
+      0,
+      Math.floor(
+        (
+          new Date(session.expiresAt).getTime() -
+          Date.now()
+        ) / 1000
+      )
+    )
+  : 0;
+
+        setRemainingSeconds(
+          diff
+        );
+
+        setRemainingTime(
+          formatTime(diff)
+        );
+
+
+        /**
+         * Session expired locally.
+         * Immediately ask server again.
+         */
+        if (diff <= 0) {
+
+          refreshSession(
+            client.ip
+          );
+
+        }
+
+      };
+
+
+    updateCountdown();
+
+
+    const timer =
+      setInterval(
+        updateCountdown,
+        1000
+      );
+
+
+    return () => {
+
+      clearInterval(
+        timer
+      );
+
+    };
+
+  }, [
+    session?.expiresAt,
+    client.ip,
+  ]);
+
+
+  /**
+   * Warning sounds
+   */
+  useEffect(() => {
+
+    if (
+      remainingSeconds <= 0
+    ) {
+
+      return;
+
+    }
+
+
+    const minutes =
+      Math.floor(
+        remainingSeconds / 60
+      );
+
+
+    if (
+      minutes <= 5 &&
+      minutes > 1 &&
+      !played5
+    ) {
+
+      warning5.play();
+
+      setPlayed5(true);
+
+    }
+
+
+    if (
+      minutes <= 1 &&
+      !played1
+    ) {
+
+      warning1.play();
+
+      setPlayed1(true);
+
+    }
+
+  }, [
+    remainingSeconds,
+    played5,
+    played1,
+  ]);
+
+
+  /**
+   * Reset warning sounds
+   * when a new session starts
+   */
+  useEffect(() => {
+
+    setPlayed5(false);
+
+    setPlayed1(false);
+
+  }, [
+    session?.sessionId,
+    session?.id,
+    session?.expiresAt,
+  ]);
+
+
+  /**
+   * Browser reconnect / focus
+   */
+  useEffect(() => {
+
+    if (!client.ip) {
+      return;
+    }
+
+
+    const reconnect =
+      () => {
+
+        console.log(
+          "Rechecking session..."
+        );
+
+        refreshSession(
+          client.ip
+        );
+
+      };
+
+
+    const handleVisibility =
+      () => {
+
+        if (
+          !document.hidden
+        ) {
+
+          reconnect();
+
+        }
+
+      };
+
+
+    window.addEventListener(
+      "focus",
+      reconnect
+    );
+
+    window.addEventListener(
+      "online",
+      reconnect
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+
+    return () => {
+
+      window.removeEventListener(
+        "focus",
+        reconnect
+      );
+
+      window.removeEventListener(
+        "online",
+        reconnect
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+
+    };
+
+  }, [client.ip]);
+
+
+  /**
+   * Stop coin polling
+   */
+  function stopCoinPolling() {
+
+    if (
+      coinPollingRef.current
+    ) {
+
+      clearInterval(
+        coinPollingRef.current
+      );
+
+      coinPollingRef.current =
+        null;
+
+    }
+
+  }
+
+
+  /**
+   * Start checking for newly-created
+   * session after coin insertion.
+   */
+function startCoinPolling(
+  previousExpiresAt?: string
+) {
+
+  stopCoinPolling();
+
+  let attempts = 0;
+
+  const maxAttempts = 120;
+
+  const previousExpiry =
+    previousExpiresAt
       ? new Date(previousExpiresAt).getTime()
       : 0;
 
-    console.log("========== COIN POLLING START ==========");
-    console.log("Client IP:", client.ip);
-    console.log("Previous expiresAt:", previousExpiresAt);
+  console.log(
+    "========== COIN POLLING START =========="
+  );
 
-    coinPollingRef.current = setInterval(async () => {
-      attempts++;
-      console.log(`[COIN POLL] ${attempts}/${maxAttempts}`);
+  console.log(
+    "Client IP:",
+    client.ip
+  );
 
-      try {
-        const url = `/api/captive/session?ip=${encodeURIComponent(
-          client.ip
-        )}&_t=${Date.now()}`;
+  console.log(
+    "Previous expiresAt:",
+    previousExpiresAt
+  );
 
-        const res = await fetch(url, {
-          method: "GET",
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-          },
-        });
+  console.log(
+    "Previous expiry timestamp:",
+    previousExpiry
+  );
 
-        if (!res.ok) return;
+  coinPollingRef.current =
+    setInterval(
+      async () => {
 
-        const result = await res.json();
+        attempts++;
 
-        if (result?.isActive && result?.expiresAt) {
-          const newExpiry = new Date(result.expiresAt).getTime();
+        console.log(
+          `[COIN POLL] ${attempts}/${maxAttempts}`
+        );
 
-          if (newExpiry > previousExpiry) {
-            console.log("✅ COIN PAYMENT DETECTED");
-            stopCoinPolling();
-            applySession(result);
-            setShowCoinModal(false);
-            popup.play();
+        try {
+
+          const url =
+            `/api/captive/session?ip=${encodeURIComponent(
+              client.ip
+            )}&_t=${Date.now()}`;
+
+          console.log(
+            "[COIN POLL] Request:",
+            url
+          );
+
+          const res =
+            await fetch(
+              url,
+              {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                  "Cache-Control":
+                    "no-cache",
+                  "Pragma":
+                    "no-cache",
+                },
+              }
+            );
+
+          console.log(
+            "[COIN POLL] HTTP:",
+            res.status
+          );
+
+          if (!res.ok) {
+
+            console.log(
+              "[COIN POLL] HTTP ERROR"
+            );
+
             return;
+
           }
+
+          const result =
+            await res.json();
+
+          console.log(
+            "[COIN POLL] RESULT:",
+            result
+          );
+
+          if (
+            result?.isActive &&
+            result?.expiresAt
+          ) {
+
+            const newExpiry =
+              new Date(
+                result.expiresAt
+              ).getTime();
+
+            console.log(
+              "[COIN POLL] Previous expiry:",
+              previousExpiry
+            );
+
+            console.log(
+              "[COIN POLL] New expiry:",
+              newExpiry
+            );
+
+            if (
+              newExpiry >
+              previousExpiry
+            ) {
+
+              console.log(
+                "================================"
+              );
+
+              console.log(
+                "✅ COIN PAYMENT DETECTED"
+              );
+
+              console.log(
+                "OLD:",
+                previousExpiresAt
+              );
+
+              console.log(
+                "NEW:",
+                result.expiresAt
+              );
+
+              console.log(
+                "================================"
+              );
+
+              stopCoinPolling();
+
+              applySession(
+                result
+              );
+
+              setShowCoinModal(
+                false
+              );
+
+              popup.play();
+
+              return;
+
+            }
+
+          }
+
+          if (
+            attempts >=
+            maxAttempts
+          ) {
+
+            console.log(
+              "⏰ COIN POLLING TIMEOUT"
+            );
+
+            stopCoinPolling();
+
+            setShowCoinModal(
+              false
+            );
+
+          }
+
+        } catch (err) {
+
+          console.error(
+            "[COIN POLL] ERROR:",
+            err
+          );
+
         }
 
-        if (attempts >= maxAttempts) {
-          console.log("⏰ COIN POLLING TIMEOUT");
-          stopCoinPolling();
-          setShowCoinModal(false);
-        }
-      } catch (err) {
-        console.error("[COIN POLL] ERROR:", err);
-      }
-    }, 1000);
-  }
+      },
+      1000
+    );
+
+}
 
   /**
-   * Prepare Insert Coin
+   * Insert Coin
    */
   async function handleInsertCoin() {
-    if (!client.ip) {
-      alert("Unable to detect your device IP.");
-      return;
-    }
 
-    if (!client.mac) {
-      alert("Unable to detect your device MAC address.");
-      return;
-    }
+  console.log(
+    "CLIENT =",
+    client
+  );
 
-    try {
-      setAmountInserted(0);
+  if (!client.ip) {
 
-      const res = await fetch("/api/coin/wait", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          clientIP: client.ip,
-          clientMac: client.mac,
-        }),
-      });
+    alert(
+      "Unable to detect your device IP."
+    );
 
-      const data = await res.json();
+    return;
 
-      if (!res.ok || !data.success) {
-        alert(data.message || "Unable to prepare coin payment.");
-        return;
-      }
-
-      insertCoin.play();
-      setShowCoinModal(true);
-
-      // Baseline session check before coin drop
-      const baselineSession = await fetch(
-        `/api/captive/session?ip=${encodeURIComponent(client.ip)}&_t=${Date.now()}`,
-        { cache: "no-store" }
-      ).then((res) => res.json());
-
-      startCoinPolling(baselineSession?.expiresAt);
-    } catch (err) {
-      console.error("COIN WAIT ERROR:", err);
-      alert("Unable to prepare coin payment.");
-    }
   }
 
+  if (!client.mac) {
+
+    alert(
+      "Unable to detect your device MAC address."
+    );
+
+    return;
+
+  }
+
+  try {
+
+    setAmountInserted(0);
+
+    const res =
+      await fetch(
+        "/api/coin/wait",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+
+            clientIP:
+              client.ip,
+
+            clientMac:
+              client.mac,
+
+          }),
+
+        }
+      );
+
+    const data =
+      await res.json();
+
+    console.log(
+      "WAIT CLIENT:",
+      data
+    );
+
+    if (
+      !res.ok ||
+      !data.success
+    ) {
+
+      alert(
+        data.message ||
+        "Unable to prepare coin payment."
+      );
+
+      return;
+
+    }
+
+    insertCoin.play();
+
+    setShowCoinModal(true);
+
+// Get current session before waiting for coin
+const baselineSession =
+  await fetch(
+    `/api/captive/session?ip=${encodeURIComponent(
+      client.ip
+    )}&_t=${Date.now()}`,
+    {
+      cache: "no-store",
+    }
+  ).then(
+    res => res.json()
+  );
+
+console.log(
+  "[COIN] BASELINE SESSION:",
+  baselineSession
+);
+
+startCoinPolling(
+  baselineSession?.expiresAt
+);
+
+  } catch (err) {
+
+    console.error(
+      "COIN WAIT ERROR:",
+      err
+    );
+
+    alert(
+      "Unable to prepare coin payment."
+    );
+
+  }
+
+}
   /**
-   * Voucher login success handler
+   * Voucher login success
    */
-  function handleVoucherSuccess(data: any) {
-    applySession(data);
+  function handleVoucherSuccess(
+    data: any
+  ) {
+
+    console.log(
+      "VOUCHER SESSION:",
+      data
+    );
+
+
+    applySession(
+      data
+    );
+
   }
+
 
   const isConnected =
     !!session &&
@@ -473,34 +1094,63 @@ export default function Home() {
     session.internet !== false &&
     remainingSeconds > 0;
 
+
   return (
+
     <PortalLayout>
+
       {/* HERO */}
+
       <section className="relative w-full h-[350px] sm:h-[180px] lg:h-[400px] overflow-hidden">
+
         <HeroCarousel />
+
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-transparent" />
+
         <div className="absolute inset-0 flex items-center">
+
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
+
             <div className="max-w-2xl text-white">
+
               <h4 className="text-sky-400 text-sm sm:text-base lg:text-xl font-semibold">
+
                 Welcome to
+
               </h4>
+
               <h1 className="text-2xl sm:text-4xl lg:text-6xl font-extrabold leading-tight">
+
                 BayanNet Wifi Vendo
+
               </h1>
+
               <p className="text-xs sm:text-sm lg:text-xl text-gray-200 mt-1">
+
                 High-Speed Internet Access
+
               </p>
+
             </div>
+
           </div>
+
         </div>
+
       </section>
 
+
       {/* MAIN */}
+
       <section className="bg-slate-50 py-2 px-3 flex flex-col justify-between font-sans min-h-[calc(100vh-160px)]">
+
         <div className="max-w-md mx-auto w-full flex-grow flex flex-col justify-start gap-4">
+
+
           {/* STATUS HEADER */}
+
           <div className="text-center flex flex-col items-center gap-1.5 mt-1">
+
             <div
               className={`p-2.5 rounded-full transition-all duration-500 shadow-sm border ${
                 isConnected
@@ -508,6 +1158,7 @@ export default function Home() {
                   : "bg-slate-100 border-slate-200 text-slate-400"
               }`}
             >
+
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -516,94 +1167,194 @@ export default function Home() {
                 stroke="currentColor"
                 className="w-7 h-7 sm:w-9 sm:h-9"
               >
+
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22a.75.75 0 1 1-1.06 0 .75.75 0 0 1 1.06 0Z"
                 />
+
               </svg>
+
             </div>
+
 
             <span
               className={`text-[10px] font-bold uppercase tracking-wider ${
-                isConnected ? "text-green-600" : "text-slate-400"
+                isConnected
+                  ? "text-green-600"
+                  : "text-slate-400"
               }`}
             >
-              {isConnected ? "Internet Active" : "No Active Session"}
+
+              {isConnected
+                ? "Internet Active"
+                : "No Active Session"}
+
             </span>
+
           </div>
+
 
           {/* STATUS PANEL */}
+
           <div className="grid grid-cols-2 gap-3">
+
+
             {/* STATUS */}
+
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 flex items-center justify-between">
+
               <div>
-                <p className="text-xs text-slate-400 font-medium">Status</p>
+
+                <p className="text-xs text-slate-400 font-medium">
+
+                  Status
+
+                </p>
+
                 <h2 className="font-bold text-sm text-slate-800 mt-0.5">
-                  {isConnected ? "Connected" : "Disconnected"}
+
+                  {isConnected
+                    ? "Connected"
+                    : "Disconnected"}
+
                 </h2>
+
               </div>
+
+
               <div
                 className={`w-3 h-3 rounded-full ${
-                  isConnected ? "bg-green-500 animate-pulse" : "bg-slate-300"
+                  isConnected
+                    ? "bg-green-500 animate-pulse"
+                    : "bg-slate-300"
                 }`}
               />
+
             </div>
+
 
             {/* CREDIT */}
+
             <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex flex-col justify-center">
-              <p className="text-xs text-slate-400 font-medium">Credit</p>
+
+              <p className="text-xs text-slate-400 font-medium">
+
+                Credit
+
+              </p>
+
               <h3 className="text-sm sm:text-base font-bold text-green-600 mt-0.5">
-                {isConnected ? "₱0.00 (Active)" : "₱0.00"}
+
+                {isConnected
+                  ? "₱0.00 (Active)"
+                  : "₱0.00"}
+
               </h3>
+
             </div>
+
           </div>
+
 
           {/* MAIN CONTROLS */}
+
           <div className="bg-white rounded-2xl shadow-md p-4 border border-slate-100 flex flex-col gap-3">
+
+
             {/* REMAINING TIME */}
+
             <div className="col-span-2 p-4 text-blue flex justify-between items-center">
+
               <div>
+
                 <p className="uppercase tracking-wider text-sky-300 text-[10px] font-bold">
+
                   Remaining Time
+
                 </p>
+
                 <h1 className="text-3xl sm:text-4xl font-black mt-1 tracking-tight">
+
                   {remainingTime}
+
                 </h1>
+
               </div>
+
             </div>
+
 
             {/* INSERT COIN */}
+
             <button
               onClick={handleInsertCoin}
-              disabled={checkingSession || showCoinModal}
+              disabled={
+                checkingSession ||
+                showCoinModal
+              }
               className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-95 transition disabled:opacity-50"
             >
-              {showCoinModal ? "Waiting for Coin..." : "Insert Coin"}
+
+              {showCoinModal
+                ? "Waiting for Coin..."
+                : "Insert Coin"}
+
             </button>
 
+
             {/* VOUCHER */}
+
             <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
+
               <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
+
                 OR LOGIN USING VOUCHER
+
               </p>
-              <VoucherLogin onLoginSuccess={handleVoucherSuccess} />
+
+
+              <VoucherLogin
+                onLoginSuccess={
+                  handleVoucherSuccess
+                }
+              />
+
             </div>
+
           </div>
+
         </div>
+
       </section>
+
 
       <Footer />
 
-      <InsertCoinModal
-        open={showCoinModal}
-        amountInserted={amountInserted}
-        onClose={() => {
-          setShowCoinModal(false);
-          stopCoinPolling();
-        }}
-        stopPopup={popup.stop}
-      />
+
+     <InsertCoinModal
+  open={showCoinModal}
+
+  amountInserted={
+    amountInserted
+  }
+
+  onClose={() => {
+
+    setShowCoinModal(false);
+
+    stopCoinPolling();
+
+  }}
+
+  stopPopup={
+    popup.stop
+  }
+/>
+
     </PortalLayout>
+
   );
+
 }
