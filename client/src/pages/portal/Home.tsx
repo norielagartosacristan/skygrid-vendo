@@ -1032,7 +1032,27 @@ function startCoinPolling(
 
     setShowCoinModal(true);
 
-    startCoinPolling();
+// Get current session before waiting for coin
+const baselineSession =
+  await fetch(
+    `/api/captive/session?ip=${encodeURIComponent(
+      client.ip
+    )}&_t=${Date.now()}`,
+    {
+      cache: "no-store",
+    }
+  ).then(
+    res => res.json()
+  );
+
+console.log(
+  "[COIN] BASELINE SESSION:",
+  baselineSession
+);
+
+startCoinPolling(
+  baselineSession?.expiresAt
+);
 
   } catch (err) {
 
