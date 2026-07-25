@@ -714,15 +714,19 @@ export default function Home() {
    * Start checking for newly-created
    * session after coin insertion.
    */
-  function startCoinPolling(
-  previousExpiresAt?: string
-) {
+ function startCoinPolling() {
 
   stopCoinPolling();
 
   let attempts = 0;
 
   const maxAttempts = 60;
+
+  // Tandaan ang expiration time bago hulugan ng coin
+  const previousExpiresAt =
+    session?.expiresAt
+      ? new Date(session.expiresAt).getTime()
+      : 0;
 
   coinPollingRef.current =
     setInterval(
@@ -739,43 +743,12 @@ export default function Home() {
             client.ip
           );
 
-        if (!result) {
-          return;
-        }
+        if (result?.isActive && result?.expiresAt) {
 
-        /**
-         * Existing session before coin
-         *
-         * We must NOT close the modal
-         * just because an active session exists.
-         */
-        if (
-          previousExpiresAt &&
-          result.expiresAt === previousExpiresAt
-        ) {
-
-          console.log(
-            "⏳ Existing session still active. Waiting for coin..."
-          );
-
-          return;
-
-        }
-
-        /**
-         * New or extended session detected
-         *
-         * expiresAt changed.
-         */
-        if (
-          result.isActive &&
-          result.expiresAt &&
-          result.expiresAt !== previousExpiresAt
-        ) {
-
-          console.log(
-            "✅ COIN SESSION CREATED OR EXTENDED"
-          );
+          const newExpiresAt =
+            new Date(
+              result.expiresAt
+            ).getTime();
 
           console.log(
             "Previous expiresAt:",
@@ -784,16 +757,35 @@ export default function Home() {
 
           console.log(
             "New expiresAt:",
-            result.expiresAt
+            newExpiresAt
           );
 
-          stopCoinPolling();
+          /**
+           * Successful coin insertion
+           * ONLY if expiration time increased.
+           */
+          if (
+            newExpiresAt >
+            previousExpiresAt
+          ) {
 
-          setShowCoinModal(false);
+            console.log(
+              "✅ NEW COIN SESSION DETECTED"
+            );
 
-          popup.play();
+            stopCoinPolling();
 
-          return;
+            setShowCoinModal(false);
+
+            popup.play();
+
+            return;
+
+          }
+
+          console.log(
+            "Existing session detected. Waiting for coin..."
+          );
 
         }
 
@@ -809,6 +801,8 @@ export default function Home() {
           );
 
           stopCoinPolling();
+
+          setShowCoinModal(false);
 
         }
 
