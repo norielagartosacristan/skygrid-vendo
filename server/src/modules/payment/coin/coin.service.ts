@@ -331,8 +331,6 @@ class CoinService {
 
         machine.id,
 
-        defaultPackage.id,
-
         waiting.clientMac,
 
         waiting.clientIP,
