@@ -403,10 +403,20 @@ useEffect(() => {
   }
 
   if (showCoinModal) {
+    console.log(
+      "[SESSION POLL] Paused because coin modal is open."
+    );
+
     return;
   }
 
-  refreshSession(client.ip);
+  console.log(
+    "[SESSION POLL] Starting regular session polling."
+  );
+
+  refreshSession(
+    client.ip
+  );
 
   pollingRef.current =
     setInterval(() => {
@@ -419,13 +429,16 @@ useEffect(() => {
 
   return () => {
 
-    if (pollingRef.current) {
+    if (
+      pollingRef.current
+    ) {
 
       clearInterval(
         pollingRef.current
       );
 
-      pollingRef.current = null;
+      pollingRef.current =
+        null;
 
     }
 
@@ -752,7 +765,7 @@ function startCoinPolling(
 
   let attempts = 0;
 
-  const maxAttempts = 60;
+  const maxAttempts = 120;
 
   const previousExpiry =
     previousExpiresAt
@@ -764,12 +777,17 @@ function startCoinPolling(
   );
 
   console.log(
-    "Baseline expiresAt:",
+    "Client IP:",
+    client.ip
+  );
+
+  console.log(
+    "Previous expiresAt:",
     previousExpiresAt
   );
 
   console.log(
-    "Baseline timestamp:",
+    "Previous expiry timestamp:",
     previousExpiry
   );
 
@@ -780,34 +798,45 @@ function startCoinPolling(
         attempts++;
 
         console.log(
-          `Checking coin session... ${attempts}/${maxAttempts}`
+          `[COIN POLL] ${attempts}/${maxAttempts}`
         );
 
         try {
 
-          /**
-           * IMPORTANT:
-           * Direct API request only.
-           *
-           * Do NOT call refreshSession()
-           * because refreshSession() changes
-           * the session state and UI.
-           */
+          const url =
+            `/api/captive/session?ip=${encodeURIComponent(
+              client.ip
+            )}&_t=${Date.now()}`;
+
+          console.log(
+            "[COIN POLL] Request:",
+            url
+          );
+
           const res =
             await fetch(
-              `/api/captive/session?ip=${encodeURIComponent(
-                client.ip
-              )}`,
+              url,
               {
+                method: "GET",
                 cache: "no-store",
+                headers: {
+                  "Cache-Control":
+                    "no-cache",
+                  "Pragma":
+                    "no-cache",
+                },
               }
             );
+
+          console.log(
+            "[COIN POLL] HTTP:",
+            res.status
+          );
 
           if (!res.ok) {
 
             console.log(
-              "Session API failed:",
-              res.status
+              "[COIN POLL] HTTP ERROR"
             );
 
             return;
@@ -818,16 +847,11 @@ function startCoinPolling(
             await res.json();
 
           console.log(
-            "COIN POLL SESSION:",
+            "[COIN POLL] RESULT:",
             result
           );
 
-
-          /**
-           * Check active session.
-           */
           if (
-            result?.success &&
             result?.isActive &&
             result?.expiresAt
           ) {
@@ -837,95 +861,68 @@ function startCoinPolling(
                 result.expiresAt
               ).getTime();
 
-
             console.log(
-              "Baseline expiry:",
+              "[COIN POLL] Previous expiry:",
               previousExpiry
             );
 
             console.log(
-              "Current expiry:",
+              "[COIN POLL] New expiry:",
               newExpiry
             );
 
-
-            /**
-             * IMPORTANT:
-             *
-             * Only consider this a successful
-             * coin insertion if expiration
-             * actually increased.
-             */
             if (
               newExpiry >
               previousExpiry
             ) {
 
               console.log(
-                "✅ NEW COIN SESSION DETECTED"
+                "================================"
               );
 
               console.log(
-                "Old expiresAt:",
+                "✅ COIN PAYMENT DETECTED"
+              );
+
+              console.log(
+                "OLD:",
                 previousExpiresAt
               );
 
               console.log(
-                "New expiresAt:",
+                "NEW:",
                 result.expiresAt
               );
 
+              console.log(
+                "================================"
+              );
 
-              /**
-               * Stop polling first.
-               */
               stopCoinPolling();
 
-
-              /**
-               * Now update the UI with the
-               * NEW session.
-               */
               applySession(
                 result
               );
 
-
-              /**
-               * Close modal.
-               */
               setShowCoinModal(
                 false
               );
 
-
-              /**
-               * Success sound.
-               */
               popup.play();
-
 
               return;
 
             }
 
-
-            console.log(
-              "⏳ Existing session unchanged. Waiting for coin..."
-            );
-
           }
 
-
-          /**
-           * Timeout.
-           */
           if (
-            attempts >= maxAttempts
+            attempts >=
+            maxAttempts
           ) {
 
             console.log(
-              "⏰ Coin session polling timeout."
+              "⏰ COIN POLLING TIMEOUT"
             );
 
             stopCoinPolling();
@@ -939,7 +936,7 @@ function startCoinPolling(
         } catch (err) {
 
           console.error(
-            "COIN POLLING ERROR:",
+            "[COIN POLL] ERROR:",
             err
           );
 
