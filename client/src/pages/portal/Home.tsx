@@ -714,7 +714,9 @@ export default function Home() {
    * Start checking for newly-created
    * session after coin insertion.
    */
- function startCoinPolling() {
+ function startCoinPolling(
+  previousExpiresAt?: string
+) {
 
   stopCoinPolling();
 
@@ -722,11 +724,24 @@ export default function Home() {
 
   const maxAttempts = 60;
 
-  // Tandaan ang expiration time bago hulugan ng coin
-  const previousExpiresAt =
-    session?.expiresAt
-      ? new Date(session.expiresAt).getTime()
+  // Convert previous expiration time to timestamp.
+  // If there is no existing session, use 0.
+  const previousExpiry =
+    previousExpiresAt
+      ? new Date(
+          previousExpiresAt
+        ).getTime()
       : 0;
+
+  console.log(
+    "Previous session expires at:",
+    previousExpiresAt
+  );
+
+  console.log(
+    "Previous expiry timestamp:",
+    previousExpiry
+  );
 
   coinPollingRef.current =
     setInterval(
@@ -743,66 +758,101 @@ export default function Home() {
             client.ip
           );
 
-        if (result?.isActive && result?.expiresAt) {
+        /**
+         * Check if an active session exists.
+         */
+        if (
+          result?.isActive &&
+          result?.expiresAt
+        ) {
 
+          // Convert new expiration time to timestamp.
           const newExpiresAt =
             new Date(
               result.expiresAt
             ).getTime();
 
           console.log(
-            "Previous expiresAt:",
-            previousExpiresAt
+            "Previous expiry:",
+            previousExpiry
           );
 
           console.log(
-            "New expiresAt:",
+            "New expiry:",
             newExpiresAt
           );
 
           /**
-           * Successful coin insertion
-           * ONLY if expiration time increased.
+           * Coin insertion is successful
+           * only when the session expiration
+           * time becomes later than before.
            */
           if (
             newExpiresAt >
-            previousExpiresAt
+            previousExpiry
           ) {
 
             console.log(
-              "✅ NEW COIN SESSION DETECTED"
+              "✅ NEW OR EXTENDED COIN SESSION DETECTED"
             );
 
+            console.log(
+              "Old expiresAt:",
+              previousExpiresAt
+            );
+
+            console.log(
+              "New expiresAt:",
+              result.expiresAt
+            );
+
+            /**
+             * Stop coin polling.
+             */
             stopCoinPolling();
 
-            setShowCoinModal(false);
+            /**
+             * Close coin modal.
+             */
+            setShowCoinModal(
+              false
+            );
 
+            /**
+             * Play success sound.
+             */
             popup.play();
 
             return;
 
           }
 
+          /**
+           * Existing session has not changed yet.
+           * Keep the modal open and continue waiting.
+           */
           console.log(
-            "Existing session detected. Waiting for coin..."
+            "⏳ Existing session unchanged. Waiting for coin..."
           );
 
         }
 
         /**
-         * Timeout
+         * Timeout after 60 seconds.
          */
         if (
           attempts >= maxAttempts
         ) {
 
           console.log(
-            "Coin session polling timeout."
+            "⏰ Coin session polling timeout."
           );
 
           stopCoinPolling();
 
-          setShowCoinModal(false);
+          setShowCoinModal(
+            false
+          );
 
         }
 
