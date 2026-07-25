@@ -396,18 +396,45 @@ export default function Home() {
   /**
    * Restore session once client IP is known
    */
-  useEffect(() => {
+useEffect(() => {
 
-    if (!client.ip) {
-      return;
+  if (!client.ip) {
+    return;
+  }
+
+  if (showCoinModal) {
+    return;
+  }
+
+  refreshSession(client.ip);
+
+  pollingRef.current =
+    setInterval(() => {
+
+      refreshSession(
+        client.ip
+      );
+
+    }, 2000);
+
+  return () => {
+
+    if (pollingRef.current) {
+
+      clearInterval(
+        pollingRef.current
+      );
+
+      pollingRef.current = null;
+
     }
 
-    refreshSession(
-      client.ip,
-      false
-    );
+  };
 
-  }, [client.ip]);
+}, [
+  client.ip,
+  showCoinModal
+]);
 
 
   /**
