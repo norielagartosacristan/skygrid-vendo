@@ -32,22 +32,28 @@ model Vendor {
 }
 
 model Machine {
-  id               String            @id @default(cuid())
-  vendorId         String
-  name             String
-  ipAddress        String
-  macAddress       String
-  location         String?
-  status           MachineStatus     @default(OFFLINE)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  fingerprint      String            @unique
-  hostname         String?
-  vendor           Vendor            @relation(fields: [vendorId], references: [id])
+  id          String        @id @default(cuid())
+  vendorId    String
+  name        String
+  ipAddress   String
+  macAddress  String
+  location    String?
+  status      MachineStatus @default(OFFLINE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  fingerprint String        @unique
+
+  hostname String?
+
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  subVendo SubVendo? @relation(fields: [subVendoId], references: [id])
+
   sessions         Session[]
   waitingClients   WaitingClient[]
   transactions     Transaction[]
   coinTransactions CoinTransaction[]
+  subVendoId       String?
 }
 
 model Transaction {
@@ -184,8 +190,9 @@ model SubVendo {
   uptime           Int       @default(0)
   wifiSignal       Int       @default(0)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  machines  Machine[]
 }
 
 model Package {

@@ -6,6 +6,12 @@ class CoinService {
 
     /**
      * Get the active Main Vendo machine.
+     *
+     * Used by the captive portal when a client
+     * starts waiting for a coin.
+     *
+     * The portal does not know the Subvendo chipId,
+     * so we use the currently active Main Vendo machine.
      */
     private async getCurrentMachine() {
 
@@ -13,10 +19,13 @@ class CoinService {
             await prisma.machine.findFirst({
 
                 where: {
+
                     status: "ONLINE"
+
                 }
 
             });
+
 
         if (!machine) {
 
@@ -26,23 +35,115 @@ class CoinService {
 
         }
 
+
         return machine;
 
     }
 
 
     /**
-     * Portal -> Waiting for coin
+     * Get the Main Vendo machine assigned
+     * to a specific Subvendo.
+     *
+     * The ESP8266 identifies itself using chipId.
      */
-    async waitClient(data: any) {
+    private async getMachineByChipId(
+        chipId: string
+    ) {
+
+        const subVendo =
+            await prisma.subVendo.findUnique({
+
+                where: {
+
+                    chipId
+
+                }
+
+            });
+
+
+        if (!subVendo) {
+
+            throw new Error(
+                `Subvendo ${chipId} is not registered.`
+            );
+
+        }
+
+
+        if (!subVendo.machineId) {
+
+            throw new Error(
+                `Subvendo ${chipId} is not assigned to a Main Vendo machine.`
+            );
+
+        }
+
+
+        const machine =
+            await prisma.machine.findUnique({
+
+                where: {
+
+                    id:
+                        subVendo.machineId
+
+                }
+
+            });
+
+
+        if (!machine) {
+
+            throw new Error(
+                `Main Vendo machine assigned to Subvendo ${chipId} was not found.`
+            );
+
+        }
+
+
+        return {
+
+            subVendo,
+
+            machine
+
+        };
+
+    }
+
+
+    /**
+     * Portal -> Waiting for coin
+     *
+     * Called when a client opens the coin portal.
+     *
+     * The portal sends:
+     *
+     * clientIP
+     * clientMac
+     */
+    async waitClient(
+        data: any
+    ) {
 
         const {
+
             clientIP,
+
             clientMac
+
         } = data;
 
 
-        if (!clientIP || !clientMac) {
+        /**
+         * Validate client information.
+         */
+        if (
+            !clientIP ||
+            !clientMac
+        ) {
 
             throw new Error(
                 "Client IP and MAC address are required."
@@ -51,12 +152,17 @@ class CoinService {
         }
 
 
+        /**
+         * Get the current Main Vendo machine.
+         *
+         * The portal belongs to this machine.
+         */
         const machine =
             await this.getCurrentMachine();
 
 
         /**
-         * Remove old waiting request
+         * Remove previous waiting request
          * from the same client.
          */
         await prisma.waitingClient.deleteMany({
@@ -97,30 +203,36 @@ class CoinService {
             "========== WAIT CLIENT =========="
         );
 
+
         console.log(
             "Machine:",
             machine.name
         );
+
 
         console.log(
             "Machine ID:",
             machine.id
         );
 
+
         console.log(
             "Client IP:",
             clientIP
         );
+
 
         console.log(
             "Client MAC:",
             clientMac
         );
 
+
         console.log(
             "Waiting ID:",
             waiting.id
         );
+
 
         console.log(
             "================================="
@@ -140,13 +252,27 @@ class CoinService {
 
 
     /**
-     * ESP8266 -> Coin inserted
+     * ESP8266 / Subvendo -> Coin inserted
+     *
+     * The ESP8266 sends:
+     *
+     * chipId
+     * amount
+     *
+     * The chipId is used to determine
+     * which Main Vendo machine owns
+     * the Subvendo.
      */
-    async insertCoin(data: any) {
+    async insertCoin(
+        data: any
+    ) {
 
         const {
+
             chipId,
+
             amount
+
         } = data;
 
 
@@ -154,10 +280,12 @@ class CoinService {
             "========== COIN INSERT =========="
         );
 
+
         console.log(
             "Chip ID:",
             chipId
         );
+
 
         console.log(
             "Amount:",
@@ -165,6 +293,9 @@ class CoinService {
         );
 
 
+        /**
+         * Validate chipId.
+         */
         if (!chipId) {
 
             throw new Error(
@@ -174,7 +305,13 @@ class CoinService {
         }
 
 
-        if (!amount || Number(amount) <= 0) {
+        /**
+         * Validate coin amount.
+         */
+        if (
+            !amount ||
+            Number(amount) <= 0
+        ) {
 
             throw new Error(
                 "Invalid coin amount."
@@ -183,8 +320,49 @@ class CoinService {
         }
 
 
-        const machine =
-            await this.getCurrentMachine();
+        /**
+         * Resolve the Subvendo
+         * and its assigned Main Vendo machine.
+         */
+        const {
+
+            subVendo,
+
+            machine
+
+        } =
+            await this.getMachineByChipId(
+                chipId
+            );
+
+
+        console.log(
+            "========== SUBVENDO =========="
+        );
+
+
+        console.log(
+            "Chip ID:",
+            subVendo.chipId
+        );
+
+
+        console.log(
+            "Subvendo MAC:",
+            subVendo.macAddress
+        );
+
+
+        console.log(
+            "Subvendo IP:",
+            subVendo.ipAddress
+        );
+
+
+        console.log(
+            "Main Vendo Machine:",
+            machine.name
+        );
 
 
         console.log(
@@ -193,12 +371,15 @@ class CoinService {
         );
 
 
+        console.log(
+            "=============================="
+        );
+
+
         /**
-         * Find latest waiting client.
-         *
-         * IMPORTANT:
-         * Only select waiting clients that
-         * still exist.
+         * Find the latest waiting client
+         * belonging to the Main Vendo machine
+         * assigned to this Subvendo.
          */
         const waiting =
             await prisma.waitingClient.findFirst({
@@ -209,11 +390,17 @@ class CoinService {
                         machine.id,
 
                     clientIP: {
-                        not: ""
+
+                        not:
+                            ""
+
                     },
 
                     clientMac: {
-                        not: ""
+
+                        not:
+                            ""
+
                     }
 
                 },
@@ -231,7 +418,7 @@ class CoinService {
         if (!waiting) {
 
             throw new Error(
-                "No waiting client with valid MAC address."
+                `No waiting client found for Subvendo ${chipId}.`
             );
 
         }
@@ -241,20 +428,30 @@ class CoinService {
             "========== WAITING CLIENT =========="
         );
 
+
         console.log(
             "Waiting ID:",
             waiting.id
         );
+
 
         console.log(
             "Client IP:",
             waiting.clientIP
         );
 
+
         console.log(
             "Client MAC:",
             waiting.clientMac
         );
+
+
+        console.log(
+            "Machine ID:",
+            waiting.machineId
+        );
+
 
         console.log(
             "===================================="
@@ -285,14 +482,15 @@ class CoinService {
         ) {
 
             throw new Error(
-                `No coin rate configured for ₱${amount}`
+                `No coin rate configured for ₱${amount}.`
             );
 
         }
 
 
         /**
-         * Convert duration to minutes.
+         * Convert coin rate duration
+         * into minutes.
          */
         let durationMinutes =
             0;
@@ -343,6 +541,7 @@ class CoinService {
             `₱${rate.amount.toString()}`
         );
 
+
         console.log(
             "Duration:",
             durationMinutes,
@@ -351,10 +550,13 @@ class CoinService {
 
 
         /**
-         * Find default package.
+         * Find default active package.
          *
          * Session.packageId is required
          * by the current database schema.
+         *
+         * The actual session duration still
+         * comes from the CoinRate.
          */
         const defaultPackage =
             await prisma.package.findFirst({
@@ -388,11 +590,10 @@ class CoinService {
         /**
          * Create or extend session.
          *
-         * SessionService already handles:
+         * SessionService handles:
          *
-         * NEW SESSION
-         * or
-         * EXISTING SESSION EXTENSION
+         * 1. New session
+         * 2. Existing session extension
          */
         const session =
             await sessionService.createSession(
@@ -432,9 +633,7 @@ class CoinService {
 
 
         /**
-         * IMPORTANT:
-         *
-         * Remove only the waiting record
+         * Remove ONLY the waiting client
          * that received this coin.
          */
         await prisma.waitingClient.delete({
@@ -453,19 +652,35 @@ class CoinService {
             "===================================="
         );
 
+
         console.log(
             "✅ COIN SUCCESS"
         );
+
+
+        console.log(
+            "Subvendo:",
+            chipId
+        );
+
+
+        console.log(
+            "Machine:",
+            machine.name
+        );
+
 
         console.log(
             "Client IP:",
             waiting.clientIP
         );
 
+
         console.log(
             "Client MAC:",
             waiting.clientMac
         );
+
 
         console.log(
             "Added:",
@@ -473,10 +688,18 @@ class CoinService {
             "minutes"
         );
 
+
+        console.log(
+            "Session ID:",
+            session.id
+        );
+
+
         console.log(
             "Expires:",
             session.expiresAt
         );
+
 
         console.log(
             "===================================="
