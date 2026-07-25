@@ -724,8 +724,6 @@ export default function Home() {
 
   const maxAttempts = 60;
 
-  // Convert previous expiration time to timestamp.
-  // If there is no existing session, use 0.
   const previousExpiry =
     previousExpiresAt
       ? new Date(
@@ -734,7 +732,11 @@ export default function Home() {
       : 0;
 
   console.log(
-    "Previous session expires at:",
+    "========== START COIN POLLING =========="
+  );
+
+  console.log(
+    "Previous expiresAt:",
     previousExpiresAt
   );
 
@@ -753,105 +755,111 @@ export default function Home() {
           `Checking coin session... ${attempts}/${maxAttempts}`
         );
 
-        const result =
-          await refreshSession(
-            client.ip
-          );
+        try {
 
-        /**
-         * Check if an active session exists.
-         */
-        if (
-          result?.isActive &&
-          result?.expiresAt
-        ) {
-
-          // Convert new expiration time to timestamp.
-          const newExpiresAt =
-            new Date(
-              result.expiresAt
-            ).getTime();
-
-          console.log(
-            "Previous expiry:",
-            previousExpiry
-          );
-
-          console.log(
-            "New expiry:",
-            newExpiresAt
-          );
+          const result =
+            await refreshSession(
+              client.ip
+            );
 
           /**
-           * Coin insertion is successful
-           * only when the session expiration
-           * time becomes later than before.
+           * No active session yet.
            */
           if (
-            newExpiresAt >
-            previousExpiry
+            !result?.isActive ||
+            !result?.expiresAt
           ) {
 
             console.log(
-              "✅ NEW OR EXTENDED COIN SESSION DETECTED"
+              "⏳ No active session yet. Waiting for coin..."
+            );
+
+          } else {
+
+            const newExpiry =
+              new Date(
+                result.expiresAt
+              ).getTime();
+
+            console.log(
+              "Previous expiry:",
+              previousExpiry
             );
 
             console.log(
-              "Old expiresAt:",
-              previousExpiresAt
+              "Current server expiry:",
+              newExpiry
             );
+
+            /**
+             * IMPORTANT:
+             *
+             * Only close the modal when the server
+             * expiration time becomes later than
+             * the expiration time BEFORE clicking
+             * Insert Coin.
+             */
+            if (
+              newExpiry >
+              previousExpiry
+            ) {
+
+              console.log(
+                "✅ COIN PAYMENT DETECTED"
+              );
+
+              console.log(
+                "Old expiresAt:",
+                previousExpiresAt
+              );
+
+              console.log(
+                "New expiresAt:",
+                result.expiresAt
+              );
+
+              stopCoinPolling();
+
+              setShowCoinModal(
+                false
+              );
+
+              popup.play();
+
+              return;
+
+            }
 
             console.log(
-              "New expiresAt:",
-              result.expiresAt
+              "⏳ Session unchanged. Waiting for coin..."
             );
-
-            /**
-             * Stop coin polling.
-             */
-            stopCoinPolling();
-
-            /**
-             * Close coin modal.
-             */
-            setShowCoinModal(
-              false
-            );
-
-            /**
-             * Play success sound.
-             */
-            popup.play();
-
-            return;
 
           }
 
           /**
-           * Existing session has not changed yet.
-           * Keep the modal open and continue waiting.
+           * Timeout after 60 seconds.
            */
-          console.log(
-            "⏳ Existing session unchanged. Waiting for coin..."
-          );
+          if (
+            attempts >= maxAttempts
+          ) {
 
-        }
+            console.log(
+              "⏰ Coin polling timeout."
+            );
 
-        /**
-         * Timeout after 60 seconds.
-         */
-        if (
-          attempts >= maxAttempts
-        ) {
+            stopCoinPolling();
 
-          console.log(
-            "⏰ Coin session polling timeout."
-          );
+            setShowCoinModal(
+              false
+            );
 
-          stopCoinPolling();
+          }
 
-          setShowCoinModal(
-            false
+        } catch (error) {
+
+          console.error(
+            "COIN POLLING ERROR:",
+            error
           );
 
         }
@@ -867,122 +875,173 @@ export default function Home() {
    */
   async function handleInsertCoin() {
 
-    console.log(
-      "CLIENT =",
-      client
+  console.log(
+    "CLIENT =",
+    client
+  );
+
+  if (!client.ip) {
+
+    alert(
+      "Unable to detect your device IP."
     );
 
-
-    if (!client.ip) {
-
-      alert(
-        "Unable to detect your device IP."
-      );
-
-      return;
-
-    }
-
-
-    if (!client.mac) {
-
-      alert(
-        "Unable to detect your device MAC address."
-      );
-
-      return;
-
-    }
-
-
-    try {
-
-      const res =
-        await fetch(
-          "/api/coin/wait",
-          {
-
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body: JSON.stringify({
-
-              clientIP:
-                client.ip,
-
-              clientMac:
-                client.mac,
-
-            }),
-
-          }
-        );
-
-
-      const data =
-        await res.json();
-
-
-      console.log(
-        "WAIT CLIENT:",
-        data
-      );
-
-
-      if (!res.ok || !data.success) {
-
-        alert(
-          data.message ||
-          "Unable to prepare coin payment."
-        );
-
-        return;
-
-      }
-
-
-      insertCoin.play();
-
-/**
- * Save current session expiration
- * BEFORE waiting for coin.
- */
-const previousExpiresAt =
-  session?.expiresAt;
-
-/**
- * Keep coin modal open.
- */
-setShowCoinModal(true);
-
-/**
- * Wait for a NEW or EXTENDED session.
- */
-startCoinPolling(
-  previousExpiresAt
-);
-
-
-    } catch (err) {
-
-      console.error(
-        "COIN WAIT ERROR:",
-        err
-      );
-
-
-      alert(
-        "Unable to prepare coin payment."
-      );
-
-    }
+    return;
 
   }
 
+  if (!client.mac) {
+
+    alert(
+      "Unable to detect your device MAC address."
+    );
+
+    return;
+
+  }
+
+  try {
+
+    /**
+     * =================================================
+     * 1. GET CURRENT SESSION FIRST
+     * =================================================
+     *
+     * This is our baseline.
+     * We need to know the exact expiresAt BEFORE
+     * the user inserts a new coin.
+     */
+    const currentSession =
+      await refreshSession(
+        client.ip,
+        true
+      );
+
+    const previousExpiresAt =
+      currentSession?.expiresAt;
+
+    console.log(
+      "========== COIN PAYMENT START =========="
+    );
+
+    console.log(
+      "Current server session:",
+      currentSession
+    );
+
+    console.log(
+      "Baseline expiresAt:",
+      previousExpiresAt
+    );
+
+
+    /**
+     * =================================================
+     * 2. REGISTER CLIENT AS WAITING FOR COIN
+     * =================================================
+     */
+    const res =
+      await fetch(
+        "/api/coin/wait",
+        {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+
+            clientIP:
+              client.ip,
+
+            clientMac:
+              client.mac,
+
+          }),
+
+        }
+      );
+
+
+    const data =
+      await res.json();
+
+
+    console.log(
+      "WAIT CLIENT:",
+      data
+    );
+
+
+    /**
+     * Waiting client registration failed.
+     */
+    if (
+      !res.ok ||
+      !data.success
+    ) {
+
+      alert(
+        data.message ||
+        "Unable to prepare coin payment."
+      );
+
+      return;
+
+    }
+
+
+    /**
+     * =================================================
+     * 3. PLAY COIN SOUND
+     * =================================================
+     */
+    insertCoin.play();
+
+
+    /**
+     * =================================================
+     * 4. OPEN COIN MODAL
+     * =================================================
+     *
+     * The modal must stay open while waiting
+     * for the actual coin insertion.
+     */
+    setShowCoinModal(
+      true
+    );
+
+
+    /**
+     * =================================================
+     * 5. START POLLING
+     * =================================================
+     *
+     * The modal will only close when the server
+     * reports that expiresAt has increased.
+     */
+    startCoinPolling(
+      previousExpiresAt
+    );
+
+
+  } catch (err) {
+
+    console.error(
+      "COIN WAIT ERROR:",
+      err
+    );
+
+    alert(
+      "Unable to prepare coin payment."
+    );
+
+  }
+
+}
 
   /**
    * Voucher login success
