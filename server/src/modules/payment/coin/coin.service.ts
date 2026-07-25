@@ -327,19 +327,19 @@ class CoinService {
      * Create or extend session
      */
     const session =
-        await sessionService.createSession(
+    await sessionService.createSession(
 
-            machine.id,
+        machine.id,
 
-            defaultPackage.id,
+        defaultPackage.id,
 
-            waiting.clientMac,
+        waiting.clientMac,
 
-            waiting.clientIP,
+        waiting.clientIP,
 
-            durationMinutes
+        durationMinutes
 
-        );
+    );
 
     /**
      * Record coin transaction
