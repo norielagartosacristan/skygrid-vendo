@@ -47,71 +47,36 @@ class CoinService {
      *
      * The ESP8266 identifies itself using chipId.
      */
-    private async getMachineByChipId(
-        chipId: string
-    ) {
+   private async getMachineByChipId(
+    chipId: string
+) {
+    const subvendo =
+        await prisma.subVendo.findUnique({
+            where: {
+                chipId
+            },
+            include: {
+                machine: true
+            }
+        });
 
-        const subVendo =
-            await prisma.subVendo.findUnique({
-
-                where: {
-
-                    chipId
-
-                }
-
-            });
-
-
-        if (!subVendo) {
-
-            throw new Error(
-                `Subvendo ${chipId} is not registered.`
-            );
-
-        }
-
-
-        if (!subVendo.machineId) {
-
-            throw new Error(
-                `Subvendo ${chipId} is not assigned to a Main Vendo machine.`
-            );
-
-        }
-
-
-        const machine =
-            await prisma.machine.findUnique({
-
-                where: {
-
-                    id:
-                        subVendo.machineId
-
-                }
-
-            });
-
-
-        if (!machine) {
-
-            throw new Error(
-                `Main Vendo machine assigned to Subvendo ${chipId} was not found.`
-            );
-
-        }
-
-
-        return {
-
-            subVendo,
-
-            machine
-
-        };
-
+    if (!subvendo) {
+        throw new Error(
+            `Subvendo ${chipId} not found.`
+        );
     }
+
+    if (!subvendo.machine) {
+        throw new Error(
+            `Subvendo ${chipId} is not assigned to a Main Vendo machine.`
+        );
+    }
+
+    return {
+        subVendo: subvendo,
+        machine: subvendo.machine
+    };
+}
 
 
     /**
@@ -550,44 +515,6 @@ class CoinService {
 
 
         /**
-         * Find default active package.
-         *
-         * Session.packageId is required
-         * by the current database schema.
-         *
-         * The actual session duration still
-         * comes from the CoinRate.
-         */
-        const defaultPackage =
-            await prisma.package.findFirst({
-
-                where: {
-
-                    isActive:
-                        true
-
-                },
-
-                orderBy: {
-
-                    price:
-                        "asc"
-
-                }
-
-            });
-
-
-        if (!defaultPackage) {
-
-            throw new Error(
-                "No active package configured."
-            );
-
-        }
-
-
-        /**
          * Create or extend session.
          *
          * SessionService handles:
@@ -597,17 +524,11 @@ class CoinService {
          */
         const session =
             await sessionService.createSession(
-
                 machine.id,
-
-                defaultPackage.id,
-
+                null,
                 waiting.clientMac,
-
                 waiting.clientIP,
-
                 durationMinutes
-
             );
 
 
