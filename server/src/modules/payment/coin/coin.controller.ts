@@ -92,6 +92,58 @@ class CoinController {
 
 }
 
+/**
+ * ESP8266 checks if there is a client waiting for coin
+ */
+async waiting(req: Request, res: Response) {
+
+    try {
+
+        const { chipId } = req.params;
+
+        console.log(
+            "========== CHECK WAITING CLIENT =========="
+        );
+
+        console.log(
+            "Chip ID:",
+            chipId
+        );
+
+        const result =
+            await coinService.checkWaitingClient(
+                chipId
+            );
+
+        console.log(
+            "WAITING RESULT:",
+            result
+        );
+
+        return res.json(
+            result
+        );
+
+    } catch (err: any) {
+
+        console.error(
+            "CHECK WAITING CLIENT ERROR:",
+            err
+        );
+
+        return res.status(400).json({
+
+            success: false,
+
+            message:
+                err.message
+
+        });
+
+    }
+
+}
+
 }
 
 export const coinController =

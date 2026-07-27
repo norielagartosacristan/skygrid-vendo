@@ -726,6 +726,148 @@ class CoinService {
 
     }
 
+    async checkWaitingClient(
+    chipId: string
+) {
+
+    console.log(
+        "========== CHECK WAITING CLIENT =========="
+    );
+
+    console.log(
+        "Subvendo Chip ID:",
+        chipId
+    );
+
+
+    /**
+     * Find the Subvendo.
+     */
+    const subvendo =
+        await prisma.subVendo.findUnique({
+
+            where: {
+
+                chipId
+
+            }
+
+        });
+
+
+    if (!subvendo) {
+
+        throw new Error(
+            `Subvendo ${chipId} not found.`
+        );
+
+    }
+
+
+    console.log(
+        "Subvendo Machine ID:",
+        subvendo.machineId
+    );
+
+
+    /**
+     * Find latest waiting client
+     * assigned to this Subvendo's Main Vendo.
+     */
+    const waiting =
+        await prisma.waitingClient.findFirst({
+
+            where: {
+
+                machineId:
+                    subvendo.machineId,
+
+                clientIP: {
+                    not: ""
+                },
+
+                clientMac: {
+                    not: ""
+                }
+
+            },
+
+            orderBy: {
+
+                createdAt:
+                    "desc"
+
+            }
+
+        });
+
+
+    /**
+     * No client waiting.
+     */
+    if (!waiting) {
+
+        console.log(
+            "No waiting client."
+        );
+
+        return {
+
+            success:
+                true,
+
+            waiting:
+                false
+
+        };
+
+    }
+
+
+    /**
+     * Client is waiting.
+     */
+    console.log(
+        "WAITING CLIENT FOUND"
+    );
+
+    console.log(
+        "Waiting ID:",
+        waiting.id
+    );
+
+    console.log(
+        "Client IP:",
+        waiting.clientIP
+    );
+
+    console.log(
+        "Client MAC:",
+        waiting.clientMac
+    );
+
+
+    return {
+
+        success:
+            true,
+
+        waiting:
+            true,
+
+        clientIP:
+            waiting.clientIP,
+
+        clientMac:
+            waiting.clientMac,
+
+        waitingId:
+            waiting.id
+
+    };
+
+}
+
 }
 
 

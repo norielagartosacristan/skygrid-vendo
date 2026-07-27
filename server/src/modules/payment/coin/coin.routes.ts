@@ -12,6 +12,14 @@ router.post(
 );
 
 /**
+ * ESP8266 -> Check waiting client
+ */
+router.get(
+    "/waiting/:chipId",
+    coinController.waiting
+);
+
+/**
  * ESP8266 -> Coin Inserted
  */
 router.post(
