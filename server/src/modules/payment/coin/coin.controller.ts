@@ -168,7 +168,6 @@ async waiting(
     }
 
 }
-
 }
 
 export const coinController =
