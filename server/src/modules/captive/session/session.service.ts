@@ -3,6 +3,7 @@ import prisma from "../../../config/prisma";
 import { ipsetService } from "../firewall/ipset.service";
 import { captiveSocket } from "../websocket/captive.socket";
 
+
 class SessionService {
 
     async createSession(
@@ -345,6 +346,48 @@ class SessionService {
         return session;
 
     }
+
+    async restoreActiveSessions(): Promise<void> {
+
+    console.log("🔄 Restoring active client sessions...");
+
+    const sessions = await prisma.session.findMany({
+        where: {
+            isActive: true,
+            expiresAt: {
+                gt: new Date()
+            }
+        }
+    });
+
+    console.log(
+        `Found ${sessions.length} active sessions`
+    );
+
+    for (const session of sessions) {
+
+        try {
+
+            await ipsetService.allow(
+                session.ipAddress
+            );
+
+            console.log(
+                `✅ Restored Internet: ${session.ipAddress}`
+            );
+
+        } catch (err) {
+
+            console.error(
+                `❌ Failed to restore ${session.ipAddress}`,
+                err
+            );
+
+        }
+
+    }
+
+}
 
 }
 

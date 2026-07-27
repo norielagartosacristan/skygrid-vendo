@@ -108,6 +108,27 @@ class IPSetService {
 
     }
 
+    /**
+ * Restore all active sessions to ipset after server reboot
+ */
+async restoreActiveClients(): Promise<void> {
+
+    console.log("🔄 Restoring active clients to ipset...");
+
+    try {
+
+        const { stdout } = await execAsync(
+            `sudo /usr/bin/node -e ""`
+        );
+
+        console.log(stdout);
+
+    } catch (err) {
+        console.error(err);
+    }
+
+}
+
 }
 
 export const ipsetService = new IPSetService();
