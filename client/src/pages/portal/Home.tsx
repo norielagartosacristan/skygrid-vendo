@@ -449,61 +449,6 @@ useEffect(() => {
   showCoinModal
 ]);
 
-
-  /**
-   * Regular HTTP session polling
-   *
-   * This replaces the need for
-   * WebSocket session updates.
-   */
-  useEffect(() => {
-
-    if (!client.ip) {
-      return;
-    }
-
-
-    /**
-     * Check immediately
-     */
-    refreshSession(
-      client.ip
-    );
-
-
-    /**
-     * Check every 2 seconds
-     */
-    pollingRef.current =
-      setInterval(() => {
-
-        refreshSession(
-          client.ip
-        );
-
-      }, 2000);
-
-
-    return () => {
-
-      if (
-        pollingRef.current
-      ) {
-
-        clearInterval(
-          pollingRef.current
-        );
-
-        pollingRef.current =
-          null;
-
-      }
-
-    };
-
-  }, [client.ip]);
-
-
   /**
    * Local countdown
    *
