@@ -726,7 +726,8 @@ class CoinService {
 
     }
 
-    async checkWaitingClient(
+    
+async checkWaitingClient(
     chipId: string
 ) {
 
@@ -755,6 +756,9 @@ class CoinService {
         });
 
 
+    /**
+     * Make sure the Subvendo exists.
+     */
     if (!subvendo) {
 
         throw new Error(
@@ -764,30 +768,49 @@ class CoinService {
     }
 
 
-    console.log(
-        "Subvendo Machine ID:",
-        subvendo.machineId
-    );
+    /**
+     * Make sure the Subvendo
+     * is assigned to a Main Vendo.
+     */
+    if (!subvendo.machineId) {
+
+        throw new Error(
+            `Subvendo ${chipId} is not assigned to a Main Vendo machine.`
+        );
+
+    }
 
 
     /**
-     * Find latest waiting client
-     * assigned to this Subvendo's Main Vendo.
+     * Save machineId after the
+     * null check so TypeScript
+     * knows this is a string.
+     */
+    const machineId =
+        subvendo.machineId;
+
+
+    /**
+     * Find the latest waiting client
+     * belonging to this Main Vendo.
      */
     const waiting =
         await prisma.waitingClient.findFirst({
 
             where: {
 
-                machineId:
-                    subvendo.machineId,
+                machineId,
 
                 clientIP: {
+
                     not: ""
+
                 },
 
                 clientMac: {
+
                     not: ""
+
                 }
 
             },
@@ -803,7 +826,7 @@ class CoinService {
 
 
     /**
-     * No client waiting.
+     * No client is waiting.
      */
     if (!waiting) {
 
@@ -867,6 +890,7 @@ class CoinService {
     };
 
 }
+
 
 }
 
