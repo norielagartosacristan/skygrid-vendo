@@ -47,16 +47,15 @@ class CoinService {
      *
      * The ESP8266 identifies itself using chipId.
      */
-   private async getMachineByChipId(
-    chipId: string
-) {
+  private async getMachineByChipId(chipId: string) {
+
     const subvendo =
         await prisma.subVendo.findUnique({
             where: {
                 chipId
             },
             include: {
-                machine: true
+                machines: true
             }
         });
 
@@ -66,18 +65,23 @@ class CoinService {
         );
     }
 
-    if (!subvendo.machine) {
+    if (
+        !subvendo.machines ||
+        subvendo.machines.length === 0
+    ) {
         throw new Error(
             `Subvendo ${chipId} is not assigned to a Main Vendo machine.`
         );
     }
 
+    const machine =
+        subvendo.machines[0];
+
     return {
         subVendo: subvendo,
-        machine: subvendo.machine
+        machine
     };
 }
-
 
     /**
      * Portal -> Waiting for coin
@@ -89,131 +93,224 @@ class CoinService {
      * clientIP
      * clientMac
      */
-    async waitClient(
-        data: any
+   async waitClient(
+    data: any
+) {
+
+    const {
+        clientIP,
+        clientMac
+    } = data;
+
+    /**
+     * Validate client.
+     */
+    if (
+        !clientIP ||
+        !clientMac
     ) {
 
-        const {
+        throw new Error(
+            "Client IP and MAC address are required."
+        );
 
-            clientIP,
-
-            clientMac
-
-        } = data;
+    }
 
 
-        /**
-         * Validate client information.
-         */
-        if (
-            !clientIP ||
-            !clientMac
-        ) {
-
-            throw new Error(
-                "Client IP and MAC address are required."
-            );
-
-        }
+    /**
+     * Get Main Vendo.
+     */
+    const machine =
+        await this.getCurrentMachine();
 
 
-        /**
-         * Get the current Main Vendo machine.
-         *
-         * The portal belongs to this machine.
-         */
-        const machine =
-            await this.getCurrentMachine();
-
-
-        /**
-         * Remove previous waiting request
-         * from the same client.
-         */
-        await prisma.waitingClient.deleteMany({
+    /**
+     * Find a Subvendo assigned
+     * to this Main Vendo.
+     *
+     * For now, use the first configured
+     * Subvendo belonging to this machine.
+     */
+    const subvendo =
+        await prisma.subVendo.findFirst({
 
             where: {
 
                 machineId:
                     machine.id,
 
-                clientIP
+                enabled:
+                    true,
+
+                status:
+                    "CONFIGURED"
 
             }
 
         });
 
 
-        /**
-         * Create new waiting client.
-         */
-        const waiting =
-            await prisma.waitingClient.create({
+    if (!subvendo) {
 
-                data: {
-
-                    machineId:
-                        machine.id,
-
-                    clientIP,
-
-                    clientMac
-
-                }
-
-            });
-
-
-        console.log(
-            "========== WAIT CLIENT =========="
+        throw new Error(
+            "No configured Subvendo found."
         );
-
-
-        console.log(
-            "Machine:",
-            machine.name
-        );
-
-
-        console.log(
-            "Machine ID:",
-            machine.id
-        );
-
-
-        console.log(
-            "Client IP:",
-            clientIP
-        );
-
-
-        console.log(
-            "Client MAC:",
-            clientMac
-        );
-
-
-        console.log(
-            "Waiting ID:",
-            waiting.id
-        );
-
-
-        console.log(
-            "================================="
-        );
-
-
-        return {
-
-            success:
-                true,
-
-            waiting
-
-        };
 
     }
+
+
+    if (!subvendo.ipAddress) {
+
+        throw new Error(
+            `Subvendo ${subvendo.chipId} has no IP address.`
+        );
+
+    }
+
+
+    /**
+     * Remove old waiting request
+     * from this client.
+     */
+    await prisma.waitingClient.deleteMany({
+
+        where: {
+
+            machineId:
+                machine.id,
+
+            clientIP
+
+        }
+
+    });
+
+
+    /**
+     * Create waiting client.
+     */
+    const waiting =
+        await prisma.waitingClient.create({
+
+            data: {
+
+                machineId:
+                    machine.id,
+
+                clientIP,
+
+                clientMac
+
+            }
+
+        });
+
+
+    console.log(
+        "========== WAIT CLIENT =========="
+    );
+
+    console.log(
+        "Main Vendo:",
+        machine.name
+    );
+
+    console.log(
+        "Machine ID:",
+        machine.id
+    );
+
+    console.log(
+        "Subvendo:",
+        subvendo.chipId
+    );
+
+    console.log(
+        "Subvendo IP:",
+        subvendo.ipAddress
+    );
+
+    console.log(
+        "Client IP:",
+        clientIP
+    );
+
+    console.log(
+        "Client MAC:",
+        clientMac
+    );
+
+    console.log(
+        "Waiting ID:",
+        waiting.id
+    );
+
+
+    /**
+     * IMPORTANT:
+     *
+     * Tell the actual Subvendo
+     * to activate its coin acceptor.
+     */
+    try {
+
+        await this.startSubvendoCoinSession(
+            subvendo.ipAddress
+        );
+
+    } catch (err) {
+
+        /**
+         * If relay activation fails,
+         * remove waiting client again.
+         */
+        await prisma.waitingClient.delete({
+
+            where: {
+                id: waiting.id
+            }
+
+        }).catch(() => {});
+
+
+        throw err;
+
+    }
+
+
+    console.log(
+        "✅ Waiting client ready."
+    );
+
+    console.log(
+        "✅ Subvendo coin acceptor activated."
+    );
+
+    console.log(
+        "================================="
+    );
+
+
+    return {
+
+        success:
+            true,
+
+        waiting,
+
+        subvendo: {
+
+            chipId:
+                subvendo.chipId,
+
+            ipAddress:
+                subvendo.ipAddress
+
+        }
+
+    };
+
+}
 
 
     /**
