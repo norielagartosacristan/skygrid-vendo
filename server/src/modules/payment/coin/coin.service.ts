@@ -55,7 +55,7 @@ class CoinService {
                 chipId
             },
             include: {
-                machines: true
+                machine: true
             }
         });
 
@@ -65,21 +65,15 @@ class CoinService {
         );
     }
 
-    if (
-        !subvendo.machines ||
-        subvendo.machines.length === 0
-    ) {
+    if (!subvendo.machine) {
         throw new Error(
             `Subvendo ${chipId} is not assigned to a Main Vendo machine.`
         );
     }
 
-    const machine =
-        subvendo.machines[0];
-
     return {
         subVendo: subvendo,
-        machine
+        machine: subvendo.machine
     };
 }
 
@@ -254,10 +248,7 @@ class CoinService {
      */
     try {
 
-        await this.startSubvendoCoinSession(
-            subvendo.ipAddress
-        );
-
+       
     } catch (err) {
 
         /**
