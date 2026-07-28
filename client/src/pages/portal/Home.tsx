@@ -1420,27 +1420,6 @@ startCoinPolling(
         </div>
 
 
-        {/* =====================================
-            FOOTER
-        ===================================== */}
-
-        <div className="text-center py-6">
-
-          <p className="text-xs text-slate-400">
-
-            Powered by
-
-          </p>
-
-          <p className="mt-1 font-bold text-sky-600">
-
-            SkyGrid Vendo
-
-          </p>
-
-        </div>
-
-
       </div>
 
     </main>
