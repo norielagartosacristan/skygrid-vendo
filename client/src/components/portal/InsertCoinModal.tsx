@@ -3,106 +3,95 @@ import { useEffect, useState } from "react";
 interface Props {
     open: boolean;
     amountInserted: number;
+    expiresAt: string | null;
     onClose: () => void;
     stopPopup: () => void;
 }
 
-const WAITING_TIME = 30;
-
 export default function InsertCoinModal({
     open,
     amountInserted,
+    expiresAt,
     onClose,
     stopPopup
 }: Props) {
 
     const [remainingSeconds, setRemainingSeconds] =
-        useState(WAITING_TIME);
+        useState(0);
 
 
     // ==========================================
-    // RESET COUNTDOWN WHEN MODAL OPENS
-    // ==========================================
-
-    useEffect(() => {
-
-        if (!open) {
-            return;
-        }
-
-        setRemainingSeconds(
-            WAITING_TIME
-        );
-
-    }, [open]);
-
-
-    // ==========================================
-    // AUTO CLOSE WHEN COIN IS INSERTED
+    // COUNTDOWN BASED ON SERVER expiresAt
     // ==========================================
 
     useEffect(() => {
 
-        if (!open) {
-            return;
-        }
+        if (!open || !expiresAt) {
 
-        if (amountInserted > 0) {
-
-            stopPopup();
-
-            onClose();
-
-        }
-
-    }, [
-        amountInserted,
-        open,
-        onClose,
-        stopPopup
-    ]);
-
-
-    // ==========================================
-    // COUNTDOWN
-    // ==========================================
-
-    useEffect(() => {
-
-        if (!open) {
-            return;
-        }
-
-        // Kapag may coin na,
-        // huwag nang mag-countdown.
-        if (amountInserted > 0) {
-            return;
-        }
-
-        if (remainingSeconds <= 0) {
-
-            stopPopup();
-
-            onClose();
+            setRemainingSeconds(0);
 
             return;
+
         }
+
+
+        const updateCountdown = () => {
+
+            const expires =
+                new Date(
+                    expiresAt
+                ).getTime();
+
+            const now =
+                Date.now();
+
+            const remaining =
+                Math.max(
+                    0,
+                    Math.ceil(
+                        (
+                            expires -
+                            now
+                        ) / 1000
+                    )
+                );
+
+
+            setRemainingSeconds(
+                remaining
+            );
+
+
+            // ==================================
+            // WAITING CLIENT EXPIRED
+            // ==================================
+
+            if (
+                remaining <= 0
+            ) {
+
+                stopPopup();
+
+                onClose();
+
+            }
+
+        };
+
+
+        updateCountdown();
 
 
         const timer =
-            window.setTimeout(() => {
-
-                setRemainingSeconds(
-                    previous =>
-                        previous - 1
-                );
-
-            }, 1000);
+            window.setInterval(
+                updateCountdown,
+                1000
+            );
 
 
         return () => {
 
-            window.clearTimeout(
+            window.clearInterval(
                 timer
             );
 
@@ -110,8 +99,40 @@ export default function InsertCoinModal({
 
     }, [
         open,
+        expiresAt,
+        onClose,
+        stopPopup
+    ]);
+
+
+    // ==========================================
+    // AUTO CLOSE WHEN PAYMENT IS SUCCESSFUL
+    // ==========================================
+
+    useEffect(() => {
+
+        if (
+            !open
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            amountInserted > 0
+        ) {
+
+            stopPopup();
+
+            onClose();
+
+        }
+
+    }, [
         amountInserted,
-        remainingSeconds,
+        open,
         onClose,
         stopPopup
     ]);
@@ -123,8 +144,12 @@ export default function InsertCoinModal({
 
     useEffect(() => {
 
-        if (!open) {
+        if (
+            !open
+        ) {
+
             return;
+
         }
 
 
@@ -166,8 +191,12 @@ export default function InsertCoinModal({
     ]);
 
 
-    if (!open) {
+    if (
+        !open
+    ) {
+
         return null;
+
     }
 
 
@@ -175,18 +204,27 @@ export default function InsertCoinModal({
     // PROGRESS
     // ==========================================
 
+    const WAITING_TIME =
+        30;
+
     const progress =
-        (
-            remainingSeconds /
-            WAITING_TIME
-        ) * 100;
+        Math.min(
+            100,
+            Math.max(
+                0,
+                (
+                    remainingSeconds /
+                    WAITING_TIME
+                ) * 100
+            )
+        );
 
 
     return (
 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 
-            <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden animate-[fadeIn_.2s_ease]">
+            <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden">
 
 
                 {/* HEADER */}
@@ -214,58 +252,49 @@ export default function InsertCoinModal({
 
                     <h3 className="mt-6 text-2xl font-bold text-slate-800">
 
-                        {amountInserted > 0
-                            ? "Coin Received!"
-                            : "Waiting for coin..."
-                        }
+                        Waiting for coin...
 
                     </h3>
 
 
                     <p className="mt-2 text-slate-500">
 
-                        {amountInserted > 0
-                            ? "Coin received successfully."
-                            : "Please insert your coin into the machine."
-                        }
+                        Please insert your coin into the machine.
 
                     </p>
 
 
                     {/* COUNTDOWN */}
 
-                    {amountInserted === 0 && (
-
-                        <div className="mt-6">
-
-                            <div className="flex justify-between text-xs font-semibold text-slate-500 mb-2">
-
-                                <span>
-                                    Session expires in
-                                </span>
-
-                                <span>
-                                    {remainingSeconds}s
-                                </span>
-
-                            </div>
+                    <div className="mt-6">
 
 
-                            <div className="h-3 w-full rounded-full bg-slate-200 overflow-hidden">
+                        <div className="flex justify-between text-xs font-semibold text-slate-500 mb-2">
 
-                                <div
-                                    className="h-full bg-sky-500 transition-all duration-1000"
-                                    style={{
-                                        width:
-                                            `${progress}%`
-                                    }}
-                                />
+                            <span>
+                                Session expires in
+                            </span>
 
-                            </div>
+                            <span>
+                                {remainingSeconds}s
+                            </span>
 
                         </div>
 
-                    )}
+
+                        <div className="h-3 w-full rounded-full bg-slate-200 overflow-hidden">
+
+                            <div
+                                className="h-full bg-sky-500 transition-all duration-1000"
+                                style={{
+                                    width:
+                                        `${progress}%`
+                                }}
+                            />
+
+                        </div>
+
+                    </div>
 
 
                     {/* AMOUNT */}

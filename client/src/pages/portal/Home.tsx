@@ -35,6 +35,9 @@ export default function Home() {
   //const ambience = useSound("/sounds/ambience.mp3");
   const success = useSound("/sounds/success.mp3");
 
+  const [waitingExpiresAt, setWaitingExpiresAt] =
+  useState<string | null>(null);
+
   const [showCoinModal, setShowCoinModal] =
     useState(false);
 
@@ -961,18 +964,20 @@ function startCoinPolling(
     );
 
     if (
-      !res.ok ||
-      !data.success
-    ) {
+  !res.ok ||
+  !data.success
+) {
+  alert(
+    data.message ||
+    "Unable to prepare coin payment."
+  );
 
-      alert(
-        data.message ||
-        "Unable to prepare coin payment."
-      );
+  return;
+}
 
-      return;
-
-    }
+setWaitingExpiresAt(
+  data.expiresAt
+);
 
     insertCoin.play();
 
@@ -1279,26 +1284,16 @@ startCoinPolling(
       <Footer />
 
 
-     <InsertCoinModal
-  open={showCoinModal}
-
-  amountInserted={
-    amountInserted
-  }
-
-  onClose={() => {
-
-    setShowCoinModal(false);
-
-    stopCoinPolling();
-
-  }}
-
-  stopPopup={
-    popup.stop
-  }
+    <InsertCoinModal
+    open={showCoinModal}
+    amountInserted={amountInserted}
+    expiresAt={waitingExpiresAt}
+    onClose={() => {
+        setShowCoinModal(false);
+        stopCoinPolling();
+    }}
+    stopPopup={popup.stop}
 />
-
     </PortalLayout>
 
   );
