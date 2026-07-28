@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { coinService } from "./coin.service";
+import prisma from "../../../config/prisma";
 
 class CoinController {
 
@@ -167,6 +168,36 @@ async waiting(
 
     }
 
+}
+
+async cancelClient(req: Request, res: Response) {
+    try {
+        const { clientIP } = req.body;
+
+        if (!clientIP) {
+            return res.status(400).json({
+                success: false,
+                message: "Client IP is required."
+            });
+        }
+
+        await prisma.waitingClient.deleteMany({
+            where: {
+                clientIP
+            }
+        });
+
+        return res.json({
+            success: true,
+            message: "Coin session cancelled."
+        });
+
+    } catch (err: any) {
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+    }
 }
 }
 
