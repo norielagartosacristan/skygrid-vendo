@@ -8,75 +8,54 @@ import {
 class SessionController {
 
     async pause(
-        req: Request,
-        res: Response
-    ) {
+    req: Request,
+    res: Response
+) {
+    try {
 
-        try {
+        const { clientIP } = req.body;
 
-            const {
-                clientIP
-            } = req.body;
+        console.log(
+            "[SESSION PAUSE] BODY:",
+            req.body
+        );
 
+        console.log(
+            "[SESSION PAUSE] CLIENT IP:",
+            clientIP
+        );
 
-            if (!clientIP) {
-
-                return res
-                    .status(400)
-                    .json({
-
-                        success: false,
-
-                        message:
-                            "Client IP is required."
-
-                    });
-
-            }
-
-            console.log(
-    "[SESSION PAUSE] Client IP:",
-    clientIP
-);
-            const session =
-                await sessionService.pauseSession(
-                    clientIP
-                );
-
-
-            return res.json({
-
-                success: true,
-
-                paused: true,
-
-                session
-
+        if (!clientIP) {
+            return res.status(400).json({
+                success: false,
+                message: "Client IP is required."
             });
-
-        } catch (error: any) {
-
-            console.error(
-                "[SESSION PAUSE ERROR]",
-                error
-            );
-
-
-            return res
-                .status(400)
-                .json({
-
-                    success: false,
-
-                    message:
-                        error.message
-
-                });
-
         }
 
-    }
+        const session =
+            await sessionService.pauseSession(
+                clientIP
+            );
 
+        return res.json({
+            success: true,
+            paused: true,
+            session
+        });
+
+    } catch (error: any) {
+
+        console.error(
+            "[SESSION PAUSE ERROR]",
+            error
+        );
+
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
 
     async resume(
         req: Request,
