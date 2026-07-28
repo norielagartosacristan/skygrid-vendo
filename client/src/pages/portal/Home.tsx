@@ -32,7 +32,7 @@ export default function Home() {
   const insertCoin = useSound("/sounds/insertcoin.mp3");
   const warning5 = useSound("/sounds/warning5.mp3");
   const warning1 = useSound("/sounds/warning1.mp3");
-  const ambience = useSound("/sounds/ambience.mp3");
+  //const ambience = useSound("/sounds/ambience.mp3");
   const success = useSound("/sounds/success.mp3");
 
   const [showCoinModal, setShowCoinModal] =
@@ -387,7 +387,7 @@ export default function Home() {
 
     startup.play();
 
-    ambience.play();
+    //ambience.play();
 
     loadClient();
 
