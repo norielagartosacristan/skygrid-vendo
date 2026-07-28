@@ -382,6 +382,8 @@ model WaitingClient {
 
   createdAt DateTime @default(now())
 
+  expiresAt DateTime
+
   machine Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
 }
 
