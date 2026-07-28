@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
     open: boolean;
@@ -7,6 +7,8 @@ interface Props {
     stopPopup: () => void;
 }
 
+const WAITING_TIME = 30;
+
 export default function InsertCoinModal({
     open,
     amountInserted,
@@ -14,25 +16,139 @@ export default function InsertCoinModal({
     stopPopup
 }: Props) {
 
+    const [remainingSeconds, setRemainingSeconds] =
+        useState(WAITING_TIME);
+
+
+    // ==========================================
+    // RESET COUNTDOWN WHEN MODAL OPENS
+    // ==========================================
+
     useEffect(() => {
 
-        if (!open) return;
+        if (!open) {
+            return;
+        }
 
-        const handleEsc = (e: KeyboardEvent) => {
+        setRemainingSeconds(
+            WAITING_TIME
+        );
 
-            if (e.key === "Escape") {
+    }, [open]);
 
-                stopPopup();
-                onClose();
 
-            }
+    // ==========================================
+    // AUTO CLOSE WHEN COIN IS INSERTED
+    // ==========================================
+
+    useEffect(() => {
+
+        if (!open) {
+            return;
+        }
+
+        if (amountInserted > 0) {
+
+            stopPopup();
+
+            onClose();
+
+        }
+
+    }, [
+        amountInserted,
+        open,
+        onClose,
+        stopPopup
+    ]);
+
+
+    // ==========================================
+    // COUNTDOWN
+    // ==========================================
+
+    useEffect(() => {
+
+        if (!open) {
+            return;
+        }
+
+        // Kapag may coin na,
+        // huwag nang mag-countdown.
+        if (amountInserted > 0) {
+            return;
+        }
+
+        if (remainingSeconds <= 0) {
+
+            stopPopup();
+
+            onClose();
+
+            return;
+        }
+
+
+        const timer =
+            window.setTimeout(() => {
+
+                setRemainingSeconds(
+                    previous =>
+                        previous - 1
+                );
+
+            }, 1000);
+
+
+        return () => {
+
+            window.clearTimeout(
+                timer
+            );
 
         };
+
+    }, [
+        open,
+        amountInserted,
+        remainingSeconds,
+        onClose,
+        stopPopup
+    ]);
+
+
+    // ==========================================
+    // ESC KEY
+    // ==========================================
+
+    useEffect(() => {
+
+        if (!open) {
+            return;
+        }
+
+
+        const handleEsc =
+            (e: KeyboardEvent) => {
+
+                if (
+                    e.key === "Escape"
+                ) {
+
+                    stopPopup();
+
+                    onClose();
+
+                }
+
+            };
+
 
         window.addEventListener(
             "keydown",
             handleEsc
         );
+
 
         return () => {
 
@@ -49,9 +165,22 @@ export default function InsertCoinModal({
         stopPopup
     ]);
 
+
     if (!open) {
         return null;
     }
+
+
+    // ==========================================
+    // PROGRESS
+    // ==========================================
+
+    const progress =
+        (
+            remainingSeconds /
+            WAITING_TIME
+        ) * 100;
+
 
     return (
 
@@ -59,7 +188,8 @@ export default function InsertCoinModal({
 
             <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden animate-[fadeIn_.2s_ease]">
 
-                {/* Header */}
+
+                {/* HEADER */}
 
                 <div className="bg-sky-600 text-white text-center py-5">
 
@@ -70,12 +200,15 @@ export default function InsertCoinModal({
                 </div>
 
 
-                {/* Body */}
+                {/* BODY */}
 
                 <div className="p-8 text-center">
 
+
                     <div className="text-7xl animate-bounce">
+
                         🪙
+
                     </div>
 
 
@@ -92,14 +225,50 @@ export default function InsertCoinModal({
                     <p className="mt-2 text-slate-500">
 
                         {amountInserted > 0
-                            ? "You may insert another coin."
-                            : "Please insert coin into the machine."
+                            ? "Coin received successfully."
+                            : "Please insert your coin into the machine."
                         }
 
                     </p>
 
 
-                    {/* Amount */}
+                    {/* COUNTDOWN */}
+
+                    {amountInserted === 0 && (
+
+                        <div className="mt-6">
+
+                            <div className="flex justify-between text-xs font-semibold text-slate-500 mb-2">
+
+                                <span>
+                                    Session expires in
+                                </span>
+
+                                <span>
+                                    {remainingSeconds}s
+                                </span>
+
+                            </div>
+
+
+                            <div className="h-3 w-full rounded-full bg-slate-200 overflow-hidden">
+
+                                <div
+                                    className="h-full bg-sky-500 transition-all duration-1000"
+                                    style={{
+                                        width:
+                                            `${progress}%`
+                                    }}
+                                />
+
+                            </div>
+
+                        </div>
+
+                    )}
+
+
+                    {/* AMOUNT */}
 
                     <div className="mt-8 rounded-2xl bg-slate-100 p-5">
 
@@ -121,7 +290,7 @@ export default function InsertCoinModal({
                 </div>
 
 
-                {/* Footer */}
+                {/* FOOTER */}
 
                 <div className="border-t p-4">
 
