@@ -1,6 +1,9 @@
 import { Router } from "express";
 import * as CaptiveController from "../controllers/captive.controller";
 import * as LoginController from "../controllers/login.controller";
+import {
+    sessionController
+} from "../session/session.controller";
 
 const router = Router();
 
@@ -31,6 +34,20 @@ router.get(
 router.get(
     "/client",
     CaptiveController.client
+);
+
+router.post(
+    "/session/pause",
+    sessionController.pause.bind(
+        sessionController
+    )
+);
+
+router.post(
+    "/session/resume",
+    sessionController.resume.bind(
+        sessionController
+    )
 );
 
 export default router;

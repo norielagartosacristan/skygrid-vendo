@@ -68,7 +68,7 @@ setMessage("");
     return (
         <div className="bg-white rounded-3xl shadow-lg p-4 sm:p-6">
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-1">
 
                 <input
                     value={voucher}

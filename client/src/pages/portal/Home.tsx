@@ -35,6 +35,11 @@ export default function Home() {
   //const ambience = useSound("/sounds/ambience.mp3");
   const success = useSound("/sounds/success.mp3");
 
+  const [isPaused, setIsPaused] =
+    useState(false);
+
+const [pausing, setPausing] =
+    useState(false);
 
   const [waitingStartedAt, setWaitingStartedAt] =
   useState<string | null>(null);
@@ -1052,6 +1057,157 @@ startCoinPolling(
     session.internet !== false &&
     remainingSeconds > 0;
 
+  async function handlePause() {
+
+    if (!client.ip) {
+        return;
+    }
+
+    try {
+
+        setPausing(true);
+
+        const res =
+            await fetch(
+                "/api/captive/session/pause",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        clientIP:
+                            client.ip
+                    })
+                }
+            );
+
+
+        const data =
+            await res.json();
+
+
+        if (!res.ok ||
+            !data.success
+        ) {
+
+            alert(
+                data.message ||
+                "Unable to pause session."
+            );
+
+            return;
+
+        }
+
+
+        setIsPaused(true);
+
+
+        // Refresh session
+        await refreshSession(
+            client.ip,
+            false
+        );
+
+
+    } catch (err) {
+
+        console.error(
+            "PAUSE ERROR:",
+            err
+        );
+
+        alert(
+            "Unable to pause session."
+        );
+
+    } finally {
+
+        setPausing(false);
+
+    }
+
+}
+
+async function handleResume() {
+
+    if (!client.ip) {
+        return;
+    }
+
+    try {
+
+        setPausing(true);
+
+        const res =
+            await fetch(
+                "/api/captive/session/resume",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        clientIP:
+                            client.ip
+                    })
+                }
+            );
+
+
+        const data =
+            await res.json();
+
+
+        if (!res.ok ||
+            !data.success
+        ) {
+
+            alert(
+                data.message ||
+                "Unable to resume session."
+            );
+
+            return;
+
+        }
+
+
+        setIsPaused(false);
+
+
+        await refreshSession(
+            client.ip,
+            false
+        );
+
+
+    } catch (err) {
+
+        console.error(
+            "RESUME ERROR:",
+            err
+        );
+
+        alert(
+            "Unable to resume session."
+        );
+
+    } finally {
+
+        setPausing(false);
+
+    }
+
+}
+
 
   return (
 
@@ -1302,13 +1458,32 @@ startCoinPolling(
           {/* PAUSE TIME */}
 
           <button
-            disabled={!isConnected}
-            className="w-full rounded-xl bg-red-500 hover:bg-red-600 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md disabled:opacity-40"
-          >
+    onClick={
+        isPaused
+            ? handleResume
+            : handlePause
+    }
 
-            Pause Time
+    disabled={
+        !isConnected ||
+        pausing
+    }
 
-          </button>
+    className={`w-full rounded-xl py-4 text-lg font-bold text-white shadow-md active:scale-[0.98] transition-all disabled:opacity-40 ${
+        isPaused
+            ? "bg-green-500 hover:bg-green-600"
+            : "bg-red-500 hover:bg-red-600"
+    }`}
+>
+
+    {pausing
+        ? "Please wait..."
+        : isPaused
+            ? "Resume Time"
+            : "Pause Time"
+    }
+
+</button>
 
 
           {/* WIFI RATES */}

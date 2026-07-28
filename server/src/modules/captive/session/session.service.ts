@@ -389,6 +389,170 @@ class SessionService {
 
 }
 
+async pauseSession(
+    clientIP: string
+) {
+
+    const session =
+        await prisma.session.findFirst({
+            where: {
+                ipAddress: clientIP,
+                isActive: true,
+                isPaused: false
+            },
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
+
+    if (!session) {
+        throw new Error(
+            "No active session found."
+        );
+    }
+
+
+    // Calculate remaining time
+    const remainingSeconds =
+        Math.max(
+            0,
+            Math.floor(
+                (
+                    session.expiresAt.getTime() -
+                    Date.now()
+                ) / 1000
+            )
+        );
+
+
+    if (remainingSeconds <= 0) {
+
+        await prisma.session.update({
+            where: {
+                id: session.id
+            },
+
+            data: {
+                isActive: false,
+                isPaused: false,
+                remainingSeconds: 0
+            }
+        });
+
+        throw new Error(
+            "Session has already expired."
+        );
+    }
+
+
+    const updated =
+        await prisma.session.update({
+
+            where: {
+                id: session.id
+            },
+
+            data: {
+
+                isPaused: true,
+
+                pausedAt:
+                    new Date(),
+
+                remainingSeconds
+
+            }
+
+        });
+
+
+    return updated;
+}
+
+async resumeSession(
+    clientIP: string
+) {
+
+    const session =
+        await prisma.session.findFirst({
+            where: {
+                ipAddress: clientIP,
+                isActive: true,
+                isPaused: true
+            },
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
+
+    if (!session) {
+
+        throw new Error(
+            "No paused session found."
+        );
+
+    }
+
+
+    const remainingSeconds =
+        session.remainingSeconds || 0;
+
+
+    if (remainingSeconds <= 0) {
+
+        await prisma.session.update({
+
+            where: {
+                id: session.id
+            },
+
+            data: {
+                isActive: false,
+                isPaused: false,
+                remainingSeconds: 0
+            }
+
+        });
+
+        throw new Error(
+            "Session has expired."
+        );
+
+    }
+
+
+    const expiresAt =
+        new Date(
+            Date.now() +
+            remainingSeconds * 1000
+        );
+
+
+    const updated =
+        await prisma.session.update({
+
+            where: {
+                id: session.id
+            },
+
+            data: {
+
+                isPaused: false,
+
+                pausedAt: null,
+
+                remainingSeconds: null,
+
+                expiresAt
+
+            }
+
+        });
+
+
+    return updated;
+}
+
 }
 
 
