@@ -34,7 +34,10 @@ class SessionController {
 
             }
 
-
+            console.log(
+    "[SESSION PAUSE] Client IP:",
+    clientIP
+);
             const session =
                 await sessionService.pauseSession(
                     clientIP

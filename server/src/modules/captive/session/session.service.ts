@@ -391,6 +391,10 @@ class SessionService {
 
 async pauseSession(clientIP: string) {
 
+    console.log(
+    "[PAUSE] Searching active session for IP:",
+    clientIP
+);
     const session =
         await prisma.session.findFirst({
             where: {
