@@ -1458,20 +1458,16 @@ startCoinPolling(
     ========================================= */}
 
     <InsertCoinModal
-      open={showCoinModal}
-      amountInserted={amountInserted}
-      expiresAt={waitingExpiresAt}
-      onClose={() => {
-
+    open={showCoinModal}
+    amountInserted={amountInserted}
+    startedAt={waitingStartedAt}
+    expiresAt={waitingExpiresAt}
+    onClose={() => {
         setShowCoinModal(false);
-
         stopCoinPolling();
-
-      }}
-      stopPopup={
-        popup.stop
-      }
-    />
+    }}
+    stopPopup={popup.stop}
+/>
 
   </PortalLayout>
 
