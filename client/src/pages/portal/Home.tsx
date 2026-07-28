@@ -1055,255 +1055,426 @@ startCoinPolling(
 
   return (
 
-    <PortalLayout>
+  <PortalLayout>
 
-      {/* HERO */}
+    {/* =========================================
+        HERO / BANNER
+    ========================================= */}
 
-      <section className="relative w-full h-[350px] sm:h-[180px] lg:h-[400px] overflow-hidden">
+    <section className="relative w-full h-[180px] sm:h-[220px] overflow-hidden">
 
-        <HeroCarousel />
+      <HeroCarousel />
 
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-transparent" />
+      {/* Overlay */}
 
-        <div className="absolute inset-0 flex items-center">
+      <div className="absolute inset-0 bg-black/35" />
 
-          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6">
+      {/* Welcome */}
 
-            <div className="max-w-2xl text-white">
+      <div className="absolute inset-0 flex items-center justify-center text-center px-4">
 
-              <h4 className="text-sky-400 text-sm sm:text-base lg:text-xl font-semibold">
+        <div className="text-white">
 
-                Welcome to
+          <p className="text-sm sm:text-base font-semibold opacity-90">
+            Welcome to
+          </p>
 
-              </h4>
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
+            BayanNet Wifi Vendo
+          </h1>
 
-              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-extrabold leading-tight">
+          <p className="mt-1 text-xs sm:text-sm opacity-90">
+            Fast • Reliable • Affordable Internet
+          </p>
 
-                BayanNet Wifi Vendo
+        </div>
 
-              </h1>
+      </div>
 
-              <p className="text-xs sm:text-sm lg:text-xl text-gray-200 mt-1">
+    </section>
 
-                High-Speed Internet Access
 
-              </p>
+    {/* =========================================
+        MAIN CONTENT
+    ========================================= */}
 
-            </div>
+    <main className="bg-slate-100 min-h-[calc(100vh-180px)]">
+
+      <div className="max-w-md mx-auto px-4 py-5">
+
+
+        {/* =====================================
+            CONNECTION STATUS
+        ===================================== */}
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 text-center">
+
+
+          {/* WIFI ICON */}
+
+          <div
+            className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center transition-all ${
+              isConnected
+                ? "bg-green-100 text-green-600"
+                : "bg-slate-100 text-slate-400"
+            }`}
+          >
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-9 h-9"
+            >
+
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22a.75.75 0 1 1-1.06 0 .75.75 0 0 1 1.06 0Z"
+              />
+
+            </svg>
+
+          </div>
+
+
+          {/* STATUS */}
+
+          <h2
+            className={`mt-3 text-3xl font-black ${
+              isConnected
+                ? "text-green-600"
+                : "text-slate-400"
+            }`}
+          >
+
+            {isConnected
+              ? "Connected"
+              : "Disconnected"}
+
+          </h2>
+
+
+          {/* IP / MAC */}
+
+          <div className="mt-3 text-xs sm:text-sm text-slate-500 space-y-1">
+
+            <p>
+
+              <span className="font-semibold">
+                IP:
+              </span>{" "}
+
+              {client.ip || "Detecting..."}
+
+            </p>
+
+
+            <p>
+
+              <span className="font-semibold">
+                MAC:
+              </span>{" "}
+
+              {client.mac || "Detecting..."}
+
+            </p>
 
           </div>
 
         </div>
 
-      </section>
+
+        {/* =====================================
+            ACCOUNT INFO
+        ===================================== */}
+
+        <div className="grid grid-cols-2 gap-3 mt-4">
 
 
-      {/* MAIN */}
+          {/* CREDIT */}
 
-      <section className="bg-slate-50 py-2 px-3 flex flex-col justify-between font-sans min-h-[calc(100vh-160px)]">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 text-center">
 
-        <div className="max-w-md mx-auto w-full flex-grow flex flex-col justify-start gap-4">
+            <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">
 
+              Account Credits
 
-          {/* STATUS HEADER */}
-
-          <div className="text-center flex flex-col items-center gap-1.5 mt-1">
-
-            <div
-              className={`p-2.5 rounded-full transition-all duration-500 shadow-sm border ${
-                isConnected
-                  ? "bg-green-50 border-green-200 text-green-500 animate-pulse"
-                  : "bg-slate-100 border-slate-200 text-slate-400"
-              }`}
-            >
-
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-                stroke="currentColor"
-                className="w-7 h-7 sm:w-9 sm:h-9"
-              >
-
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22a.75.75 0 1 1-1.06 0 .75.75 0 0 1 1.06 0Z"
-                />
-
-              </svg>
-
-            </div>
+            </p>
 
 
-            <span
-              className={`text-[10px] font-bold uppercase tracking-wider ${
-                isConnected
-                  ? "text-green-600"
-                  : "text-slate-400"
-              }`}
-            >
+            <p className="mt-2 text-2xl font-black text-green-600">
 
-              {isConnected
-                ? "Internet Active"
-                : "No Active Session"}
+              ₱0.00
 
-            </span>
+            </p>
 
           </div>
 
 
-          {/* STATUS PANEL */}
+          {/* POINTS */}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 text-center">
 
+            <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">
 
-            {/* STATUS */}
+              CPoints
 
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3.5 flex items-center justify-between">
-
-              <div>
-
-                <p className="text-xs text-slate-400 font-medium">
-
-                  Status
-
-                </p>
-
-                <h2 className="font-bold text-sm text-slate-800 mt-0.5">
-
-                  {isConnected
-                    ? "Connected"
-                    : "Disconnected"}
-
-                </h2>
-
-              </div>
+            </p>
 
 
-              <div
-                className={`w-3 h-3 rounded-full ${
-                  isConnected
-                    ? "bg-green-500 animate-pulse"
-                    : "bg-slate-300"
-                }`}
-              />
+            <p className="mt-2 text-2xl font-black text-sky-600">
 
-            </div>
+              0
 
-
-            {/* CREDIT */}
-
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 flex flex-col justify-center">
-
-              <p className="text-xs text-slate-400 font-medium">
-
-                Credit
-
-              </p>
-
-              <h3 className="text-sm sm:text-base font-bold text-green-600 mt-0.5">
-
-                {isConnected
-                  ? "₱0.00 (Active)"
-                  : "₱0.00"}
-
-              </h3>
-
-            </div>
-
-          </div>
-
-
-          {/* MAIN CONTROLS */}
-
-          <div className="bg-white rounded-2xl shadow-md p-4 border border-slate-100 flex flex-col gap-3">
-
-
-            {/* REMAINING TIME */}
-
-            <div className="col-span-2 p-4 text-blue flex justify-between items-center">
-
-              <div>
-
-                <p className="uppercase tracking-wider text-sky-300 text-[10px] font-bold">
-
-                  Remaining Time
-
-                </p>
-
-                <h1 className="text-3xl sm:text-4xl font-black mt-1 tracking-tight">
-
-                  {remainingTime}
-
-                </h1>
-
-              </div>
-
-            </div>
-
-
-            {/* INSERT COIN */}
-
-            <button
-              onClick={handleInsertCoin}
-              disabled={
-                checkingSession ||
-                showCoinModal
-              }
-              className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-base font-bold text-white shadow-md active:scale-95 transition disabled:opacity-50"
-            >
-
-              {showCoinModal
-                ? "Waiting for Coin..."
-                : "Insert Coin"}
-
-            </button>
-
-
-            {/* VOUCHER */}
-
-            <div className="bg-slate-50 rounded-xl border border-slate-100 p-3">
-
-              <p className="text-center text-[10px] font-bold tracking-wider text-slate-400 mb-2">
-
-                OR LOGIN USING VOUCHER
-
-              </p>
-
-
-              <VoucherLogin
-                onLoginSuccess={
-                  handleVoucherSuccess
-                }
-              />
-
-            </div>
+            </p>
 
           </div>
 
         </div>
 
-      </section>
+
+        {/* =====================================
+            REMAINING TIME
+        ===================================== */}
+
+        <div className="mt-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 text-center">
 
 
-      <Footer />
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">
+
+            Remaining Time
+
+          </p>
 
 
-   <InsertCoinModal
-    open={showCoinModal}
-    amountInserted={amountInserted}
-    startedAt={waitingStartedAt}
-    expiresAt={waitingExpiresAt}
-    onClose={() => {
+          <div
+            className={`mt-2 text-4xl sm:text-5xl font-black tracking-tight ${
+              isConnected
+                ? "text-sky-600"
+                : "text-slate-400"
+            }`}
+          >
+
+            {remainingTime}
+
+          </div>
+
+
+          <p className="mt-2 text-xs text-slate-400">
+
+            {isConnected
+              ? "Your internet session is active."
+              : "Insert money to start your internet session."}
+
+          </p>
+
+        </div>
+
+
+        {/* =====================================
+            MAIN BUTTONS
+        ===================================== */}
+
+        <div className="mt-4 space-y-3">
+
+
+          {/* INSERT MONEY */}
+
+          <button
+            onClick={handleInsertCoin}
+            disabled={
+              checkingSession ||
+              showCoinModal
+            }
+            className="w-full rounded-xl bg-green-500 hover:bg-green-600 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md disabled:opacity-50"
+          >
+
+            {showCoinModal
+              ? "Waiting for Coin..."
+              : "Insert Money"}
+
+          </button>
+
+
+          {/* PAUSE TIME */}
+
+          <button
+            disabled={!isConnected}
+            className="w-full rounded-xl bg-red-500 hover:bg-red-600 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md disabled:opacity-40"
+          >
+
+            Pause Time
+
+          </button>
+
+
+          {/* WIFI RATES */}
+
+          <button
+            className="w-full rounded-xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md"
+          >
+
+            WiFi Rates
+
+          </button>
+
+        </div>
+
+
+        {/* =====================================
+            COLOR SEPARATOR
+        ===================================== */}
+
+        <div className="flex h-2 rounded-full overflow-hidden mt-6">
+
+          <div className="flex-1 bg-lime-400" />
+
+          <div className="flex-1 bg-yellow-400" />
+
+          <div className="flex-1 bg-orange-400" />
+
+          <div className="flex-1 bg-red-400" />
+
+          <div className="flex-1 bg-purple-400" />
+
+          <div className="flex-1 bg-blue-400" />
+
+          <div className="flex-1 bg-cyan-400" />
+
+        </div>
+
+
+        {/* =====================================
+            REDEEM CPOINTS
+        ===================================== */}
+
+        <div className="mt-6 text-center">
+
+
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+
+            Redeem CPoints
+
+          </p>
+
+
+          {/* SPIN WHEEL */}
+
+          <button
+            className="mt-3 w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md"
+          >
+
+            🎡 Spin The Wheel
+
+          </button>
+
+        </div>
+
+
+        {/* =====================================
+            VOUCHER
+        ===================================== */}
+
+        <div className="mt-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+
+
+          <p className="text-center text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+
+            Login Using Voucher
+
+          </p>
+
+
+          <VoucherLogin
+            onLoginSuccess={
+              handleVoucherSuccess
+            }
+          />
+
+        </div>
+
+
+        {/* =====================================
+            COLOR SEPARATOR
+        ===================================== */}
+
+        <div className="flex h-2 rounded-full overflow-hidden mt-6">
+
+          <div className="flex-1 bg-lime-400" />
+
+          <div className="flex-1 bg-yellow-400" />
+
+          <div className="flex-1 bg-orange-400" />
+
+          <div className="flex-1 bg-red-400" />
+
+          <div className="flex-1 bg-purple-400" />
+
+          <div className="flex-1 bg-blue-400" />
+
+          <div className="flex-1 bg-cyan-400" />
+
+        </div>
+
+
+        {/* =====================================
+            FOOTER
+        ===================================== */}
+
+        <div className="text-center py-6">
+
+          <p className="text-xs text-slate-400">
+
+            Powered by
+
+          </p>
+
+          <p className="mt-1 font-bold text-sky-600">
+
+            SkyGrid Vendo
+
+          </p>
+
+        </div>
+
+
+      </div>
+
+    </main>
+
+
+    {/* =========================================
+        FOOTER
+    ========================================= */}
+
+    <Footer />
+
+
+    {/* =========================================
+        INSERT COIN MODAL
+    ========================================= */}
+
+    <InsertCoinModal
+      open={showCoinModal}
+      amountInserted={amountInserted}
+      expiresAt={waitingExpiresAt}
+      onClose={() => {
+
         setShowCoinModal(false);
-        stopCoinPolling();
-    }}
-    stopPopup={popup.stop}
-/>
-    </PortalLayout>
 
-  );
+        stopCoinPolling();
+
+      }}
+      stopPopup={
+        popup.stop
+      }
+    />
+
+  </PortalLayout>
+
+);
 
 }
