@@ -216,20 +216,24 @@ export async function wait(req: Request, res: Response) {
         }
     });
 
-    const waiting =
-        await prisma.waitingClient.create({
+const expiresAt = new Date(
+    Date.now() + 30 * 1000
+);
 
-            data: {
-
-                machineId,
-                clientIP,
-                clientMac
-
+const waiting = await prisma.waitingClient.create({
+    data: {
+        clientIP,
+        clientMac,
+        expiresAt,
+        machine: {
+            connect: {
+                id: machineId
             }
+        }
+    }
+});
 
-        });
-
-    res.json(waiting);
+return res.json(waiting);
 
 }
 
