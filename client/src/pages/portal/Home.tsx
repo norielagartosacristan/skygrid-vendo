@@ -35,6 +35,9 @@ export default function Home() {
   //const ambience = useSound("/sounds/ambience.mp3");
   const success = useSound("/sounds/success.mp3");
 
+
+  const [waitingStartedAt, setWaitingStartedAt] =
+  useState<string | null>(null);
   const [waitingExpiresAt, setWaitingExpiresAt] =
   useState<string | null>(null);
 
@@ -975,6 +978,10 @@ function startCoinPolling(
   return;
 }
 
+setWaitingStartedAt(
+  data.createdAt
+);
+
 setWaitingExpiresAt(
   data.expiresAt
 );
@@ -1284,9 +1291,10 @@ startCoinPolling(
       <Footer />
 
 
-    <InsertCoinModal
+   <InsertCoinModal
     open={showCoinModal}
     amountInserted={amountInserted}
+    startedAt={waitingStartedAt}
     expiresAt={waitingExpiresAt}
     onClose={() => {
         setShowCoinModal(false);

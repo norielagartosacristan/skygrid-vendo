@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 interface Props {
     open: boolean;
     amountInserted: number;
+    startedAt: string | null;
     expiresAt: string | null;
     onClose: () => void;
     stopPopup: () => void;
@@ -11,6 +12,7 @@ interface Props {
 export default function InsertCoinModal({
     open,
     amountInserted,
+    startedAt,
     expiresAt,
     onClose,
     stopPopup
@@ -203,21 +205,38 @@ export default function InsertCoinModal({
     // ==========================================
     // PROGRESS
     // ==========================================
+    const startTime =
+    startedAt
+        ? new Date(startedAt).getTime()
+        : 0;
 
-    const WAITING_TIME =
-        30;
+const endTime =
+    expiresAt
+        ? new Date(expiresAt).getTime()
+        : 0;
 
-    const progress =
-        Math.min(
+const totalDuration =
+    endTime - startTime;
+
+const remainingDuration =
+    Math.max(
+        0,
+        endTime - Date.now()
+    );
+
+const progress =
+    totalDuration > 0
+        ? Math.min(
             100,
             Math.max(
                 0,
                 (
-                    remainingSeconds /
-                    WAITING_TIME
+                    remainingDuration /
+                    totalDuration
                 ) * 100
             )
-        );
+        )
+        : 0;
 
 
     return (
@@ -282,13 +301,12 @@ export default function InsertCoinModal({
                         </div>
 
 
-                        <div className="h-3 w-full rounded-full bg-slate-200 overflow-hidden">
+                       <div className="h-3 w-full rounded-full bg-slate-200 overflow-hidden">
 
                             <div
                                 className="h-full bg-sky-500 transition-all duration-1000"
                                 style={{
-                                    width:
-                                        `${progress}%`
+                                    width: `${progress}%`
                                 }}
                             />
 
