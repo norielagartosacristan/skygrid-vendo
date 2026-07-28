@@ -33,6 +33,7 @@ export default function Home() {
   const warning5 = useSound("/sounds/warning5.mp3");
   const warning1 = useSound("/sounds/warning1.mp3");
   const ambience = useSound("/sounds/ambience.mp3");
+  const success = useSound("/sounds/success.mp3");
 
   const [showCoinModal, setShowCoinModal] =
     useState(false);
@@ -853,7 +854,7 @@ function startCoinPolling(
                 false
               );
 
-              popup.play();
+              success.play();
 
               return;
 
