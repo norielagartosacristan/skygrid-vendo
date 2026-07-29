@@ -42,41 +42,88 @@ export default function HeroCarousel() {
       className="h-[350px] sm:h-[280px] md:h-[380px] lg:h-[520px]"
     >
       {slides.map((slide) => (
-        <SwiperSlide key={slide.subtitle}>
-          <div className="relative w-full h-full">
+       <SwiperSlide key={slide.subtitle}>
+  <div className="relative w-full h-full">
 
-            <img
-              src={slide.image}
-              alt={slide.subtitle}
-              className="w-full h-full object-cover"
-            />
+    {/* IMAGE */}
+    <img
+      src={slide.image}
+      alt={slide.subtitle}
+      className="w-full h-full object-cover object-center"
+    />
 
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/50 to-transparent" />
+    {/* DARK OVERLAY */}
+    <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/60 to-transparent" />
 
-            <div className="absolute inset-0 flex items-center">
-              <div className="max-w-7xl mx-auto w-full px-5 sm:px-8">
+    {/* CONTENT */}
+    <div className="absolute inset-0 flex items-center">
 
-                <div className="max-w-xl">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                  <h4 className="text-sky-400 font-semibold text-sm sm:text-lg lg:text-xl">
-                    {slide.title}
-                  </h4>
+        <div className="max-w-xl">
 
-                  <h1 className="mt-2 text-3xl sm:text-5xl lg:text-7xl font-black text-white leading-tight">
-                    {slide.subtitle}
-                  </h1>
+          {/* TITLE */}
+          <h4
+            className="
+              text-sky-400
+              font-semibold
+              text-xs
+              sm:text-base
+              md:text-lg
+              lg:text-xl
+              leading-tight
+            "
+          >
+            {slide.title}
+          </h4>
 
-                  <p className="mt-4 text-gray-200 text-sm sm:text-base lg:text-xl">
-                    {slide.description}
-                  </p>
 
-                </div>
+          {/* MAIN TITLE */}
+          <h1
+            className="
+              mt-1
+              sm:mt-2
+              text-2xl
+              xs:text-3xl
+              sm:text-4xl
+              md:text-5xl
+              lg:text-7xl
+              font-black
+              text-white
+              leading-tight
+              break-words
+            "
+          >
+            {slide.subtitle}
+          </h1>
 
-              </div>
-            </div>
 
-          </div>
-        </SwiperSlide>
+          {/* DESCRIPTION */}
+          <p
+            className="
+              mt-2
+              sm:mt-3
+              md:mt-4
+              max-w-md
+              text-gray-200
+              text-xs
+              sm:text-sm
+              md:text-base
+              lg:text-xl
+              leading-relaxed
+            "
+          >
+            {slide.description}
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</SwiperSlide>
       ))}
     </Swiper>
   );
