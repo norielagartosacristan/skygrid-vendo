@@ -49,20 +49,17 @@ class SessionService {
          * Find existing active session
          * using client IP.
          */
-        const existing =
-            await prisma.session.findFirst({
-
-                where: {
-
-                    ipAddress:
-                        clientIP,
-
-                    isActive:
-                        true
-
-                }
-
-            });
+       const existing =
+    await prisma.session.findFirst({
+        where: {
+            ipAddress: clientIP,
+            isActive: true,
+            isPaused: false,
+            expiresAt: {
+                not: null
+            }
+        }
+    });
 
 
         /**
@@ -77,10 +74,10 @@ class SessionService {
 
 
             const baseTime =
-                existing.expiresAt.getTime() > now
-                    ? existing.expiresAt.getTime()
+                //existing.expiresAt &&
+                existing.expiresAt!.getTime() > now
+                    ? existing.expiresAt!.getTime()
                     : now;
-
 
             const newExpiresAt =
                 new Date(
@@ -405,22 +402,28 @@ async pauseSession(clientIP: string) {
             }
         });
 
-    if (!session) {
-        throw new Error(
-            "No active session found."
-        );
-    }
+if (!session) {
+    throw new Error(
+        "No active session found."
+    );
+}
 
-    const remainingSeconds =
-        Math.max(
-            0,
-            Math.floor(
-                (
-                    session.expiresAt.getTime() -
-                    Date.now()
-                ) / 1000
-            )
-        );
+if (!session.expiresAt) {
+    throw new Error(
+        "Session has no expiration time."
+    );
+}
+
+const remainingSeconds =
+    Math.max(
+        0,
+        Math.floor(
+            (
+                session.expiresAt.getTime() -
+                Date.now()
+            ) / 1000
+        )
+    );
 
     if (remainingSeconds <= 0) {
 
