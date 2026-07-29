@@ -42,6 +42,8 @@ export default function Home() {
 const [pausing, setPausing] =
     useState(false);
 
+  const [showWifiRates, setShowWifiRates] = useState(false);
+
   const [waitingStartedAt, setWaitingStartedAt] =
   useState<string | null>(null);
   const [waitingExpiresAt, setWaitingExpiresAt] =
@@ -1550,13 +1552,12 @@ const isConnected =
 
           {/* WIFI RATES */}
 
-          <button
-            className="w-full rounded-xl bg-gray-500 hover:bg-blue-600 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md"
-          >
-
-            WiFi Rates
-
-          </button>
+         <button
+          onClick={() => setShowWifiRates(true)}
+          className="w-full rounded-xl bg-sky-500 py-3 font-bold text-white shadow-md hover:bg-sky-600 transition"
+        >
+          WiFi Rates
+        </button>
 
         </div>
 
@@ -1684,6 +1685,112 @@ const isConnected =
     }}
     stopPopup={popup.stop}
 />
+
+
+{showWifiRates && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+    onClick={() => setShowWifiRates(false)}
+  >
+    <div
+      className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden"
+      onClick={(e) => e.stopPropagation()}
+    >
+
+      {/* Header */}
+      <div className="bg-sky-600 px-5 py-4 text-white flex items-center justify-between">
+
+        <div>
+          <h2 className="text-lg font-bold">
+            WiFi Rates
+          </h2>
+
+          <p className="text-xs text-sky-100">
+            Choose your preferred internet package
+          </p>
+        </div>
+
+        <button
+          onClick={() => setShowWifiRates(false)}
+          className="text-2xl leading-none hover:text-sky-200"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      {/* Rates */}
+      <div className="p-5 space-y-3">
+
+        <div className="flex items-center justify-between rounded-xl bg-slate-50 border p-4">
+          <div>
+            <p className="font-bold text-slate-800">
+              1 Hour
+            </p>
+
+            <p className="text-xs text-slate-500">
+              Fast internet access
+            </p>
+          </div>
+
+          <span className="text-lg font-black text-green-600">
+            ₱5
+          </span>
+        </div>
+
+
+        <div className="flex items-center justify-between rounded-xl bg-slate-50 border p-4">
+          <div>
+            <p className="font-bold text-slate-800">
+              3 Hours
+            </p>
+
+            <p className="text-xs text-slate-500">
+              Fast internet access
+            </p>
+          </div>
+
+          <span className="text-lg font-black text-green-600">
+            ₱10
+          </span>
+        </div>
+
+
+        <div className="flex items-center justify-between rounded-xl bg-slate-50 border p-4">
+          <div>
+            <p className="font-bold text-slate-800">
+              1 Day
+            </p>
+
+            <p className="text-xs text-slate-500">
+              Unlimited browsing
+            </p>
+          </div>
+
+          <span className="text-lg font-black text-green-600">
+            ₱20
+          </span>
+        </div>
+
+      </div>
+
+
+      {/* Footer */}
+      <div className="border-t bg-slate-50 p-4">
+
+        <button
+          onClick={() => setShowWifiRates(false)}
+          className="w-full rounded-xl bg-slate-800 py-3 font-bold text-white hover:bg-slate-900 transition"
+        >
+          Close
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+)}
 
   </PortalLayout>
 
