@@ -26,6 +26,14 @@ interface SessionInfo {
   [key: string]: any;
 }
 
+interface CoinRate {
+  id: string;
+  amount: string;
+  duration: number;
+  durationUnit: string;
+  enabled: boolean;
+}
+
 export default function Home() {
 
   const popup = useSound("/sounds/popup.mp3");
@@ -60,6 +68,12 @@ const [pausing, setPausing] =
       ip: "",
       mac: "",
     });
+
+    const [coinRates, setCoinRates] =
+  useState<CoinRate[]>([]);
+
+const [loadingCoinRates, setLoadingCoinRates] =
+  useState(false);
 
   const [session, setSession] =
     useState<SessionInfo | null>(() => {
@@ -419,7 +433,11 @@ const [pausing, setPausing] =
 
     loadClient();
 
+    loadCoinRates();
+
   }, []);
+
+  
 
 
   /**
@@ -1268,6 +1286,54 @@ async function handleResume() {
 
 }
 
+async function loadCoinRates() {
+
+  try {
+
+    setLoadingCoinRates(true);
+
+    const res =
+      await fetch(
+        "/api/coin-rates",
+        {
+          cache: "no-store"
+        }
+      );
+
+    if (!res.ok) {
+
+      throw new Error(
+        "Failed to load coin rates"
+      );
+
+    }
+
+    const data =
+      await res.json();
+
+    if (data.success) {
+
+      setCoinRates(
+        data.rates
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "COIN RATES ERROR:",
+      error
+    );
+
+  } finally {
+
+    setLoadingCoinRates(false);
+
+  }
+
+}
+
 
 const hasActiveSession =
   !!session &&
@@ -1692,31 +1758,76 @@ const isConnected =
 
 
 {showWifiRates && (
+
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-    onClick={() => setShowWifiRates(false)}
+    className="
+      fixed
+      inset-0
+      z-[9999]
+      flex
+      items-center
+      justify-center
+      bg-black/60
+      backdrop-blur-sm
+      p-4
+    "
+    onClick={() =>
+      setShowWifiRates(false)
+    }
   >
+
     <div
-      className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden"
-      onClick={(e) => e.stopPropagation()}
+      className="
+        w-full
+        max-w-md
+        max-h-[85vh]
+        overflow-hidden
+        rounded-2xl
+        bg-white
+        shadow-2xl
+      "
+      onClick={(e) =>
+        e.stopPropagation()
+      }
     >
 
-      {/* Header */}
-      <div className="bg-sky-600 px-5 py-4 text-white flex items-center justify-between">
+      {/* HEADER */}
+
+      <div
+        className="
+          flex
+          items-center
+          justify-between
+          bg-sky-600
+          px-5
+          py-4
+          text-white
+        "
+      >
 
         <div>
+
           <h2 className="text-lg font-bold">
             WiFi Rates
           </h2>
 
           <p className="text-xs text-sky-100">
-            Choose your preferred internet package
+            Choose your preferred package
           </p>
+
         </div>
 
+
         <button
-          onClick={() => setShowWifiRates(false)}
-          className="text-2xl leading-none hover:text-sky-200"
+          type="button"
+          onClick={() =>
+            setShowWifiRates(false)
+          }
+          className="
+            text-2xl
+            leading-none
+            hover:text-sky-200
+          "
         >
           ×
         </button>
@@ -1724,68 +1835,146 @@ const isConnected =
       </div>
 
 
-      {/* Rates */}
-      <div className="p-5 space-y-3">
+      {/* BODY */}
 
-        <div className="flex items-center justify-between rounded-xl bg-slate-50 border p-4">
-          <div>
-            <p className="font-bold text-slate-800">
-              1 Hour
+      <div
+        className="
+          max-h-[60vh]
+          overflow-y-auto
+          p-5
+        "
+      >
+
+        {loadingCoinRates ? (
+
+          <div className="py-10 text-center">
+
+            <div
+              className="
+                mx-auto
+                h-8
+                w-8
+                animate-spin
+                rounded-full
+                border-4
+                border-slate-200
+                border-t-sky-500
+              "
+            />
+
+            <p className="mt-3 text-sm text-slate-500">
+              Loading rates...
             </p>
 
-            <p className="text-xs text-slate-500">
-              Fast internet access
-            </p>
           </div>
 
-          <span className="text-lg font-black text-green-600">
-            ₱5
-          </span>
-        </div>
+        ) : coinRates.length === 0 ? (
 
+          <div
+            className="
+              py-10
+              text-center
+              text-sm
+              text-slate-500
+            "
+          >
 
-        <div className="flex items-center justify-between rounded-xl bg-slate-50 border p-4">
-          <div>
-            <p className="font-bold text-slate-800">
-              3 Hours
-            </p>
+            No WiFi rates available.
 
-            <p className="text-xs text-slate-500">
-              Fast internet access
-            </p>
           </div>
 
-          <span className="text-lg font-black text-green-600">
-            ₱10
-          </span>
-        </div>
+        ) : (
+
+          <div className="space-y-3">
+
+            {coinRates.map((rate) => (
+
+              <div
+                key={rate.id}
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  p-4
+                  transition
+                  hover:border-sky-300
+                  hover:bg-sky-50
+                "
+              >
+
+                <div>
+
+                  <p className="font-bold text-slate-800">
+
+                    {rate.duration}{" "}
+
+                    {rate.durationUnit
+                      .toLowerCase()
+                      .replace(
+                        /s$/,
+                        ""
+                      )}
+
+                  </p>
+
+                  <p className="text-xs text-slate-500">
+
+                    Fast and reliable internet access
+
+                  </p>
+
+                </div>
 
 
-        <div className="flex items-center justify-between rounded-xl bg-slate-50 border p-4">
-          <div>
-            <p className="font-bold text-slate-800">
-              1 Day
-            </p>
+                <span
+                  className="
+                    text-lg
+                    font-black
+                    text-green-600
+                  "
+                >
 
-            <p className="text-xs text-slate-500">
-              Unlimited browsing
-            </p>
+                  ₱
+                  {Number(
+                    rate.amount
+                  ).toFixed(2)}
+
+                </span>
+
+              </div>
+
+            ))}
+
           </div>
 
-          <span className="text-lg font-black text-green-600">
-            ₱20
-          </span>
-        </div>
+        )}
 
       </div>
 
 
-      {/* Footer */}
+      {/* FOOTER */}
+
       <div className="border-t bg-slate-50 p-4">
 
         <button
-          onClick={() => setShowWifiRates(false)}
-          className="w-full rounded-xl bg-slate-800 py-3 font-bold text-white hover:bg-slate-900 transition"
+          type="button"
+          onClick={() =>
+            setShowWifiRates(false)
+          }
+          className="
+            w-full
+            rounded-xl
+            bg-slate-800
+            py-3
+            font-bold
+            text-white
+            transition
+            hover:bg-slate-900
+          "
         >
           Close
         </button>
@@ -1793,7 +1982,9 @@ const isConnected =
       </div>
 
     </div>
+
   </div>
+
 )}
 
   </PortalLayout>

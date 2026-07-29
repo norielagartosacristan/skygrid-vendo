@@ -22,6 +22,7 @@ import { errorHandler } from "./middleware/error.middleware";
 import coinRoutes from "./modules/payment/coin/coin.routes";
 import paymentRoutes from "./modules/payment/payment.routes";
 import subVendoRoutes from "./routes/subVendo.routes";
+import coinRateRoutes from "./modules/payment/coinRate.routes";
 
 
 
@@ -60,6 +61,10 @@ app.use("/api/machine", machineRoutes);
 app.use("/api/coin", coinRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/subvendo", subVendoRoutes);
+app.use(
+  "/api/coin-rates",
+  coinRateRoutes
+);
 
 
 /* =========================
