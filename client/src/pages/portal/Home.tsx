@@ -148,28 +148,29 @@ const [pausing, setPausing] =
     /**
      * No active session
      */
-    if (
-      !data ||
-      data.isActive === false ||
-      data.internet === false ||
-      !data.expiresAt
-    ) {
+   if (
+    !data ||
+    (
+        data.isActive === false &&
+        data.paused !== true
+    ) ||
+    (
+        data.internet === false &&
+        data.paused !== true
+    )
+) {
+    setSession(null);
 
-      setSession(null);
+    setRemainingSeconds(0);
 
-      setRemainingSeconds(0);
+    setRemainingTime("00:00:00");
 
-      setRemainingTime(
-        "00:00:00"
-      );
-
-      localStorage.removeItem(
+    localStorage.removeItem(
         "skygrid_session"
-      );
+    );
 
-      return;
-
-    }
+    return;
+}
 
 
     /**
@@ -217,7 +218,7 @@ const [pausing, setPausing] =
         Math.floor(
           (
             new Date(
-              data.expiresAt
+              data.paused
             ).getTime() -
             Date.now()
           ) / 1000
@@ -296,12 +297,12 @@ const [pausing, setPausing] =
        */
       if (
         data?.isActive &&
-        data?.expiresAt
+        data?.paused
       ) {
 
-        applySession(data);
+        applySession(null);
 
-        return data;
+        return null;
 
       }
 
