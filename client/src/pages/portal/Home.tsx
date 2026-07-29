@@ -142,79 +142,103 @@ const [pausing, setPausing] =
    * Apply session returned by server
    */
   function applySession(
-    data: SessionInfo | null
+  data: SessionInfo | null
+) {
+
+  if (
+    !data ||
+    data.isActive === false
   ) {
 
-    /**
-     * No active session
-     */
-   if (
-    !data ||
-    (
-        data.isActive === false &&
-        data.paused !== true
-    ) ||
-    (
-        data.internet === false &&
-        data.paused !== true
-    )
-) {
     setSession(null);
 
     setRemainingSeconds(0);
 
-    setRemainingTime("00:00:00");
+    setRemainingTime(
+      "00:00:00"
+    );
 
     localStorage.removeItem(
-        "skygrid_session"
+      "skygrid_session"
     );
 
     return;
-}
+
+  }
 
 
-    /**
-     * Save session
-     */
-    setSession(data);
+  /**
+   * Save session
+   */
 
-    localStorage.setItem(
-      "skygrid_session",
-      JSON.stringify(data)
+  setSession(data);
+
+  localStorage.setItem(
+    "skygrid_session",
+    JSON.stringify(data)
+  );
+
+
+  /**
+   * PAUSED SESSION
+   */
+
+  if (
+    data.isPaused === true
+  ) {
+
+    const pausedSeconds =
+      data.remainingSeconds || 0;
+
+    setRemainingSeconds(
+      pausedSeconds
     );
 
+    setRemainingTime(
+      formatTime(
+        pausedSeconds
+      )
+    );
 
-    /**
-     * Use server remainingSeconds
-     * when available
-     */
-    if (
-      typeof data.remainingSeconds ===
-      "number"
-    ) {
+    return;
 
-      setRemainingSeconds(
+  }
+
+
+  /**
+   * RUNNING SESSION
+   */
+
+  if (
+    typeof data.remainingSeconds ===
+    "number"
+  ) {
+
+    setRemainingSeconds(
+      data.remainingSeconds
+    );
+
+    setRemainingTime(
+      formatTime(
         data.remainingSeconds
-      );
+      )
+    );
 
-      setRemainingTime(
-        formatTime(
-          data.remainingSeconds
-        )
-      );
+    return;
 
-      return;
-
-    }
+  }
 
 
-    /**
-     * Fallback:
-     * calculate using expiresAt
-     */
+  /**
+   * Fallback
+   */
+
+  if (
+    data.expiresAt
+  ) {
+
     const diff =
-  data.expiresAt
-    ? Math.max(
+      Math.max(
         0,
         Math.floor(
           (
@@ -224,18 +248,19 @@ const [pausing, setPausing] =
             Date.now()
           ) / 1000
         )
-      )
-    : (
-        data.remainingSeconds || 0
       );
 
-    setRemainingSeconds(diff);
+    setRemainingSeconds(
+      diff
+    );
 
     setRemainingTime(
       formatTime(diff)
     );
 
   }
+
+}
 
 
   /**
