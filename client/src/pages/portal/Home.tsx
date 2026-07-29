@@ -1296,7 +1296,7 @@ const isConnected =
   <div className="absolute inset-0 bg-black/35 pointer-events-none" />
 
   {/* Welcome */}
-  <div className="absolute inset-0 flex items-start justify-center text-center px-4 pt-10 sm:pt-8 pointer-events-none">
+  <div className="absolute inset-0 flex items-start justify-center text-center px-4 pt-3 sm:pt-8 pointer-events-none">
 
     <div className="text-white">
 
