@@ -213,16 +213,20 @@ const [pausing, setPausing] =
      * calculate using expiresAt
      */
     const diff =
-      Math.max(
+  data.expiresAt
+    ? Math.max(
         0,
         Math.floor(
           (
             new Date(
-              data.paused
+              data.expiresAt
             ).getTime() -
             Date.now()
           ) / 1000
         )
+      )
+    : (
+        data.remainingSeconds || 0
       );
 
     setRemainingSeconds(diff);

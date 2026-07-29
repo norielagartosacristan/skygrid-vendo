@@ -392,9 +392,10 @@ class SessionService {
 async pauseSession(clientIP: string) {
 
     console.log(
-    "[PAUSE] Searching active session for IP:",
-    clientIP
-);
+        "[PAUSE] Searching active session for IP:",
+        clientIP
+    );
+
     const session =
         await prisma.session.findFirst({
             where: {
@@ -410,12 +411,6 @@ async pauseSession(clientIP: string) {
         );
     }
 
-    if (!session.expiresAt) {
-        throw new Error(
-            "Session has no expiration time."
-        );
-    }
-
     const remainingSeconds =
         Math.max(
             0,
@@ -428,6 +423,16 @@ async pauseSession(clientIP: string) {
         );
 
     if (remainingSeconds <= 0) {
+
+        await prisma.session.update({
+            where: {
+                id: session.id
+            },
+            data: {
+                isActive: false
+            }
+        });
+
         throw new Error(
             "Session has already expired."
         );
@@ -441,17 +446,65 @@ async pauseSession(clientIP: string) {
             },
 
             data: {
+
                 isPaused: true,
+
                 remainingSeconds,
-                pausedAt: new Date()
+
+                pausedAt:
+                    new Date(),
+
+                // IMPORTANT:
+                // Stop using expiresAt
+                // while paused.
+                expiresAt:
+                    null
+
             }
 
         });
+
+    // Block internet while paused
+    await ipsetService.block(
+        session.ipAddress
+    );
+
+    // Notify frontend
+    captiveSocket.send(
+
+        session.ipAddress,
+
+        {
+
+            type:
+                "session.paused",
+
+            payload:
+                pausedSession
+
+        }
+
+    );
+
+    console.log(
+        "[PAUSE] Session paused."
+    );
+
+    console.log(
+        "[PAUSE] Remaining:",
+        remainingSeconds,
+        "seconds"
+    );
 
     return pausedSession;
 }
 
 async resumeSession(clientIP: string) {
+
+    console.log(
+        "[RESUME] Searching paused session for IP:",
+        clientIP
+    );
 
     const session =
         await prisma.session.findFirst({
@@ -463,9 +516,11 @@ async resumeSession(clientIP: string) {
         });
 
     if (!session) {
+
         throw new Error(
             "No paused session found."
         );
+
     }
 
     const remainingSeconds =
@@ -480,22 +535,35 @@ async resumeSession(clientIP: string) {
             },
 
             data: {
-                isActive: false,
-                isPaused: false,
-                remainingSeconds: 0
+
+                isActive:
+                    false,
+
+                isPaused:
+                    false,
+
+                remainingSeconds:
+                    0
+
             }
 
         });
 
+        await ipsetService.block(
+            session.ipAddress
+        );
+
         throw new Error(
             "Session has expired."
         );
+
     }
 
     const expiresAt =
         new Date(
             Date.now() +
-            remainingSeconds * 1000
+            remainingSeconds *
+            1000
         );
 
     const resumedSession =
@@ -506,17 +574,62 @@ async resumeSession(clientIP: string) {
             },
 
             data: {
-                isPaused: false,
-                pausedAt: null,
-                remainingSeconds: null,
+
+                isPaused:
+                    false,
+
+                pausedAt:
+                    null,
+
+                remainingSeconds:
+                    null,
+
                 expiresAt
+
+            },
+
+            include: {
+
+                package:
+                    true
+
             }
 
         });
 
+    // Restore internet
+    await ipsetService.allow(
+        session.ipAddress
+    );
+
+    // Notify frontend
+    captiveSocket.send(
+
+        session.ipAddress,
+
+        {
+
+            type:
+                "session.resumed",
+
+            payload:
+                resumedSession
+
+        }
+
+    );
+
+    console.log(
+        "[RESUME] Session resumed."
+    );
+
+    console.log(
+        "[RESUME] New expiresAt:",
+        expiresAt
+    );
+
     return resumedSession;
 }
-
 }
 
 

@@ -274,7 +274,7 @@ model Session {
   ipAddress String
 
   startedAt DateTime @default(now())
-  expiresAt DateTime
+  expiresAt DateTime?
 
   isActive Boolean @default(true)
 
