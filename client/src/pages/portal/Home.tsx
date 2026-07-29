@@ -146,9 +146,7 @@ const [pausing, setPausing] =
   data: SessionInfo | null
 ) {
 
-  /**
-   * No session at all
-   */
+  // Walang session talaga
   if (
     !data ||
     data.isActive === false
@@ -169,18 +167,15 @@ const [pausing, setPausing] =
     );
 
     return;
-
   }
 
 
-  /**
-   * Save session
-   */
+  // May valid session
   setSession(data);
 
   setIsPaused(
-  data?.isPaused === true
-);
+    data.isPaused === true
+  );
 
   localStorage.setItem(
     "skygrid_session",
@@ -188,21 +183,16 @@ const [pausing, setPausing] =
   );
 
 
-  /**
-   * PAUSED SESSION
-   *
-   * When paused:
-   * - expiresAt = null
-   * - internet = false
-   * - remainingSeconds contains
-   *   the saved remaining time
-   */
+  // ==============================
+  // PAUSED SESSION
+  // ==============================
+
   if (
     data.isPaused === true
   ) {
 
     const pausedRemaining =
-      data.remainingSeconds || 0;
+      data.remainingSeconds ?? 0;
 
     setRemainingSeconds(
       pausedRemaining
@@ -215,13 +205,13 @@ const [pausing, setPausing] =
     );
 
     return;
-
   }
 
 
-  /**
-   * ACTIVE SESSION
-   */
+  // ==============================
+  // ACTIVE SESSION
+  // ==============================
+
   if (
     data.expiresAt
   ) {
@@ -248,19 +238,15 @@ const [pausing, setPausing] =
     );
 
     return;
-
   }
 
 
-  /**
-   * No valid expiration
-   */
+  // Invalid session
   setRemainingSeconds(0);
 
   setRemainingTime(
     "00:00:00"
   );
-
 }
 
   /**
