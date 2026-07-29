@@ -1288,37 +1288,35 @@ const isConnected =
         HERO / BANNER
     ========================================= */}
 
-    <section className="relative w-full h-[180px] sm:h-[220px] overflow-hidden">
+   <section className="relative w-full h-[280px] sm:h-[230px] overflow-hidden">
 
-      <HeroCarousel />
+  <HeroCarousel />
 
-      {/* Overlay */}
+  {/* Overlay */}
+  <div className="absolute inset-0 bg-black/35 pointer-events-none" />
 
-      <div className="absolute inset-0 bg-black/35" />
+  {/* Welcome */}
+  <div className="absolute inset-0 flex items-start justify-center text-center px-4 pt-10 sm:pt-8 pointer-events-none">
 
-      {/* Welcome */}
+    <div className="text-white">
 
-      <div className="absolute inset-0 flex items-center justify-center text-center px-4">
+      <p className="text-sm sm:text-base font-semibold opacity-90">
+        Welcome to
+      </p>
 
-        <div className="text-white">
+      <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
+        BayanNet Wifi Vendo
+      </h1>
 
-          <p className="text-sm sm:text-base font-semibold opacity-90">
-            Welcome to
-          </p>
+      <p className="mt-1 text-xs sm:text-sm opacity-90">
+        Fast • Reliable • Affordable Internet
+      </p>
 
-          <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
-            BayanNet Wifi Vendo
-          </h1>
+    </div>
 
-          <p className="mt-1 text-xs sm:text-sm opacity-90">
-            Fast • Reliable • Affordable Internet
-          </p>
+  </div>
 
-        </div>
-
-      </div>
-
-    </section>
+</section>
 
 
     {/* =========================================
