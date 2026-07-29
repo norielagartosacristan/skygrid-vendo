@@ -1356,7 +1356,7 @@ const isConnected =
         HERO / BANNER
     ========================================= */}
 
-   <section className="relative w-full h-[380px] sm:h-[230px] overflow-hidden">
+   <section className="relative w-full h-[280px] sm:h-[380px] overflow-hidden">
 
   <HeroCarousel />
 
