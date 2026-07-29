@@ -1382,7 +1382,7 @@ const isConnected =
 
           {/* IP / MAC */}
 
-          <div className="mt-3 text-xs sm:text-sm text-slate-500 space-y-1">
+          <div className="d-flex mt-2 text-xs sm:text-sm text-slate-500 space-y-1">
 
             <p>
 
@@ -1525,33 +1525,33 @@ const isConnected =
           {/* PAUSE TIME */}
 
        {hasActiveSession && (
-  <button
-    onClick={
-      isPaused
-        ? handleResume
-        : handlePause
-    }
-    disabled={pausing}
-    className={`w-full rounded-xl py-4 text-lg font-bold text-white shadow-md active:scale-[0.98] transition-all disabled:opacity-40 ${
-      isPaused
-        ? "bg-green-500 hover:bg-green-600"
-        : "bg-red-500 hover:bg-red-600"
-    }`}
-  >
-    {pausing
-      ? "Please wait..."
-      : isPaused
-        ? "Resume Time"
-        : "Pause Time"
-    }
-  </button>
-)}
+        <button
+          onClick={
+            isPaused
+              ? handleResume
+              : handlePause
+          }
+          disabled={pausing}
+          className={`w-full rounded-xl py-4 text-lg font-bold text-white shadow-md active:scale-[0.98] transition-all disabled:opacity-40 ${
+            isPaused
+              ? "bg-blue-500 hover:bg-green-600"
+              : "bg-red-500 hover:bg-red-600"
+          }`}
+        >
+          {pausing
+            ? "Please wait..."
+            : isPaused
+              ? "Resume Time"
+              : "Pause Time"
+          }
+        </button>
+      )}
 
 
           {/* WIFI RATES */}
 
           <button
-            className="w-full rounded-xl bg-blue-500 hover:bg-blue-600 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md"
+            className="w-full rounded-xl bg-gray-500 hover:bg-blue-600 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md"
           >
 
             WiFi Rates
