@@ -1624,7 +1624,7 @@ const isConnected =
     console.log("WiFi Rates clicked");
     setShowWifiRates(true);
   }}
-  className="w-full rounded-xl bg-sky-500 py-3 font-bold text-white"
+  className="w-full rounded-xl bg-gray-500 py-3 font-bold text-white"
 >
   WiFi Rates
 </button>
