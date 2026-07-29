@@ -96,12 +96,18 @@ export async function getSession(
 
     try {
 
-        console.log("========== GET SESSION STATUS ==========");
+        console.log(
+            "========== GET SESSION STATUS =========="
+        );
 
         const ip =
             req.query.ip as string;
 
-        console.log("Client IP:", ip);
+        console.log(
+            "Client IP:",
+            ip
+        );
+
 
         if (!ip) {
 
@@ -109,37 +115,49 @@ export async function getSession(
 
                 success: false,
 
-                message: "IP address is required"
+                message:
+                    "IP address is required"
 
             });
 
         }
 
+
         /**
-         * Find active session
+         * ========================================
+         * FIND ACTIVE SESSION
+         * ========================================
          */
+
         const session =
             await prisma.session.findFirst({
 
                 where: {
 
-                    ipAddress: ip,
+                    ipAddress:
+                        ip,
 
-                    isActive: true
+                    isActive:
+                        true
 
                 },
 
                 orderBy: {
 
-                    createdAt: "desc"
+                    createdAt:
+                        "desc"
 
                 }
 
             });
 
+
         /**
-         * No active session
+         * ========================================
+         * NO ACTIVE SESSION
+         * ========================================
          */
+
         if (!session) {
 
             return res.json({
@@ -148,44 +166,189 @@ export async function getSession(
 
                 isActive: false,
 
+                isPaused: false,
+
                 internet: false,
 
                 remainingSeconds: 0,
 
-                remainingTime: "00:00:00"
+                remainingTime:
+                    "00:00:00"
 
             });
 
         }
 
+
+        /**
+         * ========================================
+         * PAUSED SESSION
+         * ========================================
+         *
+         * Kapag paused:
+         *
+         * - expiresAt = null
+         * - remainingSeconds ang source
+         * - huwag i-compute gamit ang Date.now()
+         * - huwag i-check ang expiration
+         */
+
+        if (session.isPaused) {
+
+            const remainingSeconds =
+                Math.max(
+                    0,
+                    session.remainingSeconds || 0
+                );
+
+
+            const hours =
+                Math.floor(
+                    remainingSeconds / 3600
+                );
+
+
+            const minutes =
+                Math.floor(
+                    (
+                        remainingSeconds % 3600
+                    ) / 60
+                );
+
+
+            const seconds =
+                remainingSeconds % 60;
+
+
+            const remainingTime =
+                [
+                    hours,
+                    minutes,
+                    seconds
+                ]
+                    .map(
+                        value =>
+                            String(value)
+                                .padStart(
+                                    2,
+                                    "0"
+                                )
+                    )
+                    .join(":");
+
+
+            console.log(
+                "⏸️ SESSION PAUSED"
+            );
+
+
+            console.log({
+
+                ip,
+
+                sessionId:
+                    session.id,
+
+                remainingSeconds,
+
+                remainingTime
+
+            });
+
+
+            return res.json({
+
+                success: true,
+
+                isActive: true,
+
+                isPaused: true,
+
+                internet: false,
+
+                remainingSeconds,
+
+                remainingTime,
+
+                expiresAt:
+                    null,
+
+                sessionId:
+                    session.id
+
+            });
+
+        }
+
+
+        /**
+         * ========================================
+         * RUNNING SESSION
+         * ========================================
+         */
+
+        /**
+         * Safety check:
+         * Running session must have expiresAt.
+         */
+
+        if (!session.expiresAt) {
+
+            console.error(
+                "❌ Running session has no expiresAt:",
+                session.id
+            );
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Session expiration time is missing."
+
+            });
+
+        }
+
+
         /**
          * Calculate remaining time
          */
-        const now =
-            Date.now();
-
-        const expiresAt =
-            session.expiresAt.getTime();
 
         const remainingSeconds =
             Math.max(
                 0,
                 Math.floor(
-                    (expiresAt - now) / 1000
+                    (
+                        session.expiresAt.getTime() -
+                        Date.now()
+                    ) / 1000
                 )
             );
 
-        /**
-         * Check if client is actually
-         * allowed by firewall.
-         */
-        const internet =
-            await ipsetService.exists(ip);
 
         /**
-         * Session already expired
+         * ========================================
+         * CHECK FIREWALL
+         * ========================================
          */
-        if (remainingSeconds <= 0) {
+
+        const internet =
+            await ipsetService.exists(
+                ip
+            );
+
+
+        /**
+         * ========================================
+         * SESSION EXPIRED
+         * ========================================
+         */
+
+        if (
+            remainingSeconds <= 0
+        ) {
 
             return res.json({
 
@@ -193,31 +356,49 @@ export async function getSession(
 
                 isActive: false,
 
+                isPaused: false,
+
                 internet: false,
 
                 remainingSeconds: 0,
 
-                remainingTime: "00:00:00"
+                remainingTime:
+                    "00:00:00",
+
+                expiresAt:
+                    session.expiresAt,
+
+                sessionId:
+                    session.id
 
             });
 
         }
 
+
         /**
-         * Format HH:MM:SS
+         * ========================================
+         * FORMAT HH:MM:SS
+         * ========================================
          */
+
         const hours =
             Math.floor(
                 remainingSeconds / 3600
             );
 
+
         const minutes =
             Math.floor(
-                (remainingSeconds % 3600) / 60
+                (
+                    remainingSeconds % 3600
+                ) / 60
             );
+
 
         const seconds =
             remainingSeconds % 60;
+
 
         const remainingTime =
             [
@@ -228,9 +409,13 @@ export async function getSession(
                 .map(
                     value =>
                         String(value)
-                            .padStart(2, "0")
+                            .padStart(
+                                2,
+                                "0"
+                            )
                 )
                 .join(":");
+
 
         console.log({
 
@@ -238,6 +423,9 @@ export async function getSession(
 
             sessionId:
                 session.id,
+
+            isPaused:
+                false,
 
             remainingSeconds,
 
@@ -247,11 +435,20 @@ export async function getSession(
 
         });
 
+
+        /**
+         * ========================================
+         * RETURN RUNNING SESSION
+         * ========================================
+         */
+
         return res.json({
 
             success: true,
 
             isActive: true,
+
+            isPaused: false,
 
             internet,
 
@@ -274,6 +471,7 @@ export async function getSession(
             err
         );
 
+
         return res.status(500).json({
 
             success: false,
@@ -286,7 +484,6 @@ export async function getSession(
     }
 
 }
-
 export async function client(
     req: Request,
     res: Response
