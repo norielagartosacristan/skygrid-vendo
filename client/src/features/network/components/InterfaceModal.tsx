@@ -155,12 +155,17 @@ useEffect(() => {
       onSaved();
       onClose();
 
-    } catch (err) {
+    } catch (err: any) {
 
-      console.log(err);
-      alert("Unable to save interface.");
+  console.error(err);
 
-    } finally {
+  alert(
+    err?.response?.data?.message ||
+    err?.message ||
+    "Unable to save interface."
+  );
+
+} finally {
 
       setLoading(false);
 
