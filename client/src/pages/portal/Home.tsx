@@ -1523,7 +1523,7 @@ const isConnected =
 
           {/* PAUSE TIME */}
 
-          <button
+         <button
     onClick={
         isPaused
             ? handleResume
@@ -1531,7 +1531,7 @@ const isConnected =
     }
 
     disabled={
-        !isConnected ||
+        (!isConnected && !isPaused) ||
         pausing
     }
 
@@ -1541,14 +1541,12 @@ const isConnected =
             : "bg-red-500 hover:bg-red-600"
     }`}
 >
-
     {pausing
         ? "Please wait..."
         : isPaused
             ? "Resume Time"
             : "Pause Time"
     }
-
 </button>
 
 
