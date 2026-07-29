@@ -1523,31 +1523,28 @@ const isConnected =
 
           {/* PAUSE TIME */}
 
-         <button
-    onClick={
-        isPaused
-            ? handleResume
-            : handlePause
-    }
-
-    disabled={
-        (!isConnected && !isPaused) ||
-        pausing
-    }
-
-    className={`w-full rounded-xl py-4 text-lg font-bold text-white shadow-md active:scale-[0.98] transition-all disabled:opacity-40 ${
-        isPaused
-            ? "bg-green-500 hover:bg-green-600"
-            : "bg-red-500 hover:bg-red-600"
-    }`}
->
-    {pausing
-        ? "Please wait..."
-        : isPaused
-            ? "Resume Time"
-            : "Pause Time"
-    }
-</button>
+        {session && session.isActive !== false && (
+          <button
+            onClick={
+              isPaused
+                ? handleResume
+                : handlePause
+            }
+            disabled={pausing}
+            className={`w-full rounded-xl py-4 text-lg font-bold text-white shadow-md active:scale-[0.98] transition-all disabled:opacity-40 ${
+              isPaused
+                ? "bg-green-500 hover:bg-green-600"
+                : "bg-red-500 hover:bg-red-600"
+            }`}
+          >
+            {pausing
+              ? "Please wait..."
+              : isPaused
+                ? "Resume Time"
+                : "Pause Time"
+            }
+          </button>
+        )}
 
 
           {/* WIFI RATES */}
