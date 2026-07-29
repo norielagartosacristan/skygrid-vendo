@@ -1367,19 +1367,17 @@ const isConnected =
 
           {/* STATUS */}
 
-          <h2
-            className={`mt-3 text-3xl font-black ${
-              isConnected
-                ? "text-green-600"
-                : "text-slate-400"
-            }`}
-          >
-
-            {isConnected
-              ? "Connected"
-              : "Disconnected"}
-
-          </h2>
+         <h2
+          className={`mt-1 text-lg sm:text-xl md:text-2xl font-black ${
+            isConnected
+              ? "text-green-600"
+              : "text-slate-400"
+          }`}
+        >
+          {isConnected
+            ? "Connected"
+            : "Disconnected"}
+        </h2>
 
 
           {/* IP / MAC */}
