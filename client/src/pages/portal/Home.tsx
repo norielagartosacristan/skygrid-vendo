@@ -16,10 +16,11 @@ interface ClientInfo {
 interface SessionInfo {
   success?: boolean;
   isActive?: boolean;
+  isPaused?: boolean;
   internet?: boolean;
   remainingSeconds?: number;
   remainingTime?: string;
-  expiresAt?: string;
+  expiresAt?: string | null;
   sessionId?: string;
   id?: string;
   [key: string]: any;
@@ -141,16 +142,21 @@ const [pausing, setPausing] =
   /**
    * Apply session returned by server
    */
-  function applySession(
+ function applySession(
   data: SessionInfo | null
 ) {
 
+  /**
+   * No session at all
+   */
   if (
     !data ||
     data.isActive === false
   ) {
 
     setSession(null);
+
+    setIsPaused(false);
 
     setRemainingSeconds(0);
 
@@ -170,8 +176,11 @@ const [pausing, setPausing] =
   /**
    * Save session
    */
-
   setSession(data);
+
+  setIsPaused(
+  data?.isPaused === true
+);
 
   localStorage.setItem(
     "skygrid_session",
@@ -181,22 +190,27 @@ const [pausing, setPausing] =
 
   /**
    * PAUSED SESSION
+   *
+   * When paused:
+   * - expiresAt = null
+   * - internet = false
+   * - remainingSeconds contains
+   *   the saved remaining time
    */
-
   if (
     data.isPaused === true
   ) {
 
-    const pausedSeconds =
+    const pausedRemaining =
       data.remainingSeconds || 0;
 
     setRemainingSeconds(
-      pausedSeconds
+      pausedRemaining
     );
 
     setRemainingTime(
       formatTime(
-        pausedSeconds
+        pausedRemaining
       )
     );
 
@@ -206,33 +220,8 @@ const [pausing, setPausing] =
 
 
   /**
-   * RUNNING SESSION
+   * ACTIVE SESSION
    */
-
-  if (
-    typeof data.remainingSeconds ===
-    "number"
-  ) {
-
-    setRemainingSeconds(
-      data.remainingSeconds
-    );
-
-    setRemainingTime(
-      formatTime(
-        data.remainingSeconds
-      )
-    );
-
-    return;
-
-  }
-
-
-  /**
-   * Fallback
-   */
-
   if (
     data.expiresAt
   ) {
@@ -258,10 +247,21 @@ const [pausing, setPausing] =
       formatTime(diff)
     );
 
+    return;
+
   }
 
-}
 
+  /**
+   * No valid expiration
+   */
+  setRemainingSeconds(0);
+
+  setRemainingTime(
+    "00:00:00"
+  );
+
+}
 
   /**
    * Get session from server
@@ -324,16 +324,15 @@ const [pausing, setPausing] =
       /**
        * API returned active session
        */
-      if (
-        data?.isActive &&
-        data?.paused
-      ) {
+     if (
+  data?.isActive
+) {
 
-        applySession(null);
+  applySession(data);
 
-        return null;
+  return data;
 
-      }
+}
 
 
       /**
@@ -499,81 +498,122 @@ useEffect(() => {
    */
   useEffect(() => {
 
-    if (!session?.expiresAt) {
+  /**
+   * No session
+   */
+  if (!session) {
 
-      setRemainingSeconds(0);
+    setRemainingSeconds(0);
+
+    setRemainingTime(
+      "00:00:00"
+    );
+
+    return;
+
+  }
+
+
+  /**
+   * PAUSED SESSION
+   *
+   * Do NOT countdown.
+   */
+  if (
+    session.isPaused === true
+  ) {
+
+    const pausedRemaining =
+      session.remainingSeconds || 0;
+
+    setRemainingSeconds(
+      pausedRemaining
+    );
+
+    setRemainingTime(
+      formatTime(
+        pausedRemaining
+      )
+    );
+
+    return;
+
+  }
+
+
+  /**
+   * ACTIVE SESSION
+   */
+  if (
+    !session.expiresAt
+  ) {
+
+    return;
+
+  }
+
+
+  const updateCountdown =
+    () => {
+
+      const diff =
+        Math.max(
+          0,
+          Math.floor(
+            (
+              new Date(
+                session.expiresAt!
+              ).getTime() -
+              Date.now()
+            ) / 1000
+          )
+        );
+
+
+      setRemainingSeconds(
+        diff
+      );
 
       setRemainingTime(
-        "00:00:00"
+        formatTime(diff)
       );
 
-      return;
 
-    }
+      if (
+        diff <= 0
+      ) {
 
-
-    const updateCountdown =
-      () => {
-
-        const diff = session.expiresAt
-  ? Math.max(
-      0,
-      Math.floor(
-        (
-          new Date(session.expiresAt).getTime() -
-          Date.now()
-        ) / 1000
-      )
-    )
-  : 0;
-
-        setRemainingSeconds(
-          diff
+        refreshSession(
+          client.ip
         );
 
-        setRemainingTime(
-          formatTime(diff)
-        );
-
-
-        /**
-         * Session expired locally.
-         * Immediately ask server again.
-         */
-        if (diff <= 0) {
-
-          refreshSession(
-            client.ip
-          );
-
-        }
-
-      };
-
-
-    updateCountdown();
-
-
-    const timer =
-      setInterval(
-        updateCountdown,
-        1000
-      );
-
-
-    return () => {
-
-      clearInterval(
-        timer
-      );
+      }
 
     };
 
-  }, [
-    session?.expiresAt,
-    client.ip,
-  ]);
 
+  updateCountdown();
+
+
+  const timer =
+    setInterval(
+      updateCountdown,
+      1000
+    );
+
+
+  return () => {
+
+    clearInterval(
+      timer
+    );
+
+  };
+
+}, [
+  session,
+  client.ip
+]);
 
   /**
    * Warning sounds
@@ -1081,12 +1121,6 @@ startCoinPolling(
   }
 
 
-  const isConnected =
-    !!session &&
-    session.isActive !== false &&
-    session.internet !== false &&
-    remainingSeconds > 0;
-
   async function handlePause() {
 
     if (!client.ip) {
@@ -1238,6 +1272,14 @@ async function handleResume() {
 
 }
 
+const hasActiveSession =
+  !!session &&
+  session.isActive !== false &&
+  remainingSeconds > 0;
+
+const isConnected =
+  hasActiveSession &&
+  !isPaused;
 
   return (
 
