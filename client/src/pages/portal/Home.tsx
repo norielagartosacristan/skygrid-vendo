@@ -1185,76 +1185,84 @@ startCoinPolling(
 
 async function handleResume() {
 
-    if (!client.ip) {
-        return;
-    }
+  if (!client.ip) {
+    alert("Unable to detect client IP.");
+    return;
+  }
 
-    try {
+  try {
 
-        setPausing(true);
+    console.log(
+      "[RESUME] Resuming session for:",
+      client.ip
+    );
 
-        const res =
-            await fetch(
-                "/api/captive/session/resume",
-                {
-                    method: "POST",
+    const res = await fetch(
+      "/api/captive/session/resume",
+      {
+        method: "POST",
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
 
-                    body: JSON.stringify({
-                        clientIP:
-                            client.ip
-                    })
-                }
-            );
+        body: JSON.stringify({
+          clientIP: client.ip,
+        }),
+      }
+    );
 
+    const data = await res.json();
 
-        const data =
-            await res.json();
+    console.log(
+      "[RESUME RESPONSE]:",
+      data
+    );
 
+    if (!res.ok || !data.success) {
 
-        if (!res.ok ||
-            !data.success
-        ) {
+      alert(
+        data.message ||
+        "Unable to resume session."
+      );
 
-            alert(
-                data.message ||
-                "Unable to resume session."
-            );
-
-            return;
-
-        }
-
-
-        setIsPaused(false);
-
-
-        await refreshSession(
-            client.ip,
-            false
-        );
-
-
-    } catch (err) {
-
-        console.error(
-            "RESUME ERROR:",
-            err
-        );
-
-        alert(
-            "Unable to resume session."
-        );
-
-    } finally {
-
-        setPausing(false);
+      return;
 
     }
+
+    /**
+     * Update frontend session
+     */
+    if (data.session) {
+
+      applySession(
+        data.session
+      );
+
+    }
+
+    /**
+     * Refresh session from server
+     * to get the latest expiresAt
+     */
+    await refreshSession(
+      client.ip,
+      false
+    );
+
+  } catch (error) {
+
+    console.error(
+      "[RESUME ERROR]:",
+      error
+    );
+
+    alert(
+      "Unable to resume session."
+    );
+
+  }
 
 }
 
