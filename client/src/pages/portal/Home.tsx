@@ -1552,12 +1552,16 @@ const isConnected =
 
           {/* WIFI RATES */}
 
-         <button
-          onClick={() => setShowWifiRates(true)}
-          className="w-full rounded-xl bg-sky-500 py-3 font-bold text-white shadow-md hover:bg-sky-600 transition"
-        >
-          WiFi Rates
-        </button>
+        <button
+  type="button"
+  onClick={() => {
+    console.log("WiFi Rates clicked");
+    setShowWifiRates(true);
+  }}
+  className="w-full rounded-xl bg-sky-500 py-3 font-bold text-white"
+>
+  WiFi Rates
+</button>
 
         </div>
 
