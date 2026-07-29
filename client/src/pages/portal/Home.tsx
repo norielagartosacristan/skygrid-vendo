@@ -1523,7 +1523,7 @@ const isConnected =
 
           {/* PAUSE TIME */}
 
-        {session && session.isActive !== false && (
+       {isConnected && (
           <button
             onClick={
               isPaused
