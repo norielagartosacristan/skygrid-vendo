@@ -3,6 +3,8 @@ import { ipsetService } from "../firewall/ipset.service";
 import { firewallRules } from "../firewall/firewallRules.service";
 import prisma from "../../../config/prisma";
 import { macService } from "../network/mac.service";
+import { sessionService } from "../session/session.service";
+import { machineService } from "../../machine/services/machine.service";
 
 
 export async function allow(
@@ -504,7 +506,190 @@ export async function client(
 
 }
 
+export async function restoreSession(
+    req: Request,
+    res: Response
+) {
 
+    try {
+
+        const clientIP =
+            req.query.ip as string;
+
+        if (!clientIP) {
+
+            return res
+                .status(400)
+                .json({
+
+                    success: false,
+
+                    message:
+                        "IP address is required."
+
+                });
+
+        }
+
+        /**
+         * Current machine
+         */
+        const machine =
+            await machineService.getCurrentMachine();
+
+        if (!machine) {
+
+            return res
+                .status(500)
+                .json({
+
+                    success: false,
+
+                    message:
+                        "Machine not registered."
+
+                });
+
+        }
+
+        /**
+         * Find client MAC
+         */
+        const waitingClient =
+            await prisma.waitingClient.findFirst({
+
+                where: {
+                    clientIP
+                },
+
+                orderBy: {
+                    createdAt: "desc"
+                }
+
+            });
+
+        const clientMac =
+            waitingClient?.clientMac || "";
+
+        if (!clientMac) {
+
+            return res
+                .status(404)
+                .json({
+
+                    success: false,
+
+                    message:
+                        "Client MAC not found."
+
+                });
+
+        }
+
+        /**
+         * Find existing session
+         */
+        const session =
+            await sessionService.getExistingSession(
+
+                machine.id,
+
+                clientMac,
+
+                clientIP
+
+            );
+
+        /**
+         * No existing session
+         */
+        if (!session) {
+
+            return res.json({
+
+                success: true,
+
+                found: false,
+
+                session: null
+
+            });
+
+        }
+
+        /**
+         * Existing session found
+         */
+        let remainingSeconds = 0;
+
+        if (session.isPaused) {
+
+            remainingSeconds =
+                session.remainingSeconds || 0;
+
+        } else if (session.expiresAt) {
+
+            remainingSeconds =
+                Math.max(
+
+                    0,
+
+                    Math.floor(
+
+                        (
+                            session.expiresAt.getTime() -
+                            Date.now()
+
+                        ) / 1000
+
+                    )
+
+                );
+
+        }
+
+        return res.json({
+
+            success: true,
+
+            found: true,
+
+            isActive:
+                session.isActive,
+
+            isPaused:
+                session.isPaused,
+
+            remainingSeconds,
+
+            expiresAt:
+                session.expiresAt,
+
+            session
+
+        });
+
+    } catch (error: any) {
+
+        console.error(
+            "[SESSION RESTORE ERROR]",
+            error
+        );
+
+        return res
+            .status(500)
+            .json({
+
+                success: false,
+
+                message:
+                    error.message
+
+            });
+
+    }
+
+}
 
 
 export async function enable(_req: Request, res: Response) {

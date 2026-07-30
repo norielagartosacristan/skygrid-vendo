@@ -7,181 +7,80 @@ import { captiveSocket } from "../websocket/captive.socket";
 class SessionService {
 
     async createSession(
-        machineId: string,
-        packageId: string | null,
-        clientMac: string,
-        clientIP: string,
-        durationMinutes: number
-    ) {
+    machineId: string,
+    packageId: string | null,
+    clientMac: string,
+    clientIP: string,
+    durationMinutes: number
+) {
 
-        console.log(
-            "========== CREATE SESSION =========="
-        );
+    console.log("========== CREATE SESSION ==========");
 
-        console.log(
-            "Machine:",
-            machineId
-        );
-
-        console.log(
-            "Package:",
-            packageId
-        );
-
-        console.log(
-            "Client MAC:",
-            clientMac
-        );
-
-        console.log(
-            "Client IP:",
-            clientIP
-        );
-
-        console.log(
-            "Duration:",
-            durationMinutes,
-            "minutes"
-        );
+    console.log("Machine ID:", machineId);
+    console.log("Client MAC:", clientMac);
+    console.log("Client IP:", clientIP);
+    console.log("Duration:", durationMinutes);
 
 
-        /**
-         * Find existing active session
-         * using client IP.
-         */
-       const existing =
-    await prisma.session.findFirst({
-        where: {
-            ipAddress: clientIP,
-            isActive: true,
-            isPaused: false,
-            expiresAt: {
-                not: null
-            }
-        }
-    });
+    /**
+     * ========================================
+     * FIND EXISTING SESSION
+     * ========================================
+     */
 
+    const existing =
+        await prisma.session.findFirst({
 
-        /**
-         * ========================================
-         * EXTEND EXISTING SESSION
-         * ========================================
-         */
-        if (existing) {
+            where: {
 
-            const now =
-                Date.now();
+                machineId,
 
+                clientMac,
 
-            const baseTime =
-                //existing.expiresAt &&
-                existing.expiresAt!.getTime() > now
-                    ? existing.expiresAt!.getTime()
-                    : now;
+                isActive: true,
 
-            const newExpiresAt =
-                new Date(
+                isPaused: false,
 
-                    baseTime +
-
-                    durationMinutes *
-                    60 *
-                    1000
-
-                );
-
-
-            const session =
-                await prisma.session.update({
-
-                    where: {
-
-                        id:
-                            existing.id
-
-                    },
-
-                    data: {
-
-                        expiresAt:
-                            newExpiresAt,
-
-                        isActive:
-                            true,
-
-                        /**
-                         * Update package reference
-                         * to the package used by
-                         * the latest payment.
-                         */
-                        packageId
-
-                    },
-
-                    include: {
-
-                        package:
-                            true
-
-                    }
-
-                });
-
-
-            /**
-             * Re-allow client IP.
-             */
-            await ipsetService.allow(
-                session.ipAddress
-            );
-
-
-            console.log(
-                "✅ IP allowed:",
-                session.ipAddress
-            );
-
-
-            console.log(
-                "➕ Session extended until:",
-                newExpiresAt
-            );
-
-
-            /**
-             * Immediately notify portal.
-             */
-            captiveSocket.send(
-
-                session.ipAddress,
-
-                {
-
-                    type:
-                        "session.updated",
-
-                    payload:
-                        session
-
+                expiresAt: {
+                    not: null
                 }
 
-            );
+            },
+
+            orderBy: {
+
+                createdAt: "desc"
+
+            }
+
+        });
 
 
-            return session;
+    /**
+     * ========================================
+     * EXTEND EXISTING SESSION
+     * ========================================
+     */
 
-        }
+    if (existing) {
+
+        const now =
+            Date.now();
 
 
-        /**
-         * ========================================
-         * CREATE NEW SESSION
-         * ========================================
-         */
-        const expiresAt =
+        const baseTime =
+            existing.expiresAt &&
+            existing.expiresAt.getTime() > now
+
+                ? existing.expiresAt.getTime()
+
+                : now;
+
+
+        const newExpiresAt =
             new Date(
 
-                Date.now() +
+                baseTime +
 
                 durationMinutes *
                 60 *
@@ -190,24 +89,28 @@ class SessionService {
             );
 
 
-        const session =
-            await prisma.session.create({
+        const updatedSession =
+            await prisma.session.update({
+
+                where: {
+
+                    id:
+                        existing.id
+
+                },
 
                 data: {
 
-                    machineId,
-
-                    packageId,
-
-                    clientMac,
-
-                    ipAddress:
-                        clientIP,
-
-                    expiresAt,
+                    expiresAt:
+                        newExpiresAt,
 
                     isActive:
-                        true
+                        true,
+
+                    isPaused:
+                        false,
+
+                    packageId
 
                 },
 
@@ -222,65 +125,354 @@ class SessionService {
 
 
         /**
-         * Allow IP immediately.
+         * Allow internet
          */
+
         await ipsetService.allow(
-            session.ipAddress
+            updatedSession.ipAddress
         );
 
 
         console.log(
-            "✅ NEW SESSION CREATED"
+            "✅ EXISTING SESSION EXTENDED"
         );
-
 
         console.log(
             "Session ID:",
-            session.id
+            updatedSession.id
         );
-
-
-        console.log(
-            "Client IP:",
-            session.ipAddress
-        );
-
 
         console.log(
             "Expires:",
-            session.expiresAt
-        );
-
-
-        console.log(
-            "🔥 IPSET ALLOWED:",
-            session.ipAddress
+            updatedSession.expiresAt
         );
 
 
         /**
-         * Notify portal immediately.
+         * Notify captive portal
          */
+
         captiveSocket.send(
 
-            session.ipAddress,
+            updatedSession.ipAddress,
 
             {
 
                 type:
-                    "session.created",
+                    "session.updated",
 
                 payload:
-                    session
+                    updatedSession
 
             }
 
         );
 
 
+        return updatedSession;
+
+    }
+
+
+    /**
+     * ========================================
+     * CREATE NEW SESSION
+     * ========================================
+     */
+
+    const expiresAt =
+        new Date(
+
+            Date.now() +
+
+            durationMinutes *
+            60 *
+            1000
+
+        );
+
+
+    const newSession =
+        await prisma.session.create({
+
+            data: {
+
+                machineId,
+
+                packageId,
+
+                clientMac,
+
+                ipAddress:
+                    clientIP,
+
+                expiresAt,
+
+                isActive:
+                    true,
+
+                isPaused:
+                    false
+
+            },
+
+            include: {
+
+                package:
+                    true
+
+            }
+
+        });
+
+
+    /**
+     * Allow IP immediately
+     */
+
+    await ipsetService.allow(
+        newSession.ipAddress
+    );
+
+
+    console.log(
+        "✅ NEW SESSION CREATED"
+    );
+
+    console.log(
+        "Session ID:",
+        newSession.id
+    );
+
+    console.log(
+        "Client IP:",
+        newSession.ipAddress
+    );
+
+    console.log(
+        "Expires:",
+        newSession.expiresAt
+    );
+
+
+    /**
+     * Notify portal
+     */
+
+    captiveSocket.send(
+
+        newSession.ipAddress,
+
+        {
+
+            type:
+                "session.created",
+
+            payload:
+                newSession
+
+        }
+
+    );
+
+
+    return newSession;
+
+}
+
+    async getExistingSession(
+    machineId: string,
+    clientMac: string,
+    clientIP: string
+) {
+
+    console.log(
+        "========== CHECK EXISTING SESSION =========="
+    );
+
+    console.log("Machine ID:", machineId);
+    console.log("Client MAC:", clientMac);
+    console.log("Client IP:", clientIP);
+
+    const session =
+        await prisma.session.findFirst({
+
+            where: {
+
+                machineId,
+
+                clientMac,
+
+                isActive: true,
+
+                expiresAt: {
+                    not: null
+                }
+
+            },
+
+            include: {
+                package: true
+            }
+
+        });
+
+    if (!session) {
+
+        console.log(
+            "❌ No existing session"
+        );
+
+        return null;
+
+    }
+
+    /**
+     * PAUSED SESSION
+     *
+     * Do not calculate from expiresAt because
+     * expiresAt is null while paused.
+     */
+    if (session.isPaused) {
+
+        console.log(
+            "⏸️ Existing session is paused"
+        );
+
         return session;
 
     }
+
+    /**
+     * Check expiration
+     */
+    if (!session.expiresAt) {
+
+        return null;
+
+    }
+
+    const remainingSeconds =
+        Math.max(
+
+            0,
+
+            Math.floor(
+
+                (
+                    session.expiresAt.getTime() -
+                    Date.now()
+
+                ) / 1000
+
+            )
+
+        );
+
+    /**
+     * Session already expired
+     */
+    if (remainingSeconds <= 0) {
+
+        console.log(
+            "❌ Existing session expired"
+        );
+
+        await prisma.session.update({
+
+            where: {
+                id: session.id
+            },
+
+            data: {
+                isActive: false
+            }
+
+        });
+
+        await ipsetService.block(
+            session.ipAddress
+        );
+
+        return null;
+
+    }
+
+    /**
+     * Update current IP.
+     *
+     * IP may change when the client
+     * reconnects to another Subvendo.
+     */
+    const updatedSession =
+        await prisma.session.update({
+
+            where: {
+                id: session.id
+            },
+
+            data: {
+
+                ipAddress:
+                    clientIP
+
+            },
+
+            include: {
+                package: true
+            }
+
+        });
+
+    /**
+     * Allow current client IP
+     */
+    await ipsetService.allow(
+        clientIP
+    );
+
+    console.log(
+        "✅ Existing session restored"
+    );
+
+    console.log(
+        "Session ID:",
+        updatedSession.id
+    );
+
+    console.log(
+        "Remaining:",
+        remainingSeconds,
+        "seconds"
+    );
+
+    console.log(
+        "New Client IP:",
+        clientIP
+    );
+
+    /**
+     * Notify portal
+     */
+    captiveSocket.send(
+
+        clientIP,
+
+        {
+
+            type:
+                "session.restored",
+
+            payload:
+                updatedSession
+
+        }
+
+    );
+
+    return updatedSession;
+
+}
 
 
     async expireSession(

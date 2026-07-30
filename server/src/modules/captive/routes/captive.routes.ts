@@ -4,6 +4,9 @@ import * as LoginController from "../controllers/login.controller";
 import {
     sessionController
 } from "../session/session.controller";
+import {
+    restoreSession
+} from "../controllers/captive.controller";
 
 const router = Router();
 
@@ -48,6 +51,11 @@ router.post(
     sessionController.resume.bind(
         sessionController
     )
+);
+
+router.get(
+    "/session/restore",
+    restoreSession
 );
 
 export default router;
