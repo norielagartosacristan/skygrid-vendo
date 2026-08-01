@@ -30,15 +30,28 @@ class FirewallRulesService {
     /**
      * Initialize firewall
      */
-    async initialize(): Promise<void> {
-        console.log("🔥 Initializing SkyGrid Firewall...");
+    async initialize() {
+    console.log("🔥 Initializing firewall...");
 
-        await this.enableIpForward();
-        await this.createIPSet();
-        await this.allowEstablishedConnections();
+    try {
+        // Create ipset if it does not exist
+        await execAsync(
+            "sudo ipset create skygrid_clients hash:ip -exist"
+        );
 
-        console.log("✅ Firewall initialized.");
+        console.log("✅ ipset skygrid_clients ready");
+
+        // Other firewall initialization...
+        
+    } catch (error) {
+        console.error(
+            "❌ Firewall initialization failed:",
+            error
+        );
+
+        throw error;
     }
+}
 
     /**
      * Enable IPv4 Forwarding
