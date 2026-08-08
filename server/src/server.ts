@@ -44,6 +44,8 @@ server.listen(PORT, async () => {
         console.log("Machine Registered");
         console.log(machine);
 
+        await machineService.repairSubVendo(machine.id);
+        
          await machineAssociationService.restoreSubVendoAssociations(
             machine.id
         );

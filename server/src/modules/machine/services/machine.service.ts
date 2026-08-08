@@ -93,12 +93,19 @@ class MachineService {
 
 async repairSubVendo(machineId: string) {
 
-    const subvendo =
-        await prisma.subVendo.findFirst({
+    console.log(
+        `🔧 Checking SubVendo bindings for Machine ${machineId}`
+    );
+
+    const result =
+        await prisma.subVendo.updateMany({
 
             where: {
+
                 status: "CONFIGURED",
+
                 enabled: true,
+
                 OR: [
                     {
                         machineId: null
@@ -107,36 +114,7 @@ async repairSubVendo(machineId: string) {
                         machineId: machineId
                     }
                 ]
-            },
 
-            orderBy: {
-                createdAt: "asc"
-            }
-
-        });
-
-    if (!subvendo) {
-
-        console.log(
-            "No configured SubVendo needs binding."
-        );
-
-        return null;
-
-    }
-
-    if (
-        subvendo.machineId !== machineId
-    ) {
-
-        console.log(
-            `🔧 Binding SubVendo ${subvendo.chipId} to Machine ${machineId}`
-        );
-
-        return prisma.subVendo.update({
-
-            where: {
-                id: subvendo.id
             },
 
             data: {
@@ -145,15 +123,12 @@ async repairSubVendo(machineId: string) {
 
         });
 
-    }
-
     console.log(
-        `✅ SubVendo ${subvendo.chipId} already bound.`
+        `✅ ${result.count} SubVendo(s) bound to Machine ${machineId}`
     );
 
-    return subvendo;
+    return result;
 }
-
 }
 
 export const machineService = new MachineService();

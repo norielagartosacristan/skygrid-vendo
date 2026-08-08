@@ -33,6 +33,7 @@ model Vendor {
 
 model Machine {
   id          String        @id @default(cuid())
+  machineId   String        @unique
   vendorId    String
   name        String
   ipAddress   String
@@ -49,7 +50,6 @@ model Machine {
   waitingClients   WaitingClient[]
   transactions     Transaction[]
   coinTransactions CoinTransaction[]
-
   subVendo         SubVendo[]
 }
 
