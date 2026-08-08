@@ -50,7 +50,7 @@ model Machine {
   transactions     Transaction[]
   coinTransactions CoinTransaction[]
 
-  subVendo SubVendo?
+  subVendo         SubVendo[]
 }
 
 model Transaction {
@@ -158,7 +158,7 @@ model SubVendo {
   id     String @id @default(cuid())
   chipId String @unique
 
-  machineId String?  @unique
+  machineId String?
   machine   Machine? @relation(fields: [machineId], references: [id], onDelete: SetNull)
 
   macAddress      String @unique

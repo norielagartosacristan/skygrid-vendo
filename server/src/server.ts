@@ -14,6 +14,7 @@ import { sessionScheduler } from "./modules/captive/session/session.scheduler";
 import { machineService } from "./modules/machine/services/machine.service";
 import { startDeviceMonitor } from "./modules/subvendo/services/device-monitor.service";
 import { sessionService } from "./modules/captive/session/session.service";
+import { machineAssociationService } from "./modules/machine/services/machineAssociation.service";
 
 
 const PORT = Number(process.env.PORT) || 5000;
@@ -39,9 +40,13 @@ server.listen(PORT, async () => {
         await autoProvision();
 
         const machine = await machineService.register();
-
+       
         console.log("Machine Registered");
         console.log(machine);
+
+         await machineAssociationService.restoreSubVendoAssociations(
+            machine.id
+        );
 
         await networkMonitor.update();
 

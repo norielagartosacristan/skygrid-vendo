@@ -91,6 +91,69 @@ class MachineService {
 
 }
 
+async repairSubVendo(machineId: string) {
+
+    const subvendo =
+        await prisma.subVendo.findFirst({
+
+            where: {
+                status: "CONFIGURED",
+                enabled: true,
+                OR: [
+                    {
+                        machineId: null
+                    },
+                    {
+                        machineId: machineId
+                    }
+                ]
+            },
+
+            orderBy: {
+                createdAt: "asc"
+            }
+
+        });
+
+    if (!subvendo) {
+
+        console.log(
+            "No configured SubVendo needs binding."
+        );
+
+        return null;
+
+    }
+
+    if (
+        subvendo.machineId !== machineId
+    ) {
+
+        console.log(
+            `🔧 Binding SubVendo ${subvendo.chipId} to Machine ${machineId}`
+        );
+
+        return prisma.subVendo.update({
+
+            where: {
+                id: subvendo.id
+            },
+
+            data: {
+                machineId
+            }
+
+        });
+
+    }
+
+    console.log(
+        `✅ SubVendo ${subvendo.chipId} already bound.`
+    );
+
+    return subvendo;
+}
+
 }
 
 export const machineService = new MachineService();
