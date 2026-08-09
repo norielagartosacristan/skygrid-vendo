@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as NetworkInterfaceService from "../services/networkInterface.service";
-import * as networkService from "../services/networkInterface.service";
+
 
 export async function getInterfaces(
   req: Request,

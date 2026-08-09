@@ -11,45 +11,79 @@ class FirewallRulesService {
     /**
      * Execute shell command
      */
-    private async run(command: string): Promise<string> {
-        console.log("[Firewall]", command);
+   private async run(command: string): Promise<string> {
 
-        try {
-            const { stdout, stderr } = await execAsync(command);
+    console.log("[Firewall]", command);
 
-            if (stderr) {
-                console.warn(stderr);
-            }
+    try {
 
-            return stdout;
-        } catch (err: any) {
-            return "";
+        const { stdout, stderr } =
+            await execAsync(command);
+
+        if (stderr) {
+
+            console.warn(
+                "[Firewall stderr]",
+                stderr
+            );
+
         }
+
+        return stdout;
+
+    } catch (err: any) {
+
+        console.error(
+            "[Firewall ERROR]",
+            command
+        );
+
+        console.error(
+            err.stderr || err.message
+        );
+
+        throw err;
+
     }
+
+}
 
     /**
      * Initialize firewall
      */
-    async initialize() {
+   async initialize() {
+
     console.log("🔥 Initializing firewall...");
 
     try {
-        // Create ipset if it does not exist
-        await execAsync(
-            "sudo ipset create skygrid_clients hash:ip -exist"
+
+        await this.enableIpForward();
+
+        await this.createIPSet();
+
+        await this.allowEstablishedConnections();
+
+        console.log(
+            "✅ IPv4 forwarding enabled"
         );
 
-        console.log("✅ ipset skygrid_clients ready");
+        console.log(
+            "✅ ipset skygrid_clients ready"
+        );
 
-        // Other firewall initialization...
-        
+        console.log(
+            "✅ Firewall initialized"
+        );
+
     } catch (error) {
+
         console.error(
             "❌ Firewall initialization failed:",
             error
         );
 
         throw error;
+
     }
 }
 

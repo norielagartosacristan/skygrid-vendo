@@ -37,45 +37,121 @@ server.listen(PORT, async () => {
 
     try {
 
+        // ========================================
+        // 1. NETWORK PROVISION
+        // ========================================
+
         await autoProvision();
 
-        const machine = await machineService.register();
-       
-        console.log("Machine Registered");
-        console.log(machine);
 
-        await machineService.repairSubVendo(machine.id);
-        
-         await machineAssociationService.restoreSubVendoAssociations(
-            machine.id
-        );
+        // ========================================
+        // 2. FIREWALL INITIALIZATION
+        // ========================================
 
-        await networkMonitor.update();
-
-        setInterval(async () => {
-
-            await networkMonitor.update();
-
-        }, 1000);
+        console.log("🔥 Starting firewall initialization...");
 
         await firewallRules.initialize();
 
-        await firewallRules.configureWAN("enp2s0");
+        console.log("🔥 Configuring WAN...");
+
+        await firewallRules.configureWAN(
+            "enp2s0"
+        );
+
+
+        // ========================================
+        // 3. REGISTER CAPTIVE VLAN
+        // ========================================
+
+        console.log("📡 Registering captive VLAN...");
 
         await firewallRules.registerVLAN(
             "enp2s0.22",
             "10.0.0.1"
         );
 
-        await sessionService.restoreActiveSessions();
+
+        // ========================================
+        // 4. MACHINE
+        // ========================================
+
+        const machine =
+            await machineService.register();
+
+        console.log("Machine Registered");
+        console.log(machine);
+
+
+        await machineService.repairSubVendo(
+            machine.id
+        );
+
+
+        await machineAssociationService
+            .restoreSubVendoAssociations(
+                machine.id
+            );
+
+
+        // ========================================
+        // 5. NETWORK MONITOR
+        // ========================================
+
+        await networkMonitor.update();
+
+        setInterval(async () => {
+
+            try {
+
+                await networkMonitor.update();
+
+            } catch (err) {
+
+                console.error(
+                    "❌ Network monitor error:",
+                    err
+                );
+
+            }
+
+        }, 1000);
+
+
+        // ========================================
+        // 6. RESTORE ACTIVE SESSIONS
+        // ========================================
+
+        console.log(
+            "🔄 Restoring active sessions..."
+        );
+
+        await sessionService
+            .restoreActiveSessions();
+
+
+        // ========================================
+        // 7. OTHER SERVICES
+        // ========================================
+
+        await firewallRules
+            .initialize();
+
+        await sessionService
+            .restoreActiveSessions();
 
         sessionScheduler.start();
 
-        console.log("Session Scheduler Started");
+        console.log(
+            "✅ Session Scheduler Started"
+        );
+
 
     } catch (err) {
 
-        console.error(err);
+        console.error(
+            "❌ Backend startup failed:",
+            err
+        );
 
     }
 
