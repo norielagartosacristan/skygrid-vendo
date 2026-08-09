@@ -109,10 +109,12 @@ class FirewallRulesService {
      * Allow established connections
      */
     private async allowEstablishedConnections(): Promise<void> {
-        await this.run(
-            `${IPTABLES} -C FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT || ${IPTABLES} -I FORWARD 1 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT`
-        );
-    }
+
+    await this.run(
+        `${IPTABLES} -C FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT || ${IPTABLES} -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT`
+    );
+
+}
 
     /**
      * Configure WAN masquerade
