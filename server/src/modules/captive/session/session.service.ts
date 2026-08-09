@@ -1,8 +1,11 @@
 import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+
 import prisma from "../../../config/prisma";
 import { ipsetService } from "../firewall/ipset.service";
 import { captiveSocket } from "../websocket/captive.socket";
-
 
 class SessionService {
 
@@ -474,68 +477,81 @@ class SessionService {
 
 }
 
+async expireSession(
+    sessionId: string
+) {
 
-    async expireSession(
-        sessionId: string
-    ) {
+    const session =
+        await prisma.session.update({
 
-        const session =
-            await prisma.session.update({
+            where: {
 
-                where: {
+                id:
+                    sessionId
 
-                    id:
-                        sessionId
+            },
 
-                },
+            data: {
 
-                data: {
-
-                    isActive:
-                        false
-
-                }
-
-            });
-
-
-        await ipsetService.block(
-            session.ipAddress
-        );
-
-
-        captiveSocket.send(
-
-            session.ipAddress,
-
-            {
-
-                type:
-                    "session.expired"
+                isActive:
+                    false
 
             }
 
+        });
+
+
+    // Remove IP from allowed clients
+    await ipsetService.block(
+        session.ipAddress
+    );
+
+
+    // Tell the client that the session expired
+    captiveSocket.send(
+
+        session.ipAddress,
+
+        {
+
+            type:
+                "session.expired"
+
+        }
+
+    );
+
+
+    // Clear existing connections
+    try {
+
+        await execAsync(
+            `sudo conntrack -D -s ${session.ipAddress} || true`
         );
-
-
-        exec(
-
-            `sudo conntrack -D -s ${session.ipAddress} || true`,
-
-            () => {}
-
-        );
-
 
         console.log(
-            `❌ Session expired: ${session.ipAddress}`
+            `🧹 Conntrack cleared: ${session.ipAddress}`
         );
 
+    } catch (error) {
 
-        return session;
+        console.error(
+            `⚠️ Failed to clear conntrack: ${session.ipAddress}`,
+            error
+        );
 
     }
 
+
+    console.log(
+        `❌ Session expired: ${session.ipAddress}`
+    );
+
+
+    return session;
+
+}
+    
     async restoreActiveSessions(): Promise<void> {
 
     console.log("🔄 Restoring active client sessions...");
