@@ -142,6 +142,17 @@ async function restoreConfiguredInterfaces() {
 
         });
 
+        console.log(
+    "🔎 VLANs from database:",
+    interfaces.map(v => ({
+        name: v.name,
+        vlanId: v.vlanId,
+        parent: v.parentInterface,
+        enabled: v.enabled,
+        ip: v.ipAddress
+    }))
+);
+
     for (
         const networkInterface
         of interfaces
