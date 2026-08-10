@@ -2,6 +2,7 @@ import prisma from "../config/prisma";
 import { execSync } from "child_process";
 import { detectInterfaces } from "./networkEngine.service";
 
+
 function linuxInterfaceExists(interfaceName: string): boolean {
     try {
         execSync(`ip link show ${interfaceName}`, {
@@ -191,6 +192,13 @@ async function restoreVlanInterface(
         console.log(
             `🟢 VLAN UP: ${interfaceName}`
         );
+
+        /*
+    * ========================================
+    * 4. REGISTER CAPTIVE FIREWALL
+    * ========================================
+    */
+
 
     } catch (error) {
 
