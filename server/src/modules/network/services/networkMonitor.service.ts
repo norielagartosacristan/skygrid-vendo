@@ -20,8 +20,14 @@ class NetworkMonitor {
     console.log("NETWORK UPDATE", new Date().toISOString());
 
     const interfaces =
-        await LinuxReader.getInterfaces();
-        console.log("Interfaces:", interfaces);
+    await LinuxReader.getInterfaces();
+
+    console.log("Interfaces:", interfaces);
+
+    const visibleInterfaces =
+        interfaces.filter(
+            (iface) => iface.name !== "lo"
+        );
 
     const traffic =
         await TrafficReader.getAllTraffic();
@@ -29,7 +35,7 @@ class NetworkMonitor {
 
     const now = Date.now();
 
-    this.cache = interfaces.map((iface) => {
+    this.cache = visibleInterfaces.map((iface) => {
 
         const stat = traffic.find(
             t => t.name === iface.name
