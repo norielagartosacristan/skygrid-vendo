@@ -17,19 +17,44 @@ class NetworkSocket {
 
         });
 
-        this.wss.on("connection", (ws) => {
+        this.wss.on("connection", async (ws) => {
 
-                console.log("📡 Network Dashboard Connected");
+    console.log("📡 Network Dashboard Connected");
 
-                ws.send(
-                    JSON.stringify(networkMonitor.getData())
-                );
+    try {
 
-                ws.on("close", () => {
-                    console.log("📡 Network Dashboard Disconnected");
-                });
+        // Siguraduhing updated ang network data
+        await networkMonitor.update();
 
-            });
+        // I-send agad ang latest interfaces
+        ws.send(
+            JSON.stringify(
+                networkMonitor.getData()
+            )
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Failed to load network interfaces:",
+            error
+        );
+
+        ws.send(
+            JSON.stringify([])
+        );
+
+    }
+
+    ws.on("close", () => {
+
+        console.log(
+            "📡 Network Dashboard Disconnected"
+        );
+
+    });
+
+});
     }
 
     broadcast(data: any) {

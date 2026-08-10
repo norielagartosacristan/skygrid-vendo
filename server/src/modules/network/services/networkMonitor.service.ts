@@ -126,6 +126,110 @@ return {
 
     }
 
+
+async refresh() {
+
+    const interfaces =
+        await LinuxReader.getInterfaces();
+
+    const filteredInterfaces =
+        interfaces.filter(
+            iface => iface.name !== "lo"
+        );
+
+    const traffic =
+        await TrafficReader.getAllTraffic();
+
+    const now = Date.now();
+
+    this.cache = filteredInterfaces.map((iface) => {
+
+        const stat = traffic.find(
+            t => t.name === iface.name
+        );
+
+        let rxMbps = 0;
+        let txMbps = 0;
+
+        if (stat) {
+
+            const prev =
+                this.previous.get(iface.name);
+
+            if (prev) {
+
+                const seconds =
+                    (now - prev.time) / 1000;
+
+                if (seconds > 0) {
+
+                    rxMbps =
+                        ((stat.rxBytes - prev.rx) * 8) /
+                        seconds /
+                        1000000;
+
+                    txMbps =
+                        ((stat.txBytes - prev.tx) * 8) /
+                        seconds /
+                        1000000;
+
+                }
+
+            }
+
+            this.previous.set(
+                iface.name,
+                {
+                    rx: stat.rxBytes,
+                    tx: stat.txBytes,
+                    time: now,
+                }
+            );
+
+        }
+
+        const ipv4 =
+            iface.addresses?.find(
+                (a: any) => a.family === "inet"
+            )?.ip || "";
+
+        return {
+
+            id: iface.name,
+
+            displayName: iface.name,
+
+            name: iface.name,
+
+            role:
+                iface.type === "Physical"
+                    ? "WAN"
+                    : iface.type === "VLAN"
+                    ? "LAN"
+                    : "-",
+
+            type: iface.type,
+
+            ipAddress: ipv4,
+
+            macAddress: iface.mac,
+
+            status: iface.state,
+
+            rxMbps:
+                Number(rxMbps.toFixed(2)),
+
+            txMbps:
+                Number(txMbps.toFixed(2)),
+
+            traffic: stat,
+
+        };
+
+    });
+
+}
+
 }
 
 export const networkMonitor =
