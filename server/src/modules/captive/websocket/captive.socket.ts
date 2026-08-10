@@ -1,74 +1,170 @@
-import { Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage } from "http";
 import { URL } from "url";
 
 class CaptiveSocket {
 
-    private wss?: WebSocketServer;
+    private wss: WebSocketServer;
 
-    private clients = new Map<string, WebSocket>();
+    private clients =
+        new Map<string, WebSocket>();
 
-    init(server: Server) {
+    constructor() {
 
         this.wss = new WebSocketServer({
-            server,
-            path: "/ws/session",
-
+            noServer: true,
         });
 
-        this.wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
-            console.log("================================");
-            console.log("SESSION SOCKET CONNECTED");
-            console.log("================================");
+        this.wss.on(
+            "connection",
+            (
+                ws: WebSocket,
+                req: IncomingMessage
+            ) => {
 
-            const url = new URL(
-                req.url || "",
-                `http://${req.headers.host}`
-            );
+                console.log("================================");
+                console.log("📱 SESSION SOCKET CONNECTED");
+                console.log("================================");
 
-            const clientIP =
-                url.searchParams.get("ip");
+                // ==========================================
+                // GET CLIENT IP
+                // ==========================================
 
-            if (!clientIP) {
+                const url =
+                    new URL(
+                        req.url || "",
+                        `http://${req.headers.host}`
+                    );
 
-                ws.close();
+                const clientIP =
+                    url.searchParams.get("ip");
 
-                return;
+                if (!clientIP) {
 
-            }
+                    console.warn(
+                        "⚠️ SESSION WS WITHOUT CLIENT IP"
+                    );
 
-            console.log(
-                `📱 Captive Connected: ${clientIP}`
-            );
+                    ws.close();
 
-            this.clients.set(clientIP, ws);
+                    return;
 
-            ws.on("close", () => {
+                }
 
                 console.log(
-                    `📱 Captive Disconnected: ${clientIP}`
+                    `📱 Captive Connected: ${clientIP}`
                 );
 
-                this.clients.delete(clientIP);
+                // ==========================================
+                // SAVE CLIENT
+                // ==========================================
 
-            });
+                this.clients.set(
+                    clientIP,
+                    ws
+                );
 
-        });
+                // ==========================================
+                // ERROR
+                // ==========================================
+
+                ws.on(
+                    "error",
+                    (error) => {
+
+                        console.error(
+                            "❌ SESSION WS ERROR:",
+                            error
+                        );
+
+                    }
+                );
+
+                // ==========================================
+                // CLOSE
+                // ==========================================
+
+                ws.on(
+                    "close",
+                    () => {
+
+                        console.log(
+                            `📱 Captive Disconnected: ${clientIP}`
+                        );
+
+                        this.clients.delete(
+                            clientIP
+                        );
+
+                    }
+                );
+
+            }
+        );
 
     }
 
-    send(clientIP: string, data: any) {
+    upgrade(
+        req: IncomingMessage,
+        socket: any,
+        head: Buffer
+    ) {
 
-        const ws = this.clients.get(clientIP);
+        console.log(
+            "🔌 SESSION WS UPGRADE"
+        );
 
-        if (!ws)
+        this.wss.handleUpgrade(
+            req,
+            socket,
+            head,
+            (ws) => {
+
+                this.wss.emit(
+                    "connection",
+                    ws,
+                    req
+                );
+
+            }
+        );
+
+    }
+
+    send(
+        clientIP: string,
+        data: any
+    ) {
+
+        const ws =
+            this.clients.get(clientIP);
+
+        if (!ws) {
+
+            console.log(
+                `⚠️ No WS client for ${clientIP}`
+            );
+
             return;
 
-        if (ws.readyState !== WebSocket.OPEN)
+        }
+
+        if (
+            ws.readyState !==
+            WebSocket.OPEN
+        ) {
+
+            console.log(
+                `⚠️ WS not open for ${clientIP}`
+            );
+
             return;
 
-        ws.send(JSON.stringify(data));
+        }
+
+        ws.send(
+            JSON.stringify(data)
+        );
 
     }
 

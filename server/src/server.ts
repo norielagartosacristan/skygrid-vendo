@@ -1,7 +1,10 @@
 import "dotenv/config";
-import app from "./app";
 
-import http from "http";
+import http, { IncomingMessage } from "http";
+import { Socket } from "net";
+import { URL } from "url";
+
+import app from "./app";
 import prisma from "./config/prisma";
 
 import { autoProvision } from "./services/networkProvision.service";
@@ -21,27 +24,95 @@ import { startDeviceMonitor } from "./modules/subvendo/services/device-monitor.s
 
 const PORT = Number(process.env.PORT) || 5000;
 
-
 // ======================================================
 // HTTP SERVER
 // ======================================================
 
 const server = http.createServer(app);
 
-
 // ======================================================
-// WEBSOCKET INITIALIZATION
+// WEBSOCKET UPGRADE ROUTER
 // ======================================================
 
-networkSocket.init(server);
+server.on(
+    "upgrade",
+    (
+        req: IncomingMessage,
+        socket: Socket,
+        head: Buffer
+    ) => {
 
-console.log("Network WS Initialized");
+        try {
 
+            const pathname =
+                new URL(
+                    req.url || "/",
+                    `http://${req.headers.host || "localhost"}`
+                ).pathname;
 
-captiveSocket.init(server);
+            console.log(
+                "🔌 WS UPGRADE REQUEST:",
+                pathname
+            );
 
-console.log("Captive WS Initialized");
+            // ==================================================
+            // NETWORK WEBSOCKET
+            // ==================================================
 
+            if (
+                pathname ===
+                "/ws/network"
+            ) {
+
+                networkSocket.upgrade(
+                    req,
+                    socket,
+                    head
+                );
+
+                return;
+            }
+
+            // ==================================================
+            // CAPTIVE SESSION WEBSOCKET
+            // ==================================================
+
+            if (
+                pathname ===
+                "/ws/session"
+            ) {
+
+                captiveSocket.upgrade(
+                    req,
+                    socket,
+                    head
+                );
+
+                return;
+            }
+
+            // ==================================================
+            // UNKNOWN WEBSOCKET PATH
+            // ==================================================
+
+            console.warn(
+                "⚠️ UNKNOWN WS PATH:",
+                pathname
+            );
+
+            socket.destroy();
+
+        } catch (error) {
+
+            console.error(
+                "❌ WS UPGRADE ERROR:",
+                error
+            );
+
+            socket.destroy();
+        }
+    }
+);
 
 // ======================================================
 // DEVICE MONITOR
@@ -49,226 +120,205 @@ console.log("Captive WS Initialized");
 
 startDeviceMonitor();
 
-
 // ======================================================
 // SERVER START
 // ======================================================
 
-server.listen(PORT, async () => {
-
-    console.log(
-        `🚀 Backend running on port ${PORT}`
-    );
-
-    try {
-
-        // ==================================================
-        // 1. FIREWALL INITIALIZATION
-        // ==================================================
+server.listen(
+    PORT,
+    async () => {
 
         console.log(
-            "🔥 Starting firewall initialization..."
+            `🚀 Backend running on port ${PORT}`
         );
 
-        await firewallRules.initialize();
+        try {
 
-
-        // ==================================================
-        // 2. WAN CONFIGURATION
-        // ==================================================
-
-        console.log(
-            "🔥 Configuring WAN..."
-        );
-
-        await firewallRules.configureWAN(
-            "enp2s0"
-        );
-
-
-        // ==================================================
-        // 3. NETWORK AUTO PROVISION
-        // ==================================================
-
-        console.log(
-            "🌐 Starting network auto-provision..."
-        );
-
-        await autoProvision();
-
-
-        // ==================================================
-        // 4. REGISTER CAPTIVE VLANs
-        // ==================================================
-
-        console.log(
-            "📡 Registering captive VLANs..."
-        );
-
-        const captiveVLANs =
-            await prisma.networkInterface.findMany({
-
-                where: {
-
-                    type: "VLAN",
-
-                    enabled: true,
-
-                    role: "LAN",
-
-                },
-
-                orderBy: {
-
-                    vlanId: "asc",
-
-                },
-
-            });
-
-
-        for (
-            const vlan
-            of captiveVLANs
-        ) {
-
-            if (
-                !vlan.name ||
-                !vlan.ipAddress
-            ) {
-
-                console.warn(
-                    `⚠️ Skipping invalid VLAN: ${vlan.name}`
-                );
-
-                continue;
-
-            }
-
+            // ==================================================
+            // 1. FIREWALL INITIALIZATION
+            // ==================================================
 
             console.log(
-                `📡 Registering ${vlan.name} → gateway ${vlan.ipAddress}`
+                "🔥 Starting firewall initialization..."
             );
 
+            await firewallRules.initialize();
 
-            await firewallRules.registerVLAN(
-                vlan.name,
-                vlan.ipAddress
+            // ==================================================
+            // 2. WAN CONFIGURATION
+            // ==================================================
+
+            console.log(
+                "🔥 Configuring WAN..."
             );
 
-        }
+            await firewallRules.configureWAN(
+                "enp2s0"
+            );
 
+            // ==================================================
+            // 3. NETWORK AUTO PROVISION
+            // ==================================================
 
-        // ==================================================
-        // 5. MACHINE
-        // ==================================================
+            console.log(
+                "🌐 Starting network auto-provision..."
+            );
 
-        const machine =
-            await machineService.register();
+            await autoProvision();
 
+            // ==================================================
+            // 4. REGISTER CAPTIVE VLANs
+            // ==================================================
 
-        console.log(
-            "Machine Registered"
-        );
+            console.log(
+                "📡 Registering captive VLANs..."
+            );
 
-        console.log(
-            machine
-        );
+            const captiveVLANs =
+                await prisma.networkInterface.findMany({
 
+                    where: {
 
-        await machineService.repairSubVendo(
-            machine.id
-        );
+                        type: "VLAN",
 
+                        enabled: true,
 
-        await machineAssociationService
-            .restoreSubVendoAssociations(
+                        role: "LAN",
+
+                    },
+
+                    orderBy: {
+
+                        vlanId: "asc",
+
+                    },
+
+                });
+
+            for (
+                const vlan
+                of captiveVLANs
+            ) {
+
+                if (
+                    !vlan.name ||
+                    !vlan.ipAddress
+                ) {
+
+                    console.warn(
+                        `⚠️ Skipping invalid VLAN: ${vlan.name}`
+                    );
+
+                    continue;
+                }
+
+                console.log(
+                    `📡 Registering ${vlan.name} → gateway ${vlan.ipAddress}`
+                );
+
+                await firewallRules.registerVLAN(
+                    vlan.name,
+                    vlan.ipAddress
+                );
+            }
+
+            // ==================================================
+            // 5. MACHINE
+            // ==================================================
+
+            const machine =
+                await machineService.register();
+
+            console.log(
+                "Machine Registered"
+            );
+
+            console.log(
+                machine
+            );
+
+            await machineService.repairSubVendo(
                 machine.id
             );
 
+            await machineAssociationService
+                .restoreSubVendoAssociations(
+                    machine.id
+                );
 
-        // ==================================================
-        // 6. NETWORK MONITOR
-        // ==================================================
+            // ==================================================
+            // 6. NETWORK MONITOR
+            // ==================================================
 
-        console.log(
-            "📡 Starting network monitor..."
-        );
+            console.log(
+                "📡 Starting network monitor..."
+            );
 
+            await networkMonitor.update();
 
-        await networkMonitor.update();
+            // ==================================================
+            // TEMPORARILY NO setInterval
+            // ==================================================
+            //
+            // Once WebSocket is confirmed stable,
+            // we can enable the monitor interval again.
+            //
+            // setInterval(async () => {
+            //
+            //     try {
+            //
+            //         await networkMonitor.update();
+            //
+            //     } catch (err) {
+            //
+            //         console.error(
+            //             "❌ Network monitor error:",
+            //             err
+            //         );
+            //
+            //     }
+            //
+            // }, 1000);
 
-        /*
-        setInterval(
-            async () => {
+            // ==================================================
+            // 7. RESTORE ACTIVE SESSIONS
+            // ==================================================
 
-                try {
+            console.log(
+                "🔄 Restoring active sessions..."
+            );
 
-                    await networkMonitor.update();
+            await sessionService
+                .restoreActiveSessions();
 
-                } catch (err) {
+            // ==================================================
+            // 8. SESSION SCHEDULER
+            // ==================================================
 
-                    console.error(
-                        "❌ Network monitor error:",
-                        err
-                    );
+            sessionScheduler.start();
 
-                }
+            console.log(
+                "🕒 Session Scheduler Started"
+            );
 
-            },
-            1000
-        );
+            console.log(
+                "========================================"
+            );
 
-        */
-        // ==================================================
-        // 7. RESTORE ACTIVE SESSIONS
-        // ==================================================
+            console.log(
+                "✅ SKYGRID VENDO BACKEND READY"
+            );
 
-        console.log(
-            "🔄 Restoring active sessions..."
-        );
+            console.log(
+                "========================================"
+            );
 
+        } catch (err) {
 
-        await sessionService
-            .restoreActiveSessions();
-
-
-        // ==================================================
-        // 8. SESSION SCHEDULER
-        // ==================================================
-
-        sessionScheduler.start();
-
-
-        console.log(
-            "✅ Session Scheduler Started"
-        );
-
-
-        // ==================================================
-        // STARTUP COMPLETE
-        // ==================================================
-
-        console.log(
-            "========================================"
-        );
-
-        console.log(
-            "✅ SKYGRID VENDO BACKEND READY"
-        );
-
-        console.log(
-            "========================================"
-        );
-
-
-    } catch (err) {
-
-        console.error(
-            "❌ Backend startup failed:",
-            err
-        );
-
+            console.error(
+                "❌ Backend startup failed:",
+                err
+            );
+        }
     }
-
-});
+);
