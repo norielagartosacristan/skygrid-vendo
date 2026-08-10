@@ -17,58 +17,114 @@ export async function getInterface(id: string) {
 
 export async function createInterface(data: any) {
 
-  // AUTO GENERATE PARA SA VLAN
-  if (data.type === "VLAN") {
+    // ========================================
+    // VLAN AUTO CONFIGURATION
+    // ========================================
 
-    data.name = `${data.parentInterface}.${data.vlanId}`;
+    if (data.type === "VLAN") {
 
-    data.displayName = `VLAN${data.vlanId}`;
+        if (!data.parentInterface) {
+            throw new Error(
+                "Parent interface is required."
+            );
+        }
 
-    data.role = "LAN";
+        if (!data.vlanId) {
+            throw new Error(
+                "VLAN ID is required."
+            );
+        }
 
-    if (!data.ipMode)
-      data.ipMode = "STATIC";
+        const vlanId = Number(data.vlanId);
 
-    if (!data.ipAddress)
-      data.ipAddress = "10.0.0.1";
+        if (
+            vlanId < 1 ||
+            vlanId > 4094
+        ) {
+            throw new Error(
+                "VLAN ID must be between 1 and 4094."
+            );
+        }
 
-    if (!data.subnetMask)
-      data.subnetMask = "255.255.255.0";
-  }
+        data.name =
+            `${data.parentInterface}.${vlanId}`;
 
-  // SAVE SA DATABASE
-  const networkInterface = await prisma.networkInterface.create({
-    data,
-  });
+        data.displayName =
+            `VLAN${vlanId}`;
 
-  // CREATE VLAN SA LINUX
-  if (data.type === "VLAN") {
+        data.role = "LAN";
 
-    const interfaceName = data.name;
+        data.ipMode = "STATIC";
 
-    try {
+        // VLAN 22 = captive portal network
+        // Other VLANs = own subnet
+        data.ipAddress =
+            vlanId === 22
+                ? "10.0.0.1"
+                : `10.0.${vlanId}.1`;
 
-      execSync(
-        `ip link add link ${data.parentInterface} name ${interfaceName} type vlan id ${data.vlanId}`
-      );
-
-      execSync(
-        `ip addr add ${data.ipAddress}/24 dev ${interfaceName}`
-      );
-
-      execSync(
-        `ip link set ${interfaceName} up`
-      );
-
-    } catch (err) {
-
-      console.log("VLAN creation failed:", err);
+        data.subnetMask =
+            "255.255.255.0";
 
     }
-  }
 
-  return networkInterface;
+    // ========================================
+    // SAVE TO DATABASE
+    // ========================================
+
+    const networkInterface =
+        await prisma.networkInterface.create({
+            data,
+        });
+
+    // ========================================
+    // CREATE VLAN IN LINUX
+    // ========================================
+
+    if (data.type === "VLAN") {
+
+        const interfaceName =
+            data.name;
+
+        try {
+
+            console.log(
+                `🔧 Creating VLAN ${data.vlanId}...`
+            );
+
+            execSync(
+                `ip link add link ${data.parentInterface} name ${interfaceName} type vlan id ${data.vlanId}`
+            );
+
+            execSync(
+                `ip addr add ${data.ipAddress}/24 dev ${interfaceName}`
+            );
+
+            execSync(
+                `ip link set ${interfaceName} up`
+            );
+
+            console.log(
+                `✅ VLAN created: ${interfaceName}`
+            );
+
+            console.log(
+                `   IP: ${data.ipAddress}/24`
+            );
+
+        } catch (err) {
+
+            console.error(
+                "❌ VLAN creation failed:",
+                err
+            );
+
+        }
+    }
+
+    return networkInterface;
 }
+
 
 export async function updateInterface(
   id: string,

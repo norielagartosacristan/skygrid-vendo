@@ -2,40 +2,63 @@ import prisma from "../config/prisma";
 import { execSync } from "child_process";
 import { detectInterfaces } from "./networkEngine.service";
 
-function linuxInterfaceExists(
-    interfaceName: string
-): boolean {
-
+function linuxInterfaceExists(interfaceName: string): boolean {
     try {
+        execSync(`ip link show ${interfaceName}`, {
+            stdio: "ignore",
+        });
 
-        execSync(
-            `ip link show ${interfaceName}`,
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function subnetMaskToPrefix(subnetMask?: string | null): number {
+    if (!subnetMask) {
+        return 24;
+    }
+
+    const parts = subnetMask.split(".").map(Number);
+
+    if (parts.length !== 4 || parts.some(Number.isNaN)) {
+        return 24;
+    }
+
+    const binary = parts
+        .map((part) => part.toString(2).padStart(8, "0"))
+        .join("");
+
+    return binary.split("1").length - 1;
+}
+
+function getInterfaceIPv4(interfaceName: string): string | null {
+    try {
+        const output = execSync(
+            `ip -4 -o addr show dev ${interfaceName}`,
             {
-                stdio: "ignore"
+                encoding: "utf8",
             }
         );
 
-        return true;
+        const match = output.match(
+            /inet\s+([0-9.]+)\/\d+/
+        );
 
+        return match?.[1] ?? null;
     } catch {
-
-        return false;
-
+        return null;
     }
-
 }
 
 async function restoreVlanInterface(
     networkInterface: any
 ) {
-
     if (
         networkInterface.type !== "VLAN" ||
         !networkInterface.enabled
     ) {
-
         return;
-
     }
 
     const parentInterface =
@@ -47,83 +70,136 @@ async function restoreVlanInterface(
     const interfaceName =
         networkInterface.name;
 
+    const ipAddress =
+        networkInterface.ipAddress;
+
+    const subnetMask =
+        networkInterface.subnetMask;
+
     if (
         !parentInterface ||
         !vlanId ||
         !interfaceName
     ) {
-
         console.log(
             `⚠️ Invalid VLAN configuration: ${interfaceName}`
         );
 
         return;
-
     }
 
-    /*
-     * Check kung existing na sa Linux
-     */
-    if (
-        linuxInterfaceExists(
-            interfaceName
-        )
-    ) {
-
-        console.log(
-            `✅ VLAN already exists: ${interfaceName}`
-        );
-
-        return;
-
-    }
+    const prefix =
+        subnetMaskToPrefix(subnetMask);
 
     console.log(
-        `🔧 Restoring VLAN ${interfaceName} (ID ${vlanId})`
+        `🔎 Checking VLAN ${interfaceName} (ID ${vlanId})`
     );
 
     try {
 
         /*
-         * Create VLAN
+         * ========================================
+         * 1. CREATE VLAN IF NOT EXISTING
+         * ========================================
          */
-        execSync(
-            `ip link add link ${parentInterface} name ${interfaceName} type vlan id ${vlanId}`
-        );
 
-        /*
-         * Assign IPv4
-         */
         if (
-            networkInterface.ipAddress
+            !linuxInterfaceExists(
+                interfaceName
+            )
         ) {
 
+            console.log(
+                `🔧 Creating VLAN ${interfaceName}`
+            );
+
             execSync(
-                `ip addr add ${networkInterface.ipAddress}/24 dev ${interfaceName}`
+                `ip link add link ${parentInterface} name ${interfaceName} type vlan id ${vlanId}`
+            );
+
+        } else {
+
+            console.log(
+                `✅ VLAN already exists: ${interfaceName}`
             );
 
         }
 
+
         /*
-         * Bring interface UP
+         * ========================================
+         * 2. CONFIGURE IPv4
+         * ========================================
          */
+
+        if (ipAddress) {
+
+            const currentIP =
+                getInterfaceIPv4(
+                    interfaceName
+                );
+
+            if (currentIP !== ipAddress) {
+
+                /*
+                 * Remove existing IPv4 addresses
+                 */
+
+                try {
+
+                    execSync(
+                        `ip -4 addr flush dev ${interfaceName}`
+                    );
+
+                } catch {
+                    // Ignore
+                }
+
+                /*
+                 * Assign configured IP
+                 */
+
+                execSync(
+                    `ip addr add ${ipAddress}/${prefix} dev ${interfaceName}`
+                );
+
+                console.log(
+                    `🌐 ${interfaceName} → ${ipAddress}/${prefix}`
+                );
+
+            } else {
+
+                console.log(
+                    `✅ IPv4 already correct: ${ipAddress}/${prefix}`
+                );
+
+            }
+
+        }
+
+
+        /*
+         * ========================================
+         * 3. BRING VLAN UP
+         * ========================================
+         */
+
         execSync(
             `ip link set ${interfaceName} up`
         );
 
         console.log(
-            `✅ VLAN restored: ${interfaceName}`
+            `🟢 VLAN UP: ${interfaceName}`
         );
 
     } catch (error) {
 
         console.error(
-            `❌ Failed to restore VLAN ${interfaceName}:`,
+            `❌ Failed to provision VLAN ${interfaceName}:`,
             error
         );
 
     }
-
 }
 
 async function restoreConfiguredInterfaces() {
@@ -133,25 +209,26 @@ async function restoreConfiguredInterfaces() {
 
             where: {
                 type: "VLAN",
-                enabled: true
+                enabled: true,
             },
 
             orderBy: {
-                vlanId: "asc"
-            }
+                vlanId: "asc",
+            },
 
         });
 
-        console.log(
-    "🔎 VLANs from database:",
-    interfaces.map(v => ({
-        name: v.name,
-        vlanId: v.vlanId,
-        parent: v.parentInterface,
-        enabled: v.enabled,
-        ip: v.ipAddress
-    }))
-);
+    console.log(
+        "🔎 VLANs from database:",
+        interfaces.map((v) => ({
+            name: v.name,
+            vlanId: v.vlanId,
+            parent: v.parentInterface,
+            enabled: v.enabled,
+            ip: v.ipAddress,
+            subnetMask: v.subnetMask,
+        }))
+    );
 
     for (
         const networkInterface
@@ -163,14 +240,16 @@ async function restoreConfiguredInterfaces() {
         );
 
     }
-
 }
 
 export async function autoProvision() {
 
     /*
-     * Existing WAN auto-provision
+     * ========================================
+     * EXISTING WAN AUTO-PROVISION
+     * ========================================
      */
+
     const interfaces =
         detectInterfaces();
 
@@ -183,15 +262,13 @@ export async function autoProvision() {
             await prisma.networkInterface.findFirst({
 
                 where: {
-                    name: item.name
-                }
+                    name: item.name,
+                },
 
             });
 
         if (existing) {
-
             continue;
-
         }
 
         await prisma.networkInterface.create({
@@ -220,9 +297,9 @@ export async function autoProvision() {
                     item.ipAddress,
 
                 subnetMask:
-                    item.subnetMask
+                    item.subnetMask,
 
-            }
+            },
 
         });
 
@@ -233,9 +310,12 @@ export async function autoProvision() {
 
     }
 
-    /*
-     * Restore VLANs from database
-     */
-    await restoreConfiguredInterfaces();
 
+    /*
+     * ========================================
+     * RESTORE VLANs
+     * ========================================
+     */
+
+    await restoreConfiguredInterfaces();
 }

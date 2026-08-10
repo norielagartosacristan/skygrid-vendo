@@ -74,25 +74,28 @@ async function loadPhysicalInterfaces() {
 
 
 useEffect(() => {
-  if (form.type !== "VLAN") return;
+    if (form.type !== "VLAN") return;
 
-  if (!form.parentInterface || !form.vlanId) return;
+    if (!form.parentInterface || !form.vlanId) return;
 
-  setForm((prev) => ({
-    ...prev,
+    setForm((prev) => ({
+        ...prev,
 
-    displayName: `VLAN${prev.vlanId}`,
+        displayName: `VLAN${prev.vlanId}`,
 
-    name: `${prev.parentInterface}.${prev.vlanId}`,
+        name: `${prev.parentInterface}.${prev.vlanId}`,
 
-    ipAddress: "10.0.0.1",
+        ipAddress:
+            prev.vlanId === 22
+                ? "10.0.0.1"
+                : `10.0.${prev.vlanId}.1`,
 
-    subnetMask: "255.255.255.0",
-  }));
+        subnetMask: "255.255.255.0",
+    }));
 }, [
-  form.parentInterface,
-  form.vlanId,
-  form.type,
+    form.parentInterface,
+    form.vlanId,
+    form.type,
 ]);
 
 
