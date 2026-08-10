@@ -198,7 +198,7 @@ server.listen(PORT, async () => {
 
         await networkMonitor.update();
 
-
+        /*
         setInterval(
             async () => {
 
@@ -219,7 +219,7 @@ server.listen(PORT, async () => {
             1000
         );
 
-
+        */
         // ==================================================
         // 7. RESTORE ACTIVE SESSIONS
         // ==================================================
