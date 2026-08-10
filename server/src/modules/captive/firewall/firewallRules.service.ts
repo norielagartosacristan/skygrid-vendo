@@ -11,7 +11,10 @@ class FirewallRulesService {
     /**
      * Execute shell command
      */
-   private async run(command: string): Promise<string> {
+   private async run(
+    command: string,
+    ignoreError = false
+): Promise<string> {
 
     console.log("[Firewall]", command);
 
@@ -42,12 +45,27 @@ class FirewallRulesService {
             err.stderr || err.message
         );
 
+        if (ignoreError) {
+            return "";
+        }
+
         throw err;
-
     }
-
 }
 
+private async ruleExists(command: string): Promise<boolean> {
+
+    try {
+
+        await this.run(command);
+
+        return true;
+
+    } catch {
+
+        return false;
+    }
+}
     /**
      * Initialize firewall
      */
@@ -177,49 +195,158 @@ class FirewallRulesService {
         console.log(`✅ ${vlanInterface} registered.`);
     }
 
-    /**
-     * Remove VLAN rules
-     */
-    async unregisterVLAN(
-        vlanInterface: string,
-        gateway: string
-    ): Promise<void> {
+   /**
+ * Remove VLAN rules
+ */
+async unregisterVLAN(
+    vlanInterface: string,
+    gateway: string
+): Promise<void> {
 
-        // Linisin ang INPUT chain
-        while (true) {
-            const res = await this.run(`${IPTABLES} -D INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`);
-            if (!res) break;
+    console.log(`🧹 Cleaning firewall rules for ${vlanInterface}`);
+
+    // ==========================================
+    // INPUT
+    // ==========================================
+
+    while (true) {
+
+        const exists = await this.run(
+            `${IPTABLES} -C INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
+        );
+
+        if (!exists) {
+            break;
         }
 
-        // Linisin ang FORWARD chain rules
-        while (true) {
-            const res = await this.run(`${IPTABLES} -D FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`);
-            if (!res) break;
-        }
-        while (true) {
-            const res = await this.run(`${IPTABLES} -D FORWARD -i ${vlanInterface} -j DROP`);
-            if (!res) break;
-        }
-
-        // Linisin ang NAT PREROUTING redirect rules na idinagdag natin
-        while (true) {
-            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`);
-            if (!res) break;
-        }
-        while (true) {
-            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p udp --dport 53 -j DNAT --to-destination ${gateway}:53`);
-            if (!res) break;
-        }
-        while (true) {
-            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 53 -j DNAT --to-destination ${gateway}:53`);
-            if (!res) break;
-        }
-        while (true) {
-            const res = await this.run(`${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:80`);
-            if (!res) break;
-        }
+        await this.run(
+            `${IPTABLES} -D INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
+        );
     }
 
+
+    // ==========================================
+    // FORWARD - AUTHENTICATED CLIENTS
+    // ==========================================
+
+    while (true) {
+
+        const exists = await this.run(
+            `${IPTABLES} -C FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+        );
+
+        if (!exists) {
+            break;
+        }
+
+        await this.run(
+            `${IPTABLES} -D FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+        );
+    }
+
+
+    // ==========================================
+    // FORWARD - DROP
+    // ==========================================
+
+    while (true) {
+
+        const exists = await this.run(
+            `${IPTABLES} -C FORWARD -i ${vlanInterface} -j DROP`
+        );
+
+        if (!exists) {
+            break;
+        }
+
+        await this.run(
+            `${IPTABLES} -D FORWARD -i ${vlanInterface} -j DROP`
+        );
+    }
+
+
+    // ==========================================
+    // NAT - AUTHENTICATED BYPASS
+    // ==========================================
+
+    while (true) {
+
+        const exists = await this.run(
+            `${IPTABLES} -t nat -C PREROUTING -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+        );
+
+        if (!exists) {
+            break;
+        }
+
+        await this.run(
+            `${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
+        );
+    }
+
+
+    // ==========================================
+    // NAT - DNS UDP
+    // ==========================================
+
+    while (true) {
+
+        const exists = await this.run(
+            `${IPTABLES} -t nat -C PREROUTING -i ${vlanInterface} -p udp --dport 53 -j DNAT --to-destination ${gateway}:53`
+        );
+
+        if (!exists) {
+            break;
+        }
+
+        await this.run(
+            `${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p udp --dport 53 -j DNAT --to-destination ${gateway}:53`
+        );
+    }
+
+
+    // ==========================================
+    // NAT - DNS TCP
+    // ==========================================
+
+    while (true) {
+
+        const exists = await this.run(
+            `${IPTABLES} -t nat -C PREROUTING -i ${vlanInterface} -p tcp --dport 53 -j DNAT --to-destination ${gateway}:53`
+        );
+
+        if (!exists) {
+            break;
+        }
+
+        await this.run(
+            `${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 53 -j DNAT --to-destination ${gateway}:53`
+        );
+    }
+
+
+    // ==========================================
+    // NAT - HTTP PORTAL
+    // ==========================================
+
+    while (true) {
+
+        const exists = await this.run(
+            `${IPTABLES} -t nat -C PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:80`
+        );
+
+        if (!exists) {
+            break;
+        }
+
+        await this.run(
+            `${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:80`
+        );
+    }
+
+
+    console.log(`🧹 Firewall cleanup complete: ${vlanInterface}`);
+}
     /**
      * Show firewall rules
      */
