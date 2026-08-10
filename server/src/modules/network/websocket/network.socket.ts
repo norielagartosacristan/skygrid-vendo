@@ -2,7 +2,6 @@ import { WebSocketServer, WebSocket } from "ws";
 import { Server } from "http";
 import { networkMonitor } from "../services/networkMonitor.service";
 
-
 class NetworkSocket {
 
     private wss?: WebSocketServer;
@@ -10,51 +9,105 @@ class NetworkSocket {
     init(server: Server) {
 
         this.wss = new WebSocketServer({
-
             server,
-
             path: "/ws/network",
+        });
+
+        this.wss.on("connection", (ws) => {
+
+            console.log("================================");
+            console.log("📡 NETWORK SOCKET CONNECTED");
+            console.log("================================");
+
+            const data = networkMonitor.getData();
+
+            console.log(
+                "NETWORK INITIAL DATA TYPE:",
+                typeof data
+            );
+
+            console.log(
+                "NETWORK INITIAL DATA ARRAY:",
+                Array.isArray(data)
+            );
+
+            console.log(
+                "NETWORK INITIAL DATA LENGTH:",
+                Array.isArray(data)
+                    ? data.length
+                    : "N/A"
+            );
+
+            console.log(
+                "NETWORK INITIAL DATA:",
+                JSON.stringify(data)
+            );
+
+            try {
+
+                const payload =
+                    JSON.stringify(data);
+
+                console.log(
+                    "WS PAYLOAD LENGTH:",
+                    payload.length
+                );
+
+                ws.send(
+                    payload,
+                    (error) => {
+
+                        if (error) {
+
+                            console.error(
+                                "❌ WS SEND ERROR:",
+                                error
+                            );
+
+                        } else {
+
+                            console.log(
+                                "✅ INITIAL WS DATA SENT"
+                            );
+
+                        }
+
+                    }
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "❌ WS SERIALIZE ERROR:",
+                    error
+                );
+
+            }
+
+            ws.on("error", (error) => {
+
+                console.error(
+                    "❌ NETWORK WS ERROR:",
+                    error
+                );
+
+            });
+
+            ws.on("close", (
+                code,
+                reason
+            ) => {
+
+                console.log(
+                    "📡 NETWORK WS CLOSED:",
+                    code,
+                    reason.toString()
+                );
+
+            });
 
         });
 
-        this.wss.on("connection", async (ws) => {
-
-    console.log("📡 Network Dashboard Connected");
-
-    try {
-
-        // Siguraduhing updated ang network data
-        await networkMonitor.update();
-
-        // I-send agad ang latest interfaces
-        ws.send(
-            JSON.stringify(
-                networkMonitor.getData()
-            )
-        );
-
-    } catch (error) {
-
-        console.error(
-            "❌ Failed to load network interfaces:",
-            error
-        );
-
-        ws.send(
-            JSON.stringify([])
-        );
-
-    }
-
-    ws.on("close", () => {
-
-        console.log(
-            "📡 Network Dashboard Disconnected"
-        );
-
-    });
-
-});
     }
 
     broadcast(data: any) {
@@ -63,18 +116,44 @@ class NetworkSocket {
 
         const json = JSON.stringify(data);
 
-        this.wss.clients.forEach((client: WebSocket) => {
+        console.log(
+            "📡 NETWORK BROADCAST:",
+            json.length,
+            "bytes"
+        );
 
-            if (client.readyState === WebSocket.OPEN) {
+        this.wss.clients.forEach(
+            (client: WebSocket) => {
 
-                client.send(json);
+                if (
+                    client.readyState ===
+                    WebSocket.OPEN
+                ) {
+
+                    client.send(
+                        json,
+                        (error) => {
+
+                            if (error) {
+
+                                console.error(
+                                    "❌ BROADCAST ERROR:",
+                                    error
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
 
             }
-
-        });
+        );
 
     }
 
 }
 
-export const networkSocket = new NetworkSocket();
+export const networkSocket =
+    new NetworkSocket();
