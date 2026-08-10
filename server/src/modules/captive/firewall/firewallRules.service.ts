@@ -203,21 +203,19 @@ async unregisterVLAN(
     gateway: string
 ): Promise<void> {
 
-    console.log(`🧹 Cleaning firewall rules for ${vlanInterface}`);
+    console.log(
+        `🧹 Cleaning firewall rules for ${vlanInterface}`
+    );
 
     // ==========================================
     // INPUT
     // ==========================================
 
-    while (true) {
-
-        const exists = await this.run(
+    while (
+        await this.ruleExists(
             `${IPTABLES} -C INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
-        );
-
-        if (!exists) {
-            break;
-        }
+        )
+    ) {
 
         await this.run(
             `${IPTABLES} -D INPUT -i ${vlanInterface} -d ${gateway} -j ACCEPT`
@@ -229,15 +227,11 @@ async unregisterVLAN(
     // FORWARD - AUTHENTICATED CLIENTS
     // ==========================================
 
-    while (true) {
-
-        const exists = await this.run(
+    while (
+        await this.ruleExists(
             `${IPTABLES} -C FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
-        );
-
-        if (!exists) {
-            break;
-        }
+        )
+    ) {
 
         await this.run(
             `${IPTABLES} -D FORWARD -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
@@ -249,15 +243,11 @@ async unregisterVLAN(
     // FORWARD - DROP
     // ==========================================
 
-    while (true) {
-
-        const exists = await this.run(
+    while (
+        await this.ruleExists(
             `${IPTABLES} -C FORWARD -i ${vlanInterface} -j DROP`
-        );
-
-        if (!exists) {
-            break;
-        }
+        )
+    ) {
 
         await this.run(
             `${IPTABLES} -D FORWARD -i ${vlanInterface} -j DROP`
@@ -269,15 +259,11 @@ async unregisterVLAN(
     // NAT - AUTHENTICATED BYPASS
     // ==========================================
 
-    while (true) {
-
-        const exists = await this.run(
+    while (
+        await this.ruleExists(
             `${IPTABLES} -t nat -C PREROUTING -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
-        );
-
-        if (!exists) {
-            break;
-        }
+        )
+    ) {
 
         await this.run(
             `${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -m set --match-set skygrid_clients src -j ACCEPT`
@@ -289,15 +275,11 @@ async unregisterVLAN(
     // NAT - DNS UDP
     // ==========================================
 
-    while (true) {
-
-        const exists = await this.run(
+    while (
+        await this.ruleExists(
             `${IPTABLES} -t nat -C PREROUTING -i ${vlanInterface} -p udp --dport 53 -j DNAT --to-destination ${gateway}:53`
-        );
-
-        if (!exists) {
-            break;
-        }
+        )
+    ) {
 
         await this.run(
             `${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p udp --dport 53 -j DNAT --to-destination ${gateway}:53`
@@ -309,15 +291,11 @@ async unregisterVLAN(
     // NAT - DNS TCP
     // ==========================================
 
-    while (true) {
-
-        const exists = await this.run(
+    while (
+        await this.ruleExists(
             `${IPTABLES} -t nat -C PREROUTING -i ${vlanInterface} -p tcp --dport 53 -j DNAT --to-destination ${gateway}:53`
-        );
-
-        if (!exists) {
-            break;
-        }
+        )
+    ) {
 
         await this.run(
             `${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 53 -j DNAT --to-destination ${gateway}:53`
@@ -329,15 +307,11 @@ async unregisterVLAN(
     // NAT - HTTP PORTAL
     // ==========================================
 
-    while (true) {
-
-        const exists = await this.run(
+    while (
+        await this.ruleExists(
             `${IPTABLES} -t nat -C PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:80`
-        );
-
-        if (!exists) {
-            break;
-        }
+        )
+    ) {
 
         await this.run(
             `${IPTABLES} -t nat -D PREROUTING -i ${vlanInterface} -p tcp --dport 80 -j DNAT --to-destination ${gateway}:80`
@@ -345,7 +319,9 @@ async unregisterVLAN(
     }
 
 
-    console.log(`🧹 Firewall cleanup complete: ${vlanInterface}`);
+    console.log(
+        `🧹 Firewall cleanup complete: ${vlanInterface}`
+    );
 }
     /**
      * Show firewall rules
