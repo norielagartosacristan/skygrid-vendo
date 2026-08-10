@@ -53,7 +53,9 @@ class FirewallRulesService {
     }
 }
 
-private async ruleExists(command: string): Promise<boolean> {
+private async ruleExists(
+    command: string
+): Promise<boolean> {
 
     try {
 
@@ -64,6 +66,7 @@ private async ruleExists(command: string): Promise<boolean> {
     } catch {
 
         return false;
+
     }
 }
     /**
