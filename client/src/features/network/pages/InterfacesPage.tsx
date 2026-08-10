@@ -33,7 +33,7 @@ console.log(Array.isArray(interfaces));
 
   async function loadInterfaces() {
     try {
-      setLoading(true);
+      //setLoading(true);
 
       // const _res = await getInterfaces();
 
@@ -45,7 +45,7 @@ console.log(Array.isArray(interfaces));
 
     } finally {
 
-      setLoading(false);
+      //setLoading(false);
 
     }
   }
