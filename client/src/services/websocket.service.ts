@@ -1,5 +1,6 @@
 const WS_URL =
-  import.meta.env.VITE_WS_URL || "ws://localhost:5000/ws/network";
+  import.meta.env.VITE_SESSION_WS_URL ||
+  `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws/session`;
 
 class WebSocketService {
   private socket: WebSocket | null = null;

@@ -147,119 +147,92 @@ console.log(Array.isArray(interfaces));
 
           </thead>
 
-          <tbody>
+         <tbody>
 
-            {loading && (
-
+            {interfaces.length === 0 && (
               <tr>
-
                 <td
-                  colSpan={6}
-                  className="text-center py-8"
+                  colSpan={8}
+                  className="text-center py-8 text-gray-500"
                 >
-
-                  Loading...
-
+                  No interfaces found.
                 </td>
-
               </tr>
-
             )}
 
-            {!loading &&
-              interfaces.length === 0 && (
+            {interfaces.map((item) => (
+              <tr
+                key={item.id}
+                className="border-t hover:bg-gray-50"
+              >
+                <td className="p-4">
+                  {item.displayName}
+                </td>
 
-                <tr>
+                <td className="p-4">
+                  {item.name}
+                </td>
 
-                  <td
-                    colSpan={6}
-                    className="text-center py-8 text-gray-500"
+                <td className="p-4">
+                  {item.type}
+                </td>
+
+                <td className="p-4">
+                  {item.role || "-"}
+                </td>
+
+                <td className="p-4">
+                  {item.ipAddress?.trim() || "-"}
+                </td>
+
+                <td className="p-4">
+                  {item.macAddress || "-"}
+                </td>
+
+                <td className="p-4">
+                  <span
+                    className={`inline-flex items-center gap-2 ${
+                      item.status === "UP"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
                   >
+                    {item.status === "UP" ? (
+                      <CheckCircle size={18} />
+                    ) : (
+                      <XCircle size={18} />
+                    )}
 
-                    No interfaces found.
+                    {item.status}
+                  </span>
+                </td>
 
-                  </td>
+                <td className="p-4">
+                  <div className="flex justify-center gap-3">
 
-                </tr>
+                    <button
+                      onClick={() => {
+                        setSelected(item);
+                        setOpen(true);
+                      }}
+                      className="text-sky-600 hover:text-sky-800"
+                    >
+                      <Pencil size={18} />
+                    </button>
 
-              )}
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 size={18} />
+                    </button>
 
-           {interfaces.map((item) => (
-  <tr
-    key={item.id}
-    className="border-t hover:bg-gray-50"
-  >
-    <td className="p-4">
-      {item.displayName}
-    </td>
+                  </div>
+                </td>
+              </tr>
+            ))}
 
-    <td className="p-4">
-      {item.name}
-    </td>
-
-  <td className="p-4">
-      {item.type}
-    </td>
-
-    <td className="p-4">
-      {item.role || "-"}
-    </td>
-
-    <td className="p-4">
-      {item.ipAddress?.trim() || "-"}
-    </td>
-
-    <td className="p-4">
-    {item.macAddress}
-</td>
-
-<td className="p-4">
-
-    <span
-        className={`inline-flex items-center gap-2 ${
-            item.status === "UP"
-                ? "text-green-600"
-                : "text-red-600"
-        }`}
-    >
-
-        {item.status === "UP"
-            ? <CheckCircle size={18}/>
-            : <XCircle size={18}/>
-        }
-
-        {item.status}
-
-    </span>
-
-</td>
-
-    <td className="p-4">
-      <div className="flex justify-center gap-3">
-
-        <button
-          onClick={() => {
-            setSelected(item);
-            setOpen(true);
-          }}
-          className="text-sky-600 hover:text-sky-800"
-        >
-          <Pencil size={18} />
-        </button>
-
-        <button
-          onClick={() => handleDelete(item.id)}
-          className="text-red-600 hover:text-red-800"
-        >
-          <Trash2 size={18} />
-        </button>
-
-      </div>
-    </td>
-  </tr>
-))}
           </tbody>
-
         </table>
 
       </div>

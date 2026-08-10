@@ -76,10 +76,6 @@ export default function Router() {
                     path="/admin/settings/hardware"
                     element={<HardwareSettings />}
                 />
-                <Route
-                    path="/admin/network/interfaces"
-                    element={<InterfacesPage />}
-                />
                 <Route path="network" element={<NetworkLayout />}>
                     <Route index element={<GeneralSettingsPage />} />
                     <Route path="bandwidth" element={<GlobalBandwidthPage />} />
