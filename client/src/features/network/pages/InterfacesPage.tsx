@@ -20,7 +20,7 @@ export default function InterfacesPage() {
   //const [interfaces, setInterfaces] = useState<any[]>([]);
  
 
-  const [loading, setLoading] = useState(false);
+  //const [loading, setLoading] = useState(false);
 
   const [open, setOpen] = useState(false);
 
