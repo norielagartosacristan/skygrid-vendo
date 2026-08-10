@@ -2,7 +2,7 @@ import "dotenv/config";
 import app from "./app";
 
 import http from "http";
-
+import prisma from "./config/prisma";
 import { autoProvision } from "./services/networkProvision.service";
 import { networkMonitor } from "./modules/network/services/networkMonitor.service";
 import { networkSocket } from "./modules/network/websocket/network.socket";
@@ -63,12 +63,42 @@ server.listen(PORT, async () => {
         // 3. REGISTER CAPTIVE VLAN
         // ========================================
 
-        console.log("📡 Registering captive VLAN...");
+        console.log("📡 Registering captive VLANs...");
 
-        await firewallRules.registerVLAN(
-            "enp2s0.22",
-            "10.0.0.1"
+const captiveVLANs =
+    await prisma.networkInterface.findMany({
+        where: {
+            type: "VLAN",
+            enabled: true,
+            role: "LAN",
+        },
+        orderBy: {
+            vlanId: "asc",
+        },
+    });
+
+for (const vlan of captiveVLANs) {
+
+    if (
+        !vlan.name ||
+        !vlan.ipAddress
+    ) {
+        console.warn(
+            `⚠️ Skipping invalid VLAN: ${vlan.name}`
         );
+
+        continue;
+    }
+
+    console.log(
+        `📡 Registering ${vlan.name} → gateway ${vlan.ipAddress}`
+    );
+
+    await firewallRules.registerVLAN(
+        vlan.name,
+        vlan.ipAddress
+    );
+}
 
 
         // ========================================
