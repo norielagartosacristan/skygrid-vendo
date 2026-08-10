@@ -117,7 +117,7 @@ return {
     });
 
     // Broadcast pagkatapos ma-update ang cache
-    networkSocket.broadcast(this.cache);
+    //networkSocket.broadcast(this.cache);
 
 }
     getData() {
