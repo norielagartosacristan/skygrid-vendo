@@ -11,28 +11,52 @@ export default function useNetworkSocket() {
                 ? "wss"
                 : "ws";
 
-        const socket = new WebSocket(
-            `${protocol}://${window.location.hostname}/ws/network`
-        );
+        const wsUrl =
+            `${protocol}://${window.location.hostname}/ws/network`;
+
+        console.log("🔌 WS URL:", wsUrl);
+
+        const socket = new WebSocket(wsUrl);
+
+        console.log("🔌 WS CREATED:", socket.url);
 
         socket.onopen = () => {
 
-            console.log("Connected to Network Monitor");
+            console.log("🟢 WS OPEN");
+            console.log("🟢 WS URL:", socket.url);
+            console.log("🟢 WS PROTOCOL:", socket.protocol);
+            console.log("🟢 WS READY STATE:", socket.readyState);
 
         };
 
-       socket.onmessage = (event) => {
+    socket.onmessage = (event) => {
 
-    const data = JSON.parse(event.data);
+    console.log("📨 WS RAW DATA:", event.data);
+    console.log("📨 WS DATA TYPE:", typeof event.data);
 
-    console.log("WS DATA:", data);
+    try {
 
-    // Ignore session messages
-    if (data.type) {
-        return;
+        const data = JSON.parse(event.data);
+
+        console.log("📦 WS PARSED:", data);
+        console.log("📦 IS ARRAY:", Array.isArray(data));
+
+        if (data?.type) {
+            return;
+        }
+
+        if (Array.isArray(data)) {
+            setInterfaces(data);
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ WS JSON PARSE ERROR:",
+            error
+        );
+
     }
-
-    setInterfaces(data);
 
 };
 
