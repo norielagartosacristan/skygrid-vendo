@@ -74,20 +74,123 @@ class MachineService {
     }
 
 
-   async getCurrentMachine() {
+  async getCurrentMachine() {
 
     const fingerprint =
         fingerprintService.generate();
 
-    return prisma.machine.findFirst({
+    console.log(
+        "🔍 Current Machine Fingerprint:",
+        fingerprint
+    );
 
-        where: {
+    /**
+     * ========================================
+     * 1. FIND BY FINGERPRINT
+     * ========================================
+     */
 
-            fingerprint
+    let machine =
+        await prisma.machine.findFirst({
 
-        }
+            where: {
 
-    });
+                fingerprint
+
+            }
+
+        });
+
+    if (machine) {
+
+        console.log(
+            "✅ Machine found by fingerprint:",
+            machine.id
+        );
+
+        return machine;
+
+    }
+
+
+    /**
+     * ========================================
+     * 2. FIND BY PHYSICAL MAC
+     * ========================================
+     */
+
+    const mac =
+        Object.values(
+            os.networkInterfaces()
+        )
+        .flat()
+        .find(
+            i =>
+                i &&
+                !i.internal &&
+                i.mac &&
+                i.mac !==
+                    "00:00:00:00:00:00"
+        )
+        ?.mac ?? "";
+
+
+    console.log(
+        "🔍 Current Machine MAC:",
+        mac
+    );
+
+
+    if (mac) {
+
+        machine =
+            await prisma.machine.findFirst({
+
+                where: {
+
+                    macAddress:
+                        mac
+
+                }
+
+            });
+
+    }
+
+
+    if (machine) {
+
+        console.log(
+            "✅ Machine found by MAC:",
+            machine.id
+        );
+
+        return machine;
+
+    }
+
+
+    /**
+     * ========================================
+     * 3. NOT FOUND
+     * ========================================
+     */
+
+    console.error(
+        "❌ Current machine not found."
+    );
+
+    console.error(
+        "Fingerprint:",
+        fingerprint
+    );
+
+    console.error(
+        "MAC:",
+        mac
+    );
+
+    return null;
 
 }
 
