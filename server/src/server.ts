@@ -263,22 +263,22 @@ server.listen(
             // Once WebSocket is confirmed stable,
             // we can enable the monitor interval again.
             //
-            // setInterval(async () => {
-            //
-            //     try {
-            //
-            //         await networkMonitor.update();
-            //
-            //     } catch (err) {
-            //
-            //         console.error(
-            //             "❌ Network monitor error:",
-            //             err
-            //         );
-            //
-            //     }
-            //
-            // }, 1000);
+             setInterval(async () => {
+            
+                 try {
+            
+                     await networkMonitor.update();
+            
+                 } catch (err) {
+            
+                     console.error(
+                        "❌ Network monitor error:",
+                         err
+                     );
+            
+                 }
+            
+             }, 1000);
 
             // ==================================================
             // 7. RESTORE ACTIVE SESSIONS
