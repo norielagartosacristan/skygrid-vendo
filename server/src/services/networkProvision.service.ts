@@ -55,6 +55,7 @@ function getInterfaceIPv4(interfaceName: string): string | null {
 async function restoreVlanInterface(
     networkInterface: any
 ) {
+
     if (
         networkInterface.type !== "VLAN" ||
         !networkInterface.enabled
@@ -82,6 +83,7 @@ async function restoreVlanInterface(
         !vlanId ||
         !interfaceName
     ) {
+
         console.log(
             `⚠️ Invalid VLAN configuration: ${interfaceName}`
         );
@@ -93,14 +95,73 @@ async function restoreVlanInterface(
         subnetMaskToPrefix(subnetMask);
 
     console.log(
-        `🔎 Checking VLAN ${interfaceName} (ID ${vlanId})`
+        `\n🔎 Restoring VLAN`
+    );
+
+    console.log(
+        `   Interface : ${interfaceName}`
+    );
+
+    console.log(
+        `   Parent    : ${parentInterface}`
+    );
+
+    console.log(
+        `   VLAN ID   : ${vlanId}`
+    );
+
+    console.log(
+        `   IP        : ${ipAddress}/${prefix}`
     );
 
     try {
 
         /*
          * ========================================
-         * 1. CREATE VLAN IF NOT EXISTING
+         * 1. MAKE SURE PARENT EXISTS
+         * ========================================
+         */
+
+        if (
+            !linuxInterfaceExists(
+                parentInterface
+            )
+        ) {
+
+            console.error(
+                `❌ Parent interface does not exist: ${parentInterface}`
+            );
+
+            return;
+        }
+
+
+        /*
+         * ========================================
+         * 2. MAKE SURE PARENT IS UP
+         * ========================================
+         */
+
+        try {
+
+            execSync(
+                `ip link set ${parentInterface} up`
+            );
+
+        } catch (error) {
+
+            console.error(
+                `❌ Unable to bring parent interface UP: ${parentInterface}`,
+                error
+            );
+
+            return;
+        }
+
+
+        /*
+         * ========================================
+         * 3. CREATE VLAN IF MISSING
          * ========================================
          */
 
@@ -111,11 +172,15 @@ async function restoreVlanInterface(
         ) {
 
             console.log(
-                `🔧 Creating VLAN ${interfaceName}`
+                `🔧 Creating VLAN ${interfaceName} ID ${vlanId}`
             );
 
             execSync(
                 `ip link add link ${parentInterface} name ${interfaceName} type vlan id ${vlanId}`
+            );
+
+            console.log(
+                `✅ VLAN created: ${interfaceName}`
             );
 
         } else {
@@ -129,7 +194,22 @@ async function restoreVlanInterface(
 
         /*
          * ========================================
-         * 2. CONFIGURE IPv4
+         * 4. BRING VLAN UP
+         * ========================================
+         */
+
+        execSync(
+            `ip link set ${interfaceName} up`
+        );
+
+        console.log(
+            `🟢 VLAN UP: ${interfaceName}`
+        );
+
+
+        /*
+         * ========================================
+         * 5. CONFIGURE IPv4
          * ========================================
          */
 
@@ -140,10 +220,17 @@ async function restoreVlanInterface(
                     interfaceName
                 );
 
-            if (currentIP !== ipAddress) {
+            if (
+                currentIP !== ipAddress
+            ) {
+
+                console.log(
+                    `🌐 Configuring ${interfaceName} → ${ipAddress}/${prefix}`
+                );
+
 
                 /*
-                 * Remove existing IPv4 addresses
+                 * Remove old IPv4
                  */
 
                 try {
@@ -156,16 +243,18 @@ async function restoreVlanInterface(
                     // Ignore
                 }
 
+
                 /*
-                 * Assign configured IP
+                 * Add configured IPv4
                  */
 
                 execSync(
                     `ip addr add ${ipAddress}/${prefix} dev ${interfaceName}`
                 );
 
+
                 console.log(
-                    `🌐 ${interfaceName} → ${ipAddress}/${prefix}`
+                    `✅ IPv4 configured: ${ipAddress}/${prefix}`
                 );
 
             } else {
@@ -181,23 +270,53 @@ async function restoreVlanInterface(
 
         /*
          * ========================================
-         * 3. BRING VLAN UP
+         * 6. VERIFY VLAN
          * ========================================
          */
 
-        execSync(
-            `ip link set ${interfaceName} up`
+        if (
+            !linuxInterfaceExists(
+                interfaceName
+            )
+        ) {
+
+            console.error(
+                `❌ VLAN verification failed: ${interfaceName}`
+            );
+
+            return;
+        }
+
+
+        const finalIP =
+            getInterfaceIPv4(
+                interfaceName
+            );
+
+
+        console.log(
+            `\n✅ VLAN RESTORE SUCCESS`
         );
 
         console.log(
-            `🟢 VLAN UP: ${interfaceName}`
+            `   Interface : ${interfaceName}`
         );
 
-        /*
-    * ========================================
-    * 4. REGISTER CAPTIVE FIREWALL
-    * ========================================
-    */
+        console.log(
+            `   VLAN ID   : ${vlanId}`
+        );
+
+        console.log(
+            `   Parent    : ${parentInterface}`
+        );
+
+        console.log(
+            `   IPv4      : ${finalIP ?? "NONE"}`
+        );
+
+        console.log(
+            `========================================\n`
+        );
 
 
     } catch (error) {
@@ -252,14 +371,45 @@ async function restoreConfiguredInterfaces() {
 
 export async function autoProvision() {
 
+    console.log(
+        "\n========================================"
+    );
+
+    console.log(
+        "🌐 NETWORK AUTO PROVISION START"
+    );
+
+    console.log(
+        "========================================"
+    );
+
+
     /*
      * ========================================
-     * EXISTING WAN AUTO-PROVISION
+     * 1. RESTORE CONFIGURED VLANs FIRST
      * ========================================
      */
 
+    console.log(
+        "\n📡 Restoring configured VLANs..."
+    );
+
+    await restoreConfiguredInterfaces();
+
+
+    /*
+     * ========================================
+     * 2. EXISTING WAN AUTO-PROVISION
+     * ========================================
+     */
+
+    console.log(
+        "\n🌍 Detecting physical interfaces..."
+    );
+
     const interfaces =
         detectInterfaces();
+
 
     for (
         const item
@@ -275,9 +425,13 @@ export async function autoProvision() {
 
             });
 
+
         if (existing) {
+
             continue;
+
         }
+
 
         await prisma.networkInterface.create({
 
@@ -311,6 +465,7 @@ export async function autoProvision() {
 
         });
 
+
         console.log(
             "Imported:",
             item.name
@@ -319,11 +474,15 @@ export async function autoProvision() {
     }
 
 
-    /*
-     * ========================================
-     * RESTORE VLANs
-     * ========================================
-     */
+    console.log(
+        "\n========================================"
+    );
 
-    await restoreConfiguredInterfaces();
+    console.log(
+        "✅ NETWORK AUTO PROVISION COMPLETE"
+    );
+
+    console.log(
+        "========================================\n"
+    );
 }
