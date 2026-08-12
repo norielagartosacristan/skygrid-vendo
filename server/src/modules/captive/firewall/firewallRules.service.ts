@@ -5,7 +5,6 @@ const execAsync = promisify(exec);
 
 const IPTABLES = "sudo /usr/sbin/iptables";
 const IPSET = "sudo /usr/sbin/ipset";
-const SYSCTL = "sudo /usr/sbin/sysctl";
 
 class FirewallRulesService {
     /**
@@ -70,14 +69,12 @@ private async ruleExists(command: string): Promise<boolean> {
 
     try {
 
-        await this.enableIpForward();
-
         await this.createIPSet();
 
         await this.allowEstablishedConnections();
 
         console.log(
-            "✅ IPv4 forwarding enabled"
+            "✅ IPv4 forwarding already configured by system"
         );
 
         console.log(
@@ -100,14 +97,6 @@ private async ruleExists(command: string): Promise<boolean> {
     }
 }
 
-    /**
-     * Enable IPv4 Forwarding
-     */
-    private async enableIpForward(): Promise<void> {
-        await this.run(
-            `${SYSCTL} -w net.ipv4.ip_forward=1`
-        );
-    }
 
     /**
      * Create IPSET
