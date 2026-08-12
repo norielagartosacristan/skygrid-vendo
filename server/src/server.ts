@@ -264,21 +264,25 @@ server.listen(
             // we can enable the monitor interval again.
             //
              setInterval(async () => {
-            
-                 try {
-            
-                     await networkMonitor.update();
-            
-                 } catch (err) {
-            
-                     console.error(
-                        "❌ Network monitor error:",
-                         err
-                     );
-            
-                 }
-            
-             }, 1000);
+
+                try {
+
+                    await networkMonitor.update();
+
+                    networkSocket.broadcast(
+                        networkMonitor.getData()
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ NETWORK UPDATE ERROR:",
+                        error
+                    );
+
+                }
+
+            }, 1000);
 
             // ==================================================
             // 7. RESTORE ACTIVE SESSIONS

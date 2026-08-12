@@ -12,123 +12,100 @@ class NetworkSocket {
             noServer: true,
         });
 
-        this.wss.on(
-            "connection",
-            (ws: WebSocket) => {
+       this.wss.on(
+    "connection",
+    async (ws: WebSocket) => {
 
-                console.log("================================");
-                console.log("📡 NETWORK SOCKET CONNECTED");
-                console.log("================================");
+        console.log("================================");
+        console.log("📡 NETWORK SOCKET CONNECTED");
+        console.log("================================");
 
-                // ==========================================
-                // ERROR
-                // ==========================================
+        ws.on("error", (error) => {
 
-                ws.on("error", (error) => {
+            console.error(
+                "❌ NETWORK WS ERROR:",
+                error
+            );
 
-                    console.error(
-                        "❌ NETWORK WS ERROR:",
-                        error
-                    );
+        });
 
-                });
-
-                // ==========================================
-                // CLOSE
-                // ==========================================
-
-                ws.on(
-                    "close",
-                    (code, reason) => {
-
-                        console.log(
-                            "📡 NETWORK WS CLOSED:",
-                            code,
-                            reason.toString()
-                        );
-
-                    }
-                );
-
-                // ==========================================
-                // INITIAL DATA
-                // ==========================================
-
-                const data =
-                    networkMonitor.getData();
+        ws.on(
+            "close",
+            (code, reason) => {
 
                 console.log(
-                    "NETWORK INITIAL DATA TYPE:",
-                    typeof data
+                    "📡 NETWORK WS CLOSED:",
+                    code,
+                    reason.toString()
                 );
-
-                console.log(
-                    "NETWORK INITIAL DATA ARRAY:",
-                    Array.isArray(data)
-                );
-
-                console.log(
-                    "NETWORK INITIAL DATA LENGTH:",
-                    Array.isArray(data)
-                        ? data.length
-                        : "N/A"
-                );
-
-                try {
-
-                    const payload =
-                        JSON.stringify(data);
-
-                    console.log(
-                        "WS PAYLOAD LENGTH:",
-                        payload.length
-                    );
-
-                    if (
-                        ws.readyState !==
-                        WebSocket.OPEN
-                    ) {
-
-                        console.warn(
-                            "⚠️ WS NOT OPEN — INITIAL DATA NOT SENT"
-                        );
-
-                        return;
-                    }
-
-                    ws.send(
-                        payload,
-                        (error) => {
-
-                            if (error) {
-
-                                console.error(
-                                    "❌ WS SEND ERROR:",
-                                    error
-                                );
-
-                            } else {
-
-                                console.log(
-                                    "✅ INITIAL WS DATA SENT"
-                                );
-
-                            }
-
-                        }
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        "❌ WS SERIALIZE ERROR:",
-                        error
-                    );
-
-                }
 
             }
         );
+
+        try {
+
+            // IMPORTANT:
+            // Make sure cache is populated
+            // before sending initial data.
+
+            await networkMonitor.update();
+
+            const data =
+                networkMonitor.getData();
+
+            ws.send(
+                JSON.stringify(data)
+            );
+
+            console.log(
+                "📡 INITIAL NETWORK DATA:",
+                JSON.stringify(data, null, 2)
+            );
+
+            console.log(
+                "📡 INITIAL NETWORK DATA LENGTH:",
+                data.length
+            );
+
+            if (
+                ws.readyState ===
+                WebSocket.OPEN
+            ) {
+
+                ws.send(
+                    JSON.stringify(data),
+                    (error) => {
+
+                        if (error) {
+
+                            console.error(
+                                "❌ INITIAL WS SEND ERROR:",
+                                error
+                            );
+
+                            return;
+                        }
+
+                        console.log(
+                            "✅ INITIAL WS DATA SENT"
+                        );
+
+                    }
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "❌ NETWORK INITIAL DATA ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
 
     }
 
