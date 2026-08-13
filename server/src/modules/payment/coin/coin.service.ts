@@ -690,13 +690,17 @@ class CoinService {
 
         return {
 
-            success:
-                true,
+    success:
+        true,
 
-            session
+    amount:
+        Number(
+            rate.amount.toString()
+        ),
 
-        };
+    session
 
+};
     }
 
 
