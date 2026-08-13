@@ -800,9 +800,14 @@ function startCoinPolling(
 
   const maxAttempts = 120;
 
-  const previousExpiry =
+  // IMPORTANT:
+  // This must be mutable because every new coin
+  // becomes the new baseline.
+  let previousExpiry =
     previousExpiresAt
-      ? new Date(previousExpiresAt).getTime()
+      ? new Date(
+          previousExpiresAt
+        ).getTime()
       : 0;
 
   console.log(
@@ -852,9 +857,11 @@ function startCoinPolling(
               {
                 method: "GET",
                 cache: "no-store",
+
                 headers: {
                   "Cache-Control":
                     "no-cache",
+
                   "Pragma":
                     "no-cache",
                 },
@@ -884,6 +891,11 @@ function startCoinPolling(
             result
           );
 
+
+          // ==========================================
+          // COIN PAYMENT DETECTION
+          // ==========================================
+
           if (
             result?.isActive &&
             result?.expiresAt
@@ -894,6 +906,7 @@ function startCoinPolling(
                 result.expiresAt
               ).getTime();
 
+
             console.log(
               "[COIN POLL] Previous expiry:",
               previousExpiry
@@ -903,6 +916,11 @@ function startCoinPolling(
               "[COIN POLL] New expiry:",
               newExpiry
             );
+
+
+            // ==========================================
+            // NEW COIN DETECTED
+            // ==========================================
 
             if (
               newExpiry >
@@ -919,7 +937,9 @@ function startCoinPolling(
 
               console.log(
                 "OLD:",
-                previousExpiresAt
+                new Date(
+                  previousExpiry
+                ).toISOString()
               );
 
               console.log(
@@ -931,23 +951,61 @@ function startCoinPolling(
                 "================================"
               );
 
-              stopCoinPolling();
+
+              // ========================================
+              // UPDATE SESSION
+              // ========================================
 
               applySession(
                 result
               );
 
-              setShowCoinModal(
-                false
+
+              // ========================================
+              // IMPORTANT
+              //
+              // The newly received expiresAt becomes
+              // the baseline for the NEXT coin.
+              // ========================================
+
+              previousExpiry =
+                newExpiry;
+
+
+              console.log(
+                "🔄 New coin baseline:",
+                result.expiresAt
               );
 
+
+              // ========================================
+              // PLAY COIN SUCCESS SOUND
+              // ========================================
+
               success.play();
+
+
+              // ========================================
+              // IMPORTANT:
+              //
+              // DO NOT:
+              // stopCoinPolling()
+              // setShowCoinModal(false)
+              //
+              // The modal stays open so the customer
+              // can continue inserting coins.
+              // ========================================
 
               return;
 
             }
 
           }
+
+
+          // ==========================================
+          // WAITING TIMER TIMEOUT
+          // ==========================================
 
           if (
             attempts >=
@@ -958,13 +1016,16 @@ function startCoinPolling(
               "⏰ COIN POLLING TIMEOUT"
             );
 
+
             stopCoinPolling();
+
 
             setShowCoinModal(
               false
             );
 
           }
+
 
         } catch (err) {
 
