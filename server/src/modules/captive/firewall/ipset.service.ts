@@ -1,6 +1,8 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 
+import prisma from "../../../config/prisma";
+
 const execAsync = promisify(exec);
 
 /**
@@ -117,14 +119,119 @@ async restoreActiveClients(): Promise<void> {
 
     try {
 
-        const { stdout } = await execAsync(
-            `sudo /usr/bin/node -e ""`
+        /*
+         * Make sure the ipset exists.
+         */
+        await this.run(
+            `${IPSET} create skygrid_clients hash:ip -exist`
         );
 
-        console.log(stdout);
+        /*
+         * Get all active sessions.
+         */
+        const sessions =
+            await prisma.session.findMany({
+
+                where: {
+                    isActive: true
+                },
+
+                select: {
+                    id: true,
+                    ipAddress: true,
+                    isPaused: true,
+                    expiresAt: true,
+                    remainingSeconds: true
+                }
+
+            });
+
+        console.log(
+            `🔎 Found ${sessions.length} active session(s).`
+        );
+
+        const now = Date.now();
+
+        for (const session of sessions) {
+
+            /*
+             * Never restore paused sessions.
+             */
+            if (session.isPaused) {
+
+                console.log(
+                    `⏸️ Skipping paused client: ${session.ipAddress}`
+                );
+
+                continue;
+            }
+
+            /*
+             * Validate IP.
+             */
+            if (!session.ipAddress) {
+
+                console.log(
+                    `⚠️ Skipping session ${session.id}: no IP address`
+                );
+
+                continue;
+            }
+
+            /*
+             * Check expiration.
+             */
+            if (
+                session.expiresAt &&
+                session.expiresAt.getTime() <= now
+            ) {
+
+                console.log(
+                    `⌛ Expired client: ${session.ipAddress}`
+                );
+
+                /*
+                 * Mark expired session inactive.
+                 */
+                await prisma.session.update({
+
+                    where: {
+                        id: session.id
+                    },
+
+                    data: {
+                        isActive: false,
+                        remainingSeconds: 0
+                    }
+
+                });
+
+                continue;
+            }
+
+            /*
+             * Restore Internet access.
+             */
+            await this.run(
+                `${IPSET} add skygrid_clients ${session.ipAddress} -exist`
+            );
+
+            console.log(
+                `✅ Restored Internet: ${session.ipAddress}`
+            );
+        }
+
+        console.log(
+            "✅ Active clients restored to ipset."
+        );
 
     } catch (err) {
-        console.error(err);
+
+        console.error(
+            "❌ Failed to restore active clients:",
+            err
+        );
+
     }
 
 }

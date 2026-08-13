@@ -552,13 +552,14 @@ async expireSession(
 
 }
     
-    async restoreActiveSessions(): Promise<void> {
+   async restoreActiveSessions(): Promise<void> {
 
     console.log("🔄 Restoring active client sessions...");
 
     const sessions = await prisma.session.findMany({
         where: {
             isActive: true,
+            isPaused: false,
             expiresAt: {
                 gt: new Date()
             }
@@ -566,7 +567,7 @@ async expireSession(
     });
 
     console.log(
-        `Found ${sessions.length} active sessions`
+        `Found ${sessions.length} active/unpaused sessions`
     );
 
     for (const session of sessions) {
@@ -593,7 +594,6 @@ async expireSession(
     }
 
 }
-
 async pauseSession(clientIP: string) {
 
     console.log(
