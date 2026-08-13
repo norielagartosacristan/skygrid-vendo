@@ -649,31 +649,52 @@ const remainingSeconds =
         );
     }
 
-    const pausedSession =
-        await prisma.session.update({
+   /**
+ * ========================================
+ * BLOCK INTERNET WHILE PAUSED
+ * ========================================
+ *
+ * Remove client IP from ipset so the
+ * client immediately loses Internet access.
+ */
+await ipsetService.block(
+    session.ipAddress
+);
 
-            where: {
-                id: session.id
-            },
+console.log(
+    `⏸️ Internet blocked for paused client: ${session.ipAddress}`
+);
 
-            data: {
 
-                isPaused: true,
+/**
+ * ========================================
+ * MARK SESSION AS PAUSED
+ * ========================================
+ */
 
-                remainingSeconds,
+const pausedSession =
+    await prisma.session.update({
 
-                pausedAt:
-                    new Date(),
+        where: {
+            id: session.id
+        },
 
-                // IMPORTANT:
-                // Stop using expiresAt
-                // while paused.
-                expiresAt:
-                    null
+        data: {
 
-            }
+            isPaused: true,
 
-        });
+            remainingSeconds,
+
+            pausedAt:
+                new Date(),
+
+            // Stop expiration while paused
+            expiresAt:
+                null
+
+        }
+
+    });
 
     // Block internet while paused
     await ipsetService.block(
