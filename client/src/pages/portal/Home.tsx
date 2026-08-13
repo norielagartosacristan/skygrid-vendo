@@ -800,15 +800,13 @@ function startCoinPolling(
 
   const maxAttempts = 120;
 
-  // Mutable baseline.
-  // The current session expiry is used as the
-  // reference for detecting a newly inserted coin.
   let previousExpiry =
     previousExpiresAt
       ? new Date(
           previousExpiresAt
         ).getTime()
       : 0;
+
 
   console.log(
     "========== COIN POLLING START =========="
@@ -836,6 +834,7 @@ function startCoinPolling(
 
         attempts++;
 
+
         console.log(
           `[COIN POLL] ${attempts}/${maxAttempts}`
         );
@@ -849,18 +848,11 @@ function startCoinPolling(
             )}&_t=${Date.now()}`;
 
 
-          console.log(
-            "[COIN POLL] Request:",
-            url
-          );
-
-
           const res =
             await fetch(
               url,
               {
                 method: "GET",
-
                 cache: "no-store",
 
                 headers: {
@@ -874,16 +866,11 @@ function startCoinPolling(
             );
 
 
-          console.log(
-            "[COIN POLL] HTTP:",
-            res.status
-          );
-
-
           if (!res.ok) {
 
             console.log(
-              "[COIN POLL] HTTP ERROR"
+              "[COIN POLL] HTTP ERROR:",
+              res.status
             );
 
             return;
@@ -902,7 +889,7 @@ function startCoinPolling(
 
 
           // ==========================================
-          // CHECK ACTIVE SESSION
+          // ACTIVE SESSION
           // ==========================================
 
           if (
@@ -927,9 +914,9 @@ function startCoinPolling(
             );
 
 
-            // ==========================================
+            // ========================================
             // NEW COIN DETECTED
-            // ==========================================
+            // ========================================
 
             if (
               newExpiry >
@@ -994,31 +981,20 @@ function startCoinPolling(
 
 
               // ========================================
-              // STOP POLLING
+              // IMPORTANT
+              //
+              // DO NOT CLOSE MODAL
+              // DO NOT STOP POLLING
+              //
+              // The customer can insert another coin.
               // ========================================
-
-              stopCoinPolling();
-
-
-              // ========================================
-              // CLOSE INSERT COIN MODAL
-              // ========================================
-
-              setShowCoinModal(
-                false
-              );
-
 
               console.log(
-                "✅ Coin processed."
+                "🪙 Coin accepted."
               );
 
               console.log(
-                "🔌 Coin polling stopped."
-              );
-
-              console.log(
-                "❌ Insert Coin modal closed."
+                "💰 Coin modal remains open."
               );
 
 
@@ -1030,7 +1006,7 @@ function startCoinPolling(
 
 
           // ==========================================
-          // WAITING TIMER TIMEOUT
+          // WAITING TIMEOUT
           // ==========================================
 
           if (
