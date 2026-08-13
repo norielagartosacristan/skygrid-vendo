@@ -3,8 +3,8 @@ import { exec } from "child_process";
 
 const execAsync = promisify(exec);
 
-const IPTABLES = "sudo /usr/sbin/iptables";
-const IPSET = "sudo /usr/sbin/ipset";
+const IPTABLES = "/usr/sbin/iptables";
+const IPSET = "/usr/sbin/ipset";
 
 class FirewallRulesService {
     /**

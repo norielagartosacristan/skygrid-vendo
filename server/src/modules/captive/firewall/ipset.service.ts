@@ -6,7 +6,7 @@ const execAsync = promisify(exec);
 /**
  * Full path to ipset using sudo (NOPASSWD configured)
  */
-const IPSET = "sudo /usr/sbin/ipset";
+const IPSET = "/usr/sbin/ipset";
 
 class IPSetService {
 
