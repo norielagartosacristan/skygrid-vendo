@@ -108,39 +108,6 @@ export default function InsertCoinModal({
 
 
     // ==========================================
-    // AUTO CLOSE WHEN PAYMENT IS SUCCESSFUL
-    // ==========================================
-
-    useEffect(() => {
-
-        if (
-            !open
-        ) {
-
-            return;
-
-        }
-
-
-        if (
-            amountInserted > 0
-        ) {
-
-            stopPopup();
-
-            onClose();
-
-        }
-
-    }, [
-        amountInserted,
-        open,
-        onClose,
-        stopPopup
-    ]);
-
-
-    // ==========================================
     // ESC KEY
     // ==========================================
 
