@@ -800,9 +800,9 @@ function startCoinPolling(
 
   const maxAttempts = 120;
 
-  // IMPORTANT:
-  // This must be mutable because every new coin
-  // becomes the new baseline.
+  // Mutable baseline.
+  // The current session expiry is used as the
+  // reference for detecting a newly inserted coin.
   let previousExpiry =
     previousExpiresAt
       ? new Date(
@@ -829,6 +829,7 @@ function startCoinPolling(
     previousExpiry
   );
 
+
   coinPollingRef.current =
     setInterval(
       async () => {
@@ -839,6 +840,7 @@ function startCoinPolling(
           `[COIN POLL] ${attempts}/${maxAttempts}`
         );
 
+
         try {
 
           const url =
@@ -846,16 +848,19 @@ function startCoinPolling(
               client.ip
             )}&_t=${Date.now()}`;
 
+
           console.log(
             "[COIN POLL] Request:",
             url
           );
+
 
           const res =
             await fetch(
               url,
               {
                 method: "GET",
+
                 cache: "no-store",
 
                 headers: {
@@ -868,10 +873,12 @@ function startCoinPolling(
               }
             );
 
+
           console.log(
             "[COIN POLL] HTTP:",
             res.status
           );
+
 
           if (!res.ok) {
 
@@ -883,8 +890,10 @@ function startCoinPolling(
 
           }
 
+
           const result =
             await res.json();
+
 
           console.log(
             "[COIN POLL] RESULT:",
@@ -893,7 +902,7 @@ function startCoinPolling(
 
 
           // ==========================================
-          // COIN PAYMENT DETECTION
+          // CHECK ACTIVE SESSION
           // ==========================================
 
           if (
@@ -937,9 +946,11 @@ function startCoinPolling(
 
               console.log(
                 "OLD:",
-                new Date(
-                  previousExpiry
-                ).toISOString()
+                previousExpiry > 0
+                  ? new Date(
+                      previousExpiry
+                    ).toISOString()
+                  : "NO PREVIOUS SESSION"
               );
 
               console.log(
@@ -962,10 +973,7 @@ function startCoinPolling(
 
 
               // ========================================
-              // IMPORTANT
-              //
-              // The newly received expiresAt becomes
-              // the baseline for the NEXT coin.
+              // UPDATE BASELINE
               // ========================================
 
               previousExpiry =
@@ -979,22 +987,40 @@ function startCoinPolling(
 
 
               // ========================================
-              // PLAY COIN SUCCESS SOUND
+              // SUCCESS SOUND
               // ========================================
 
               success.play();
 
 
               // ========================================
-              // IMPORTANT:
-              //
-              // DO NOT:
-              // stopCoinPolling()
-              // setShowCoinModal(false)
-              //
-              // The modal stays open so the customer
-              // can continue inserting coins.
+              // STOP POLLING
               // ========================================
+
+              stopCoinPolling();
+
+
+              // ========================================
+              // CLOSE INSERT COIN MODAL
+              // ========================================
+
+              setShowCoinModal(
+                false
+              );
+
+
+              console.log(
+                "✅ Coin processed."
+              );
+
+              console.log(
+                "🔌 Coin polling stopped."
+              );
+
+              console.log(
+                "❌ Insert Coin modal closed."
+              );
+
 
               return;
 
@@ -1024,6 +1050,9 @@ function startCoinPolling(
               false
             );
 
+
+            return;
+
           }
 
 
@@ -1042,10 +1071,10 @@ function startCoinPolling(
 
 }
 
-  /**
-   * Insert Coin
-   */
-  async function handleInsertCoin() {
+ /**
+ * Insert Coin
+ */
+async function handleInsertCoin() {
 
   console.log(
     "CLIENT =",
@@ -1074,7 +1103,45 @@ function startCoinPolling(
 
   try {
 
+    // ==========================================
+    // GET CURRENT SESSION FIRST
+    // ==========================================
+
+    const baselineResponse =
+      await fetch(
+        `/api/captive/session?ip=${encodeURIComponent(
+          client.ip
+        )}&_t=${Date.now()}`,
+        {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+          },
+        }
+      );
+
+    const baselineSession =
+      await baselineResponse.json();
+
+    console.log(
+      "[COIN] BASELINE SESSION:",
+      baselineSession
+    );
+
+    const previousExpiresAt =
+      baselineSession?.expiresAt;
+
+    // ==========================================
+    // RESET COIN AMOUNT
+    // ==========================================
+
     setAmountInserted(0);
+
+    // ==========================================
+    // CREATE WAITING CLIENT
+    // ==========================================
 
     const res =
       await fetch(
@@ -1108,51 +1175,64 @@ function startCoinPolling(
       data
     );
 
+    // ==========================================
+    // WAIT REQUEST FAILED
+    // ==========================================
+
     if (
-  !res.ok ||
-  !data.success
-) {
-  alert(
-    data.message ||
-    "Unable to prepare coin payment."
-  );
+      !res.ok ||
+      !data.success
+    ) {
 
-  return;
-}
+      alert(
+        data.message ||
+        "Unable to prepare coin payment."
+      );
 
-setWaitingStartedAt(
-  data.createdAt
-);
+      return;
 
-setWaitingExpiresAt(
-  data.expiresAt
-);
+    }
+
+    // ==========================================
+    // WAITING TIMER
+    // ==========================================
+
+    setWaitingStartedAt(
+      data.waiting?.createdAt ||
+      data.createdAt
+    );
+
+    setWaitingExpiresAt(
+      data.waiting?.expiresAt ||
+      data.expiresAt
+    );
+
+    // ==========================================
+    // OPEN MODAL
+    // ==========================================
 
     insertCoin.play();
 
-    setShowCoinModal(true);
+    setShowCoinModal(
+      true
+    );
 
-// Get current session before waiting for coin
-const baselineSession =
-  await fetch(
-    `/api/captive/session?ip=${encodeURIComponent(
-      client.ip
-    )}&_t=${Date.now()}`,
-    {
-      cache: "no-store",
-    }
-  ).then(
-    res => res.json()
-  );
+    // ==========================================
+    // START POLLING
+    // ==========================================
 
-console.log(
-  "[COIN] BASELINE SESSION:",
-  baselineSession
-);
+    console.log(
+      "[COIN] Starting polling..."
+    );
 
-startCoinPolling(
-  baselineSession?.expiresAt
-);
+    console.log(
+      "[COIN] Previous expiresAt:",
+      previousExpiresAt
+    );
+
+    startCoinPolling(
+      previousExpiresAt
+    );
 
   } catch (err) {
 
