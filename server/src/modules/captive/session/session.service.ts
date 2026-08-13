@@ -696,6 +696,14 @@ const pausedSession =
 
     });
 
+    await ipsetService.block(
+    pausedSession.ipAddress
+);
+
+console.log(
+    `⏸️ Internet blocked while paused: ${pausedSession.ipAddress}`
+);
+
     // Block internet while paused
     await ipsetService.block(
         session.ipAddress
