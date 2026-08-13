@@ -21,6 +21,7 @@ import { machineService } from "./modules/machine/services/machine.service";
 import { machineAssociationService } from "./modules/machine/services/machineAssociation.service";
 
 import { startDeviceMonitor } from "./modules/subvendo/services/device-monitor.service";
+import { ipsetService } from "./modules/captive/firewall/ipset.service";
 
 const PORT = Number(process.env.PORT) || 5000;
 
@@ -141,6 +142,12 @@ server.listen(
             console.log(
                 "🔥 Starting firewall initialization..."
             );
+
+            console.log(
+                "🧱 Ensuring ipset is ready..."
+            );
+
+            await ipsetService.ensureSet();
 
             await firewallRules.initialize();
 

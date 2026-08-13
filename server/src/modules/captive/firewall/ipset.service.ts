@@ -33,6 +33,17 @@ class IPSetService {
 
     }
 
+    async ensureSet(): Promise<void> {
+
+    await this.run(
+        `${IPSET} create skygrid_clients hash:ip -exist`
+    );
+
+    console.log(
+        "✅ ipset skygrid_clients ready"
+    );
+}
+
     /**
      * Allow client Internet access
      */
