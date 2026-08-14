@@ -308,21 +308,13 @@ const progress =
 
                 <div className="border-t p-4">
 
-                    <button
-                        onClick={() => {
-
-                            stopPopup();
-
-                            onClose();
-
-                        }}
-                        className="w-full rounded-xl bg-red-500 py-3 font-semibold text-white hover:bg-red-600 transition"
-                    >
-
-                        Cancel
-
-                    </button>
-
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full rounded-xl bg-red-500 py-3 font-semibold text-white hover:bg-red-600 transition"
+                >
+                    {amountInserted > 0 ? "Done" : "Cancel"}
+                </button>
                 </div>
 
             </div>
