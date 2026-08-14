@@ -499,7 +499,9 @@ console.log(
                 session.expiresAt,
 
             sessionId:
-                session.id
+                session.id,
+            
+            amountInserted
 
         });
 
