@@ -690,28 +690,28 @@ const amountInserted =
 
         }
 
-        return res.json({
+       return res.json({
 
-            success: true,
+    success: true,
 
-            found: true,
+    found: true,
 
-            isActive:
-                session.isActive,
+    isActive:
+        session.isActive,
 
-            isPaused:
-                session.isPaused,
+    isPaused:
+        session.isPaused,
 
-            remainingSeconds,
+    remainingSeconds,
 
-            expiresAt:
-                session.expiresAt,
+    expiresAt:
+        session.expiresAt,
 
-            amountInserted,
+    amountInserted,
 
-            session
+    session
 
-        });
+});
 
     } catch (error: any) {
 

@@ -887,15 +887,24 @@ function startCoinPolling(
             result
           );
 
-          if (
-              typeof result?.amountInserted === "number"
-          ) {
+         // ==========================================
+        // SYNC TOTAL COIN AMOUNT
+        // ==========================================
 
-              setAmountInserted(
-                  result.amountInserted
-              );
+        if (
+            typeof result?.amountInserted === "number"
+        ) {
 
-          }
+            console.log(
+                "[COIN POLL] AMOUNT INSERTED:",
+                result.amountInserted
+            );
+
+            setAmountInserted(
+                result.amountInserted
+            );
+
+        }
 
 
           // ==========================================
@@ -963,6 +972,10 @@ function startCoinPolling(
               // ========================================
               // UPDATE SESSION
               // ========================================
+
+              setAmountInserted(
+                  result.amountInserted || 0
+              );
 
               applySession(
                 result
