@@ -181,6 +181,56 @@ export async function getSession(
 
         }
 
+        /**
+ * ========================================
+ * GET TOTAL COINS INSERTED
+ * ========================================
+ */
+
+const coinTransactions =
+    await prisma.coinTransaction.findMany({
+
+        where: {
+
+            sessionId:
+                session.id
+
+        },
+
+        select: {
+
+            amount: true
+
+        }
+
+    });
+
+const amountInserted =
+    coinTransactions.reduce(
+
+        (
+            total,
+            transaction
+        ) => {
+
+            return (
+                total +
+                Number(
+                    transaction.amount
+                )
+            );
+
+        },
+
+        0
+
+    );
+
+console.log(
+    "💰 AMOUNT INSERTED:",
+    amountInserted
+);
+
 
         /**
          * ========================================
