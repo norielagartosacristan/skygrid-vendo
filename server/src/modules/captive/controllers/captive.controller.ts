@@ -620,6 +620,48 @@ export async function restoreSession(
         /**
          * Existing session found
          */
+        // ==========================================
+// GET TOTAL COINS INSERTED
+// ==========================================
+
+const coinTransactions =
+    await prisma.coinTransaction.findMany({
+
+        where: {
+
+            sessionId:
+                session.id
+
+        },
+
+        select: {
+
+            amount: true
+
+        }
+
+    });
+
+const amountInserted =
+    coinTransactions.reduce(
+
+        (
+            total,
+            transaction
+        ) => {
+
+            return (
+                total +
+                Number(
+                    transaction.amount
+                )
+            );
+
+        },
+
+        0
+    );
+
         let remainingSeconds = 0;
 
         if (session.isPaused) {
@@ -664,6 +706,8 @@ export async function restoreSession(
 
             expiresAt:
                 session.expiresAt,
+
+            amountInserted,
 
             session
 

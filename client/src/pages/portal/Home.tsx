@@ -887,6 +887,16 @@ function startCoinPolling(
             result
           );
 
+          if (
+              typeof result?.amountInserted === "number"
+          ) {
+
+              setAmountInserted(
+                  result.amountInserted
+              );
+
+          }
+
 
           // ==========================================
           // ACTIVE SESSION
