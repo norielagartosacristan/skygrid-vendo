@@ -59,6 +59,9 @@ const [pausing, setPausing] =
 
   const [showCoinModal, setShowCoinModal] =
     useState(false);
+  
+  const coinBaselineAmountRef =
+  useRef(0);
 
   const [amountInserted, setAmountInserted] =
   useState(0);
@@ -892,19 +895,41 @@ function startCoinPolling(
         // ==========================================
 
         if (
-            typeof result?.amountInserted === "number"
-        ) {
+              typeof result?.amountInserted === "number"
+          ) {
 
-            console.log(
-                "[COIN POLL] AMOUNT INSERTED:",
-                result.amountInserted
-            );
+              const currentTotal =
+                  result.amountInserted;
 
-            setAmountInserted(
-                result.amountInserted
-            );
+              const baseline =
+                  coinBaselineAmountRef.current;
 
-        }
+              const currentCoinAmount =
+                  Math.max(
+                      0,
+                      currentTotal - baseline
+                  );
+
+              console.log(
+                  "[COIN POLL] TOTAL:",
+                  currentTotal
+              );
+
+              console.log(
+                  "[COIN POLL] BASELINE:",
+                  baseline
+              );
+
+              console.log(
+                  "[COIN POLL] CURRENT COIN AMOUNT:",
+                  currentCoinAmount
+              );
+
+              setAmountInserted(
+                  currentCoinAmount
+              );
+
+          }
 
 
           // ==========================================
@@ -973,8 +998,22 @@ function startCoinPolling(
               // UPDATE SESSION
               // ========================================
 
+              const currentTotal =
+                  typeof result?.amountInserted === "number"
+                      ? result.amountInserted
+                      : 0;
+
+              const baseline =
+                  coinBaselineAmountRef.current;
+
+              const currentCoinAmount =
+                  Math.max(
+                      0,
+                      currentTotal - baseline
+                  );
+
               setAmountInserted(
-                  result.amountInserted || 0
+                  currentCoinAmount
               );
 
               applySession(
@@ -1130,7 +1169,20 @@ async function handleInsertCoin() {
     );
 
     const previousExpiresAt =
-      baselineSession?.expiresAt;
+    baselineSession?.expiresAt;
+
+    const baselineAmount =
+        typeof baselineSession?.amountInserted === "number"
+            ? baselineSession.amountInserted
+            : 0;
+
+    coinBaselineAmountRef.current =
+        baselineAmount;
+
+    console.log(
+        "[COIN] BASELINE AMOUNT:",
+        baselineAmount
+    );
 
     // ==========================================
     // RESET COIN AMOUNT
