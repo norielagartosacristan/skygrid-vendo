@@ -181,26 +181,15 @@ export async function getSession(
 
         }
 
-        /**
- * ========================================
- * GET TOTAL COINS INSERTED
- * ========================================
- */
-
-const coinTransactions =
+         const coinTransactions =
     await prisma.coinTransaction.findMany({
 
         where: {
-
-            sessionId:
-                session.id
-
+            sessionId: session.id
         },
 
         select: {
-
             amount: true
-
         }
 
     });
@@ -208,22 +197,16 @@ const coinTransactions =
 const amountInserted =
     coinTransactions.reduce(
 
-        (
-            total,
-            transaction
-        ) => {
+        (total, transaction) => {
 
             return (
                 total +
-                Number(
-                    transaction.amount
-                )
+                Number(transaction.amount)
             );
 
         },
 
         0
-
     );
 
 console.log(
@@ -231,7 +214,7 @@ console.log(
     amountInserted
 );
 
-
+     
         /**
          * ========================================
          * PAUSED SESSION
@@ -326,7 +309,9 @@ console.log(
                     null,
 
                 sessionId:
-                    session.id
+                    session.id,
+                
+                amountInserted    
 
             });
 
@@ -421,7 +406,9 @@ console.log(
                     session.expiresAt,
 
                 sessionId:
-                    session.id
+                    session.id,
+
+                amountInserted
 
             });
 
