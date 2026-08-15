@@ -3,6 +3,29 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
+async function clearClientConntrack(
+    ip: string
+) {
+    try {
+
+        await execAsync(
+            `sudo conntrack -D -s ${ip} || true`
+        );
+
+        console.log(
+            `🧹 Conntrack cleared: ${ip}`
+        );
+
+    } catch (error) {
+
+        console.error(
+            `⚠️ Failed to clear conntrack: ${ip}`,
+            error
+        );
+
+    }
+}
+
 import prisma from "../../../config/prisma";
 import { ipsetService } from "../firewall/ipset.service";
 import { captiveSocket } from "../websocket/captive.socket";
@@ -135,6 +158,10 @@ class SessionService {
             updatedSession.ipAddress
         );
 
+        await clearClientConntrack(
+            updatedSession.ipAddress
+        );
+
 
         console.log(
             "✅ EXISTING SESSION EXTENDED"
@@ -236,6 +263,10 @@ class SessionService {
     await ipsetService.allow(
         newSession.ipAddress
     );
+
+    await clearClientConntrack(
+    newSession.ipAddress
+);
 
 
     console.log(
