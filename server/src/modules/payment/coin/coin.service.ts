@@ -626,16 +626,16 @@ class CoinService {
          * This prevents the same coin session
          * from being processed again.
          */
-        await prisma.waitingClient.delete({
+        //await prisma.waitingClient.delete({
 
-            where: {
+          //  where: {
 
-                id:
-                    waiting.id
+            //    id:
+              //      waiting.id
 
-            }
+            //}
 
-        });
+        //});
 
 
         console.log();
