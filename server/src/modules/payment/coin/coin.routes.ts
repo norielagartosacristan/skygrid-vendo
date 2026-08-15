@@ -12,6 +12,14 @@ router.post(
 );
 
 /**
+ * Portal -> Cancel coin session
+ */
+router.post(
+    "/cancel",
+    coinController.cancelClient
+);
+
+/**
  * ESP8266 -> Check waiting client
  */
 router.get(
