@@ -2,6 +2,42 @@ import prisma from "../../../config/prisma";
 import { sessionService } from "../../captive/session/session.service";
 import { Prisma } from "@prisma/client";
 
+function isIpInSubnet(
+    ip: string,
+    networkIp: string,
+    subnetMask: string
+): boolean {
+
+    const ipParts =
+        ip.split(".").map(Number);
+
+    const networkParts =
+        networkIp.split(".").map(Number);
+
+    const maskParts =
+        subnetMask.split(".").map(Number);
+
+    if (
+        ipParts.length !== 4 ||
+        networkParts.length !== 4 ||
+        maskParts.length !== 4
+    ) {
+        return false;
+    }
+
+    for (let i = 0; i < 4; i++) {
+
+        if (
+            (ipParts[i] & maskParts[i]) !==
+            (networkParts[i] & maskParts[i])
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 class CoinService {
 
     /**
@@ -118,7 +154,7 @@ class CoinService {
         /**
          * Find an available Subvendo.
          */
-        const subvendo =
+       const subvendo =
             await prisma.subVendo.findFirst({
 
                 where: {
@@ -131,11 +167,9 @@ class CoinService {
 
                     status:
                         "CONFIGURED"
-
                 }
 
             });
-
 
         if (!subvendo) {
 
@@ -144,6 +178,33 @@ class CoinService {
             );
 
         }
+
+        if (
+            !subvendo.gateway ||
+            !subvendo.subnetMask
+        ) {
+
+            throw new Error(
+                `Subvendo ${subvendo.chipId} has no network configuration.`
+            );
+
+        }
+
+        if (
+            !isIpInSubnet(
+                clientIP,
+                subvendo.gateway,
+                subvendo.subnetMask
+            )
+        ) {
+
+            throw new Error(
+                "This client is not on the network assigned to this Subvendo."
+            );
+
+        }
+
+        
 
 
         /**
