@@ -16,7 +16,9 @@ router.post(
  */
 router.post(
     "/cancel",
-    coinController.cancelClient
+    coinController.cancelClient.bind(
+        coinController
+    )
 );
 
 /**

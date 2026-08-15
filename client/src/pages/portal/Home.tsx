@@ -1941,10 +1941,42 @@ const isConnected =
     amountInserted={amountInserted}
     startedAt={waitingStartedAt}
     expiresAt={waitingExpiresAt}
-    onClose={() => {
-        setShowCoinModal(false);
+    onClose={async () => {
+
+    try {
+
+        await fetch("/api/coin/cancel", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                clientIP: client.ip,
+            }),
+        });
+
+        console.log(
+            "[COIN] Waiting client cancelled."
+        );
+
+    } catch (err) {
+
+        console.error(
+            "[COIN] Failed to cancel waiting client:",
+            err
+        );
+
+    } finally {
+
+        // Stop browser polling
         stopCoinPolling();
-    }}
+
+        // Close modal
+        setShowCoinModal(false);
+
+    }
+
+}}
     stopPopup={popup.stop}
 />
 
