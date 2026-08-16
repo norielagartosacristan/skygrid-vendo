@@ -217,25 +217,32 @@ model Voucher {
   packageId String
   status    VoucherStatus @default(ACTIVE)
 
-  sessionId String?       @unique
+  sessionId String? @unique
 
   usedByIP String?
   usedAt   DateTime?
 
   // ==========================================
-  // LONG-TERM VOUCHER
+  // DYNAMIC VALIDITY
   // ==========================================
 
-  validityType   String    @default("REGULAR")
-  activatedAt    DateTime?
-  expiresAt      DateTime?
+  validityValue Int?
+  validityUnit  String?
+
+  // ==========================================
+  // ONE-CLIENT / ONE-DEVICE BINDING
+  // ==========================================
+
   boundClientMac String?
+
+  activatedAt DateTime?
+  expiresAt   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   package Package  @relation(fields: [packageId], references: [id])
-  session Session?  @relation(fields: [sessionId], references: [id])
+  session Session? @relation(fields: [sessionId], references: [id])
 }
 
 enum UserRole {
@@ -286,7 +293,7 @@ model Session {
   clientMac String
   ipAddress String
 
-  startedAt DateTime @default(now())
+  startedAt DateTime  @default(now())
   expiresAt DateTime?
 
   isActive Boolean @default(true)
