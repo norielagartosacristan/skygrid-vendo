@@ -2,6 +2,9 @@ import os from "os";
 import prisma from "../../../config/prisma";
 import { vendorService } from "../../vendor/services/vendor.service";
 import { fingerprintService } from "./fingerprint.service";
+import {
+    getMachineIdentity
+} from "../machine.identity";
 //import { machineStorageService } from "./machineStorage.service";
 
 class MachineService {
@@ -46,6 +49,9 @@ class MachineService {
 
             const vendor =
                 await vendorService.getOrCreateDefaultVendor();
+
+            const identity =
+                getMachineIdentity();
 
             machine = await prisma.machine.create({
 
