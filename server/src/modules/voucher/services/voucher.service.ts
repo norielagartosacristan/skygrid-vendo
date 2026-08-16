@@ -1,45 +1,114 @@
 import prisma from "../../../config/prisma";
 import { voucherGenerator } from "../generators/voucher.generator";
 
+type VoucherValidityUnit =
+    | "DAY"
+    | "MONTH"
+    | "YEAR";
+
 class VoucherService {
 
     private async generateUniqueCode(): Promise<string> {
 
         while (true) {
 
-            const code = voucherGenerator.generate();
+            const code =
+                voucherGenerator.generate();
 
-            const exists = await prisma.voucher.findUnique({
-                where: {
-                    code
-                }
-            });
+            const exists =
+                await prisma.voucher.findUnique({
+                    where: {
+                        code
+                    }
+                });
 
             if (!exists) {
                 return code;
             }
-
         }
-
     }
 
-    async generate(packageId: string) {
 
-        const pkg = await prisma.package.findUnique({
+    /**
+     * Generate voucher
+     *
+     * validityValue / validityUnit:
+     *
+     * null / null
+     *     = regular one-time voucher
+     *
+     * 7 / DAY
+     *     = 7-day one-device voucher
+     *
+     * 6 / MONTH
+     *     = 6-month one-device voucher
+     */
+    async generate(
+        packageId: string,
+        validityValue: number | null = null,
+        validityUnit: VoucherValidityUnit | null = null
+    ) {
 
-            where: {
-                id: packageId
-            }
-
-        });
+        const pkg =
+            await prisma.package.findUnique({
+                where: {
+                    id: packageId
+                }
+            });
 
         if (!pkg) {
 
-            throw new Error("Package not found");
+            throw new Error(
+                "Package not found"
+            );
 
         }
 
-        const code = await this.generateUniqueCode();
+
+        // ==========================================
+        // VALIDATE LONG-TERM VALIDITY
+        // ==========================================
+
+        if (validityValue !== null) {
+
+            if (
+                !Number.isInteger(validityValue) ||
+                validityValue <= 0
+            ) {
+
+                throw new Error(
+                    "Invalid voucher validity."
+                );
+
+            }
+
+            if (!validityUnit) {
+
+                throw new Error(
+                    "Voucher validity unit is required."
+                );
+
+            }
+
+            if (
+                ![
+                    "DAY",
+                    "MONTH",
+                    "YEAR"
+                ].includes(validityUnit)
+            ) {
+
+                throw new Error(
+                    "Invalid voucher validity unit."
+                );
+
+            }
+        }
+
+
+        const code =
+            await this.generateUniqueCode();
+
 
         return await prisma.voucher.create({
 
@@ -47,7 +116,20 @@ class VoucherService {
 
                 code,
 
-                packageId
+                packageId,
+
+                validityValue,
+
+                validityUnit,
+
+                boundClientMac:
+                    null,
+
+                activatedAt:
+                    null,
+
+                expiresAt:
+                    null
 
             },
 
@@ -61,58 +143,249 @@ class VoucherService {
 
     }
 
-    async redeem(code: string) {
 
-        const voucher = await prisma.voucher.findUnique({
+    /**
+     * Redeem voucher.
+     *
+     * Regular voucher:
+     * - one time only
+     *
+     * Long-term voucher:
+     * - first device gets bound
+     * - validity starts on first use
+     * - same device can reuse
+     * - different device is rejected
+     */
+    async redeem(
+        code: string,
+        clientMac: string
+    ) {
 
-            where: {
-                code
-            },
+        const voucher =
+            await prisma.voucher.findUnique({
 
-            include: {
-                package: true
-            }
+                where: {
+                    code
+                },
 
-        });
+                include: {
+                    package: true
+                }
+
+            });
+
 
         if (!voucher) {
 
-            throw new Error("Voucher not found");
+            throw new Error(
+                "Voucher not found."
+            );
 
         }
 
-        if (voucher.status !== "ACTIVE") {
 
-            throw new Error("Voucher already used");
+        // ==========================================
+        // REGULAR VOUCHER
+        // ==========================================
+
+        const isLongTerm =
+            voucher.validityValue !== null &&
+            voucher.validityUnit !== null;
+
+
+        if (!isLongTerm) {
+
+            if (
+                voucher.status !== "ACTIVE"
+            ) {
+
+                throw new Error(
+                    "Voucher already used."
+                );
+
+            }
+
+            return voucher;
+        }
+
+
+        // ==========================================
+        // LONG-TERM VOUCHER
+        // ==========================================
+
+        const now =
+            new Date();
+
+
+        // ------------------------------------------
+        // EXPIRED
+        // ------------------------------------------
+
+        if (
+            voucher.expiresAt &&
+            voucher.expiresAt <= now
+        ) {
+
+            if (
+                voucher.status !== "EXPIRED"
+            ) {
+
+                await prisma.voucher.update({
+
+                    where: {
+                        id: voucher.id
+                    },
+
+                    data: {
+                        status: "EXPIRED"
+                    }
+
+                });
+
+            }
+
+            throw new Error(
+                "Voucher has expired."
+            );
 
         }
 
-        return voucher;
+
+        // ------------------------------------------
+        // FIRST USE
+        // ------------------------------------------
+
+        if (!voucher.boundClientMac) {
+
+            const activatedAt =
+                now;
+
+            const expiresAt =
+                new Date(now);
+
+
+            switch (
+                voucher.validityUnit
+            ) {
+
+                case "DAY":
+
+                    expiresAt.setDate(
+                        expiresAt.getDate() +
+                        voucher.validityValue!
+                    );
+
+                    break;
+
+
+                case "MONTH":
+
+                    expiresAt.setMonth(
+                        expiresAt.getMonth() +
+                        voucher.validityValue!
+                    );
+
+                    break;
+
+
+                case "YEAR":
+
+                    expiresAt.setFullYear(
+                        expiresAt.getFullYear() +
+                        voucher.validityValue!
+                    );
+
+                    break;
+
+
+                default:
+
+                    throw new Error(
+                        "Invalid voucher validity unit."
+                    );
+
+            }
+
+
+            return await prisma.voucher.update({
+
+                where: {
+                    id: voucher.id
+                },
+
+                data: {
+
+                    boundClientMac:
+                        clientMac,
+
+                    activatedAt,
+
+                    expiresAt,
+
+                    status: "ACTIVE"
+
+                },
+
+                include: {
+
+                    package: true
+
+                }
+
+            });
+
+        }
+
+
+        // ------------------------------------------
+        // SAME DEVICE
+        // ------------------------------------------
+
+        if (
+            voucher.boundClientMac ===
+            clientMac
+        ) {
+
+            return voucher;
+
+        }
+
+
+        // ------------------------------------------
+        // DIFFERENT DEVICE
+        // ------------------------------------------
+
+        throw new Error(
+            "This voucher is already bound to another device."
+        );
 
     }
 
+
     async getAll() {
 
-    return await prisma.voucher.findMany({
+        return await prisma.voucher.findMany({
 
-        include: {
+            include: {
 
-            package: true,
+                package: true,
 
-            session: true
+                session: true
 
-        },
+            },
 
-        orderBy: {
+            orderBy: {
 
-            createdAt: "desc"
+                createdAt: "desc"
 
-        }
+            }
 
-    });
+        });
+
+    }
 
 }
 
-}
 
-export const voucherService = new VoucherService();
+export const voucherService =
+    new VoucherService();

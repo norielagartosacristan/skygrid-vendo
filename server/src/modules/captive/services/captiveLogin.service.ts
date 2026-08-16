@@ -37,19 +37,6 @@ class CaptiveLoginService {
         // 1. REDEEM VOUCHER
         // ==================================================
 
-        const voucherData =
-            await voucherService.redeem(
-                voucher
-            );
-
-        console.log(
-            "Voucher OK"
-        );
-
-        console.log(
-            voucherData
-        );
-
 
         // ==================================================
         // 2. GET CURRENT MACHINE
@@ -188,6 +175,16 @@ class CaptiveLoginService {
             clientMac
         );
 
+        const voucherData =
+    await voucherService.redeem(
+        voucher,
+        clientMac
+    );
+
+console.log(
+    "Voucher validated and device binding checked."
+);
+
 
         // ==================================================
         // 4. CONVERT VOUCHER DURATION
@@ -243,30 +240,38 @@ class CaptiveLoginService {
         // 6. UPDATE VOUCHER
         // ==================================================
 
-        await prisma.voucher.update({
+        const isLongTermVoucher =
+            voucherData.validityValue !== null &&
+            voucherData.validityUnit !== null;
 
-            where: {
 
-                id:
-                    voucherData.id
+        if (!isLongTermVoucher) {
 
-            },
+            await prisma.voucher.update({
 
-            data: {
+                where: {
 
-                status:
-                    "USED",
+                    id:
+                        voucherData.id
 
-                usedByIP:
-                    clientIP,
+                },
 
-                usedAt:
-                    new Date()
+                data: {
 
-            }
+                    status:
+                        "USED",
 
-        });
+                    usedByIP:
+                        clientIP,
 
+                    usedAt:
+                        new Date()
+
+                }
+
+            });
+
+        }
 
         console.log(
             "Voucher Updated"
