@@ -5,10 +5,10 @@
   - Added the required column `machineId` to the `Machine` table without a default value. This is not possible if the table is not empty.
 
 */
-
 -- AlterTable
-ALTER TABLE "Voucher" ADD COLUMN     "activatedAt" TIMESTAMP(3),
-ADD COLUMN     "boundClientMac" TEXT,
-ADD COLUMN     "expiresAt" TIMESTAMP(3),
-ADD COLUMN     "validityType" TEXT NOT NULL DEFAULT 'REGULAR';
-
+ALTER TABLE "Voucher"
+ADD COLUMN "activatedAt" TIMESTAMP(3),
+ADD COLUMN "boundClientMac" TEXT,
+ADD COLUMN "expiresAt" TIMESTAMP(3),
+ADD COLUMN "validityValue" INTEGER,
+ADD COLUMN "validityUnit" TEXT;
