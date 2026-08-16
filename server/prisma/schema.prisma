@@ -216,13 +216,26 @@ model Voucher {
   code      String        @unique
   packageId String
   status    VoucherStatus @default(ACTIVE)
+
   sessionId String?       @unique
-  usedByIP  String?
-  usedAt    DateTime?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  package   Package       @relation(fields: [packageId], references: [id])
-  session   Session?      @relation(fields: [sessionId], references: [id])
+
+  usedByIP String?
+  usedAt   DateTime?
+
+  // ==========================================
+  // LONG-TERM VOUCHER
+  // ==========================================
+
+  validityType   String    @default("REGULAR")
+  activatedAt    DateTime?
+  expiresAt      DateTime?
+  boundClientMac String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  package Package  @relation(fields: [packageId], references: [id])
+  session Session?  @relation(fields: [sessionId], references: [id])
 }
 
 enum UserRole {
