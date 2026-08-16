@@ -47,33 +47,42 @@ class MachineService {
         // Kung wala pa rin, saka lang gumawa ng bagong machine
         if (!machine) {
 
-            const vendor =
-                await vendorService.getOrCreateDefaultVendor();
+    const vendor =
+        await vendorService.getOrCreateDefaultVendor();
 
-            const identity =
-                getMachineIdentity();
+    const identity =
+        getMachineIdentity();
 
-            machine = await prisma.machine.create({
+    machine =
+        await prisma.machine.create({
 
-                data: {
+            data: {
 
-                    vendorId: vendor.id,
+                machineId:
+                    identity.machineId,
 
-                    name: os.hostname(),
+                vendorId:
+                    vendor.id,
 
-                    ipAddress: ip,
+                name:
+                    os.hostname(),
 
-                    macAddress: mac,
+                ipAddress:
+                    ip,
 
-                    fingerprint,
+                macAddress:
+                    mac,
 
-                    status: "ONLINE"
+                fingerprint,
 
-                }
+                status:
+                    "ONLINE"
 
-            });
+            }
 
-        }
+        });
+
+}
 
         return machine;
 
