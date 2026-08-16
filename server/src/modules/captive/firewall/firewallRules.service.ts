@@ -60,16 +60,53 @@ private async ruleExists(command: string): Promise<boolean> {
         return false;
     }
 }
+
+/**
+ * Remove legacy VLAN -> WAN forwarding rules
+ *
+ * These rules were used by the old routing design
+ * and bypass the captive-portal/ipset firewall.
+ */
+private async removeLegacyVlanWanRules(): Promise<void> {
+
+    console.log(
+        "🧹 Removing legacy VLAN → WAN forwarding rules..."
+    );
+
+    const command =
+        `${IPTABLES} -D FORWARD ` +
+        `-s 10.0.40.0/24 ` +
+        `-i enp2s0.40 ` +
+        `-o enp2s0 ` +
+        `-j ACCEPT`;
+
+    while (
+        await this.ruleExists(command)
+    ) {
+
+        await this.run(
+            command,
+            true
+        );
+
+    }
+
+    console.log(
+        "✅ Legacy VLAN → WAN rule cleanup complete."
+    );
+}
     /**
      * Initialize firewall
      */
-   async initialize() {
+  async initialize() {
 
     console.log("🔥 Initializing firewall...");
 
     try {
 
         await this.createIPSet();
+
+        await this.removeLegacyVlanWanRules();
 
         await this.allowEstablishedConnections();
 

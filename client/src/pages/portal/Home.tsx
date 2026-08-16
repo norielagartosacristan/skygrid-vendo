@@ -1867,7 +1867,7 @@ const isConnected =
             className="mt-3 w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all py-4 text-lg font-bold text-white shadow-md"
           >
 
-            🎡 Spin The Wheel
+            Claim Credit Points
 
           </button>
 
