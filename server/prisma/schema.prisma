@@ -212,11 +212,16 @@ model Package {
 }
 
 model Voucher {
-  id        String        @id @default(cuid())
-  code      String        @unique
-  packageId String
-  status    VoucherStatus @default(ACTIVE)
+  id   String @id @default(cuid())
+  code String @unique
 
+  // Optional package
+  packageId String?
+  package   Package? @relation(fields: [packageId], references: [id])
+
+  status VoucherStatus @default(ACTIVE)
+
+  // One Voucher = One Session
   sessionId String? @unique
 
   usedByIP String?
@@ -230,7 +235,15 @@ model Voucher {
   validityUnit  String?
 
   // ==========================================
-  // ONE-CLIENT / ONE-DEVICE BINDING
+  // PRICE
+  // 0 = FREE
+  // null = no price specified
+  // ==========================================
+
+  price Decimal? @db.Decimal(10, 2)
+
+  // ==========================================
+  // ONE DEVICE / CLIENT
   // ==========================================
 
   boundClientMac String?
@@ -241,8 +254,11 @@ model Voucher {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  package Package  @relation(fields: [packageId], references: [id])
-  session Session? @relation(fields: [sessionId], references: [id])
+  // ==========================================
+  // ONE-TO-ONE SESSION RELATION
+  // ==========================================
+
+  session Session? @relation("VoucherSession", fields: [sessionId], references: [id])
 }
 
 enum UserRole {
@@ -298,7 +314,11 @@ model Session {
 
   isActive Boolean @default(true)
 
-  voucher Voucher?
+  // ==========================================
+  // ONE-TO-ONE VOUCHER RELATION
+  // ==========================================
+
+  voucher Voucher? @relation("VoucherSession")
 
   isPaused         Boolean   @default(false)
   remainingSeconds Int?
