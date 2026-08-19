@@ -10,5 +10,4 @@ ALTER TABLE "Voucher"
 ADD COLUMN "activatedAt" TIMESTAMP(3),
 ADD COLUMN "boundClientMac" TEXT,
 ADD COLUMN "expiresAt" TIMESTAMP(3),
-ADD COLUMN "validityValue" INTEGER,
-ADD COLUMN "validityUnit" TEXT;
+ADD COLUMN "validityType" TEXT NOT NULL DEFAULT 'REGULAR';
