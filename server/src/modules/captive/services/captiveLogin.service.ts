@@ -1,4 +1,4 @@
-import { voucherService } from "../../voucher/services/voucher.service";
+﻿import { voucherService } from "../../voucher/services/voucher.service";
 import { ipsetService } from "../firewall/ipset.service";
 import prisma from "../../../config/prisma";
 import { sessionService } from "../session/session.service";
@@ -190,6 +190,20 @@ console.log(
         // 4. CONVERT VOUCHER DURATION
         // ==================================================
 
+        const isLongTermVoucher =
+
+            voucherData.validityValue !== null &&
+
+            voucherData.validityUnit !== null;
+
+
+        if (isLongTermVoucher && !voucherData.expiresAt) {
+
+            throw new Error("Long-term voucher has no expiration date.");
+
+        }
+
+
         const durationMinutes =
             convertToMinutes(
 
@@ -222,7 +236,10 @@ console.log(
 
                 clientIP,
 
-                durationMinutes
+                durationMinutes,
+
+
+                isLongTermVoucher ? voucherData.expiresAt : null
 
             );
 
@@ -239,13 +256,12 @@ console.log(
         // ==================================================
         // 6. UPDATE VOUCHER
         // ==================================================
-
-        const isLongTermVoucher =
-            voucherData.validityValue !== null &&
-            voucherData.validityUnit !== null;
-
-
-        if (!isLongTermVoucher) {
+        if (isLongTermVoucher) {
+            await prisma.voucher.update({
+                where: { id: voucherData.id },
+                data: { sessionId: session.id }
+            });
+        } else {
 
             await prisma.voucher.update({
 
@@ -332,3 +348,4 @@ console.log(
 
 export const captiveLoginService =
     new CaptiveLoginService();
+

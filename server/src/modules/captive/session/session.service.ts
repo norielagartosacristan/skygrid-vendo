@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+﻿import { exec } from "child_process";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
@@ -13,13 +13,13 @@ async function clearClientConntrack(
         );
 
         console.log(
-            `🧹 Conntrack cleared: ${ip}`
+            `ðŸ§¹ Conntrack cleared: ${ip}`
         );
 
     } catch (error) {
 
         console.error(
-            `⚠️ Failed to clear conntrack: ${ip}`,
+            `âš ï¸ Failed to clear conntrack: ${ip}`,
             error
         );
 
@@ -37,7 +37,8 @@ class SessionService {
     packageId: string | null,
     clientMac: string,
     clientIP: string,
-    durationMinutes: number
+    durationMinutes: number,
+    absoluteExpiresAt: Date | null = null
 ) {
 
     console.log("========== CREATE SESSION ==========");
@@ -103,16 +104,9 @@ class SessionService {
                 : now;
 
 
-        const newExpiresAt =
-            new Date(
-
-                baseTime +
-
-                durationMinutes *
-                60 *
-                1000
-
-            );
+        const newExpiresAt = absoluteExpiresAt
+            ? absoluteExpiresAt
+            : new Date(baseTime + durationMinutes * 60 * 1000);
 
 
         const updatedSession =
@@ -164,7 +158,7 @@ class SessionService {
 
 
         console.log(
-            "✅ EXISTING SESSION EXTENDED"
+            "âœ… EXISTING SESSION EXTENDED"
         );
 
         console.log(
@@ -210,16 +204,9 @@ class SessionService {
      * ========================================
      */
 
-    const expiresAt =
-        new Date(
-
-            Date.now() +
-
-            durationMinutes *
-            60 *
-            1000
-
-        );
+    const expiresAt = absoluteExpiresAt
+        ? absoluteExpiresAt
+        : new Date(Date.now() + durationMinutes * 60 * 1000);
 
 
     const newSession =
@@ -270,7 +257,7 @@ class SessionService {
 
 
     console.log(
-        "✅ NEW SESSION CREATED"
+        "âœ… NEW SESSION CREATED"
     );
 
     console.log(
@@ -354,7 +341,7 @@ class SessionService {
     if (!session) {
 
         console.log(
-            "❌ No existing session"
+            "âŒ No existing session"
         );
 
         return null;
@@ -370,7 +357,7 @@ class SessionService {
     if (session.isPaused) {
 
         console.log(
-            "⏸️ Existing session is paused"
+            "â¸ï¸ Existing session is paused"
         );
 
         return session;
@@ -409,7 +396,7 @@ class SessionService {
     if (remainingSeconds <= 0) {
 
         console.log(
-            "❌ Existing session expired"
+            "âŒ Existing session expired"
         );
 
         await prisma.session.update({
@@ -466,7 +453,7 @@ class SessionService {
     );
 
     console.log(
-        "✅ Existing session restored"
+        "âœ… Existing session restored"
     );
 
     console.log(
@@ -508,50 +495,55 @@ class SessionService {
 
 }
 
-async expireSession(
-    sessionId: string
-) {
+async expireSession(sessionId: string) {
 
-    const session =
-        await prisma.session.update({
+    const session = await prisma.session.update({
+
+        where: {
+            id: sessionId
+        },
+
+        data: {
+            isActive: false
+        },
+
+        include: {
+            voucher: true
+        }
+
+    });
+
+    // Mark linked long-term vouchers as expired.
+    if (
+        session.voucher &&
+        session.voucher.validityValue !== null &&
+        session.voucher.validityUnit !== null
+    ) {
+        await prisma.voucher.update({
 
             where: {
-
-                id:
-                    sessionId
-
+                id: session.voucher.id
             },
 
             data: {
-
-                isActive:
-                    false
-
+                status: "EXPIRED"
             }
 
         });
-
+    }
 
     // Remove IP from allowed clients
     await ipsetService.block(
         session.ipAddress
     );
 
-
     // Tell the client that the session expired
     captiveSocket.send(
-
         session.ipAddress,
-
         {
-
-            type:
-                "session.expired"
-
+            type: "session.expired"
         }
-
     );
-
 
     // Clear existing connections
     try {
@@ -561,31 +553,28 @@ async expireSession(
         );
 
         console.log(
-            `🧹 Conntrack cleared: ${session.ipAddress}`
+            `?? Conntrack cleared: ${session.ipAddress}`
         );
 
     } catch (error) {
 
         console.error(
-            `⚠️ Failed to clear conntrack: ${session.ipAddress}`,
+            `?? Failed to clear conntrack: ${session.ipAddress}`,
             error
         );
 
     }
 
-
     console.log(
-        `❌ Session expired: ${session.ipAddress}`
+        `? Session expired: ${session.ipAddress}`
     );
-
 
     return session;
 
 }
-    
-   async restoreActiveSessions(): Promise<void> {
+async restoreActiveSessions(): Promise<void> {
 
-    console.log("🔄 Restoring active client sessions...");
+    console.log("ðŸ”„ Restoring active client sessions...");
 
     const sessions = await prisma.session.findMany({
         where: {
@@ -610,13 +599,13 @@ async expireSession(
             );
 
             console.log(
-                `✅ Restored Internet: ${session.ipAddress}`
+                `âœ… Restored Internet: ${session.ipAddress}`
             );
 
         } catch (err) {
 
             console.error(
-                `❌ Failed to restore ${session.ipAddress}`,
+                `âŒ Failed to restore ${session.ipAddress}`,
                 err
             );
 
@@ -638,7 +627,8 @@ async pauseSession(clientIP: string) {
                 ipAddress: clientIP,
                 isActive: true,
                 isPaused: false
-            }
+                },
+            include: { voucher: true }
         });
 
 if (!session) {
@@ -646,6 +636,8 @@ if (!session) {
         "No active session found."
     );
 }
+
+const isLongTermVoucher = !!session.voucher?.validityValue && !!session.voucher?.validityUnit;
 
 if (!session.expiresAt) {
     throw new Error(
@@ -693,7 +685,7 @@ await ipsetService.block(
 );
 
 console.log(
-    `⏸️ Internet blocked for paused client: ${session.ipAddress}`
+    `â¸ï¸ Internet blocked for paused client: ${session.ipAddress}`
 );
 
 
@@ -714,14 +706,13 @@ const pausedSession =
 
             isPaused: true,
 
-            remainingSeconds,
+            remainingSeconds: isLongTermVoucher ? null : remainingSeconds,
 
-            pausedAt:
-                new Date(),
+            pausedAt: new Date(),
 
-            // Stop expiration while paused
-            expiresAt:
-                null
+            // Long-term vouchers keep their fixed expiration while paused.
+            // Regular sessions retain the existing pause behavior.
+            expiresAt: isLongTermVoucher ? session.expiresAt : null
 
         }
 
@@ -732,7 +723,7 @@ const pausedSession =
 );
 
 console.log(
-    `⏸️ Internet blocked while paused: ${pausedSession.ipAddress}`
+    `â¸ï¸ Internet blocked while paused: ${pausedSession.ipAddress}`
 );
 
     // Block internet while paused
@@ -771,133 +762,145 @@ console.log(
 }
 
 async resumeSession(clientIP: string) {
-
     console.log(
         "[RESUME] Searching paused session for IP:",
         clientIP
     );
 
-    const session =
-        await prisma.session.findFirst({
-            where: {
-                ipAddress: clientIP,
-                isActive: true,
-                isPaused: true
-            }
-        });
+    const session = await prisma.session.findFirst({
+        where: {
+            ipAddress: clientIP,
+            isActive: true,
+            isPaused: true
+        },
+        include: {
+            voucher: true
+        }
+    });
 
     if (!session) {
-
-        throw new Error(
-            "No paused session found."
-        );
-
+        throw new Error("No paused session found.");
     }
 
-    const remainingSeconds =
-        session.remainingSeconds || 0;
+    const isLongTermVoucher =
+        !!session.voucher &&
+        session.voucher.validityValue !== null &&
+        session.voucher.validityUnit !== null;
 
-    if (remainingSeconds <= 0) {
+    // Long-term vouchers always use their original expiration date.
+    if (isLongTermVoucher) {
+        const voucherExpiresAt = session.voucher!.expiresAt;
+        const now = new Date();
 
-        await prisma.session.update({
+        if (!voucherExpiresAt || voucherExpiresAt <= now) {
+            await prisma.session.update({
+                where: {
+                    id: session.id
+                },
+                data: {
+                    isActive: false,
+                    isPaused: false,
+                    remainingSeconds: null,
+                    expiresAt: voucherExpiresAt
+                }
+            });
 
-            where: {
-                id: session.id
-            },
+            await prisma.voucher.update({
+                where: {
+                    id: session.voucher!.id
+                },
+                data: {
+                    status: "EXPIRED"
+                }
+            });
 
-            data: {
+            await ipsetService.block(session.ipAddress);
 
-                isActive:
-                    false,
-
-                isPaused:
-                    false,
-
-                remainingSeconds:
-                    0
-
-            }
-
-        });
-
-        await ipsetService.block(
-            session.ipAddress
-        );
-
-        throw new Error(
-            "Session has expired."
-        );
-
-    }
-
-    const expiresAt =
-        new Date(
-            Date.now() +
-            remainingSeconds *
-            1000
-        );
-
-    const resumedSession =
-        await prisma.session.update({
-
-            where: {
-                id: session.id
-            },
-
-            data: {
-
-                isPaused:
-                    false,
-
-                pausedAt:
-                    null,
-
-                remainingSeconds:
-                    null,
-
-                expiresAt
-
-            },
-
-            include: {
-
-                package:
-                    true
-
-            }
-
-        });
-
-    // Restore internet
-    await ipsetService.allow(
-        session.ipAddress
-    );
-
-    // Notify frontend
-    captiveSocket.send(
-
-        session.ipAddress,
-
-        {
-
-            type:
-                "session.resumed",
-
-            payload:
-                resumedSession
-
+            throw new Error("Voucher has expired.");
         }
 
+        const resumedSession = await prisma.session.update({
+            where: {
+                id: session.id
+            },
+            data: {
+                isPaused: false,
+                pausedAt: null,
+                remainingSeconds: null,
+                expiresAt: voucherExpiresAt
+            },
+            include: {
+                package: true
+            }
+        });
+
+        await ipsetService.allow(session.ipAddress);
+
+        captiveSocket.send(
+            session.ipAddress,
+            {
+                type: "session.resumed",
+                payload: resumedSession
+            }
+        );
+
+        console.log("[RESUME] Long-term voucher session resumed.");
+        console.log("[RESUME] Original expiresAt:", voucherExpiresAt);
+
+        return resumedSession;
+    }
+
+    // Preserve the original remaining-time behavior for regular sessions.
+    const remainingSeconds = session.remainingSeconds || 0;
+
+    if (remainingSeconds <= 0) {
+        await prisma.session.update({
+            where: {
+                id: session.id
+            },
+            data: {
+                isActive: false,
+                isPaused: false,
+                remainingSeconds: 0
+            }
+        });
+
+        await ipsetService.block(session.ipAddress);
+
+        throw new Error("Session has expired.");
+    }
+
+    const expiresAt = new Date(
+        Date.now() + remainingSeconds * 1000
     );
 
-    console.log(
-        "[RESUME] Session resumed."
+    const resumedSession = await prisma.session.update({
+        where: {
+            id: session.id
+        },
+        data: {
+            isPaused: false,
+            pausedAt: null,
+            remainingSeconds: null,
+            expiresAt
+        },
+        include: {
+            package: true
+        }
+    });
+
+    await ipsetService.allow(session.ipAddress);
+
+    captiveSocket.send(
+        session.ipAddress,
+        {
+            type: "session.resumed",
+            payload: resumedSession
+        }
     );
 
-    console.log(
-        "[RESUME] New expiresAt:",
-        expiresAt
-    );
+    console.log("[RESUME] Session resumed.");
+    console.log("[RESUME] New expiresAt:", expiresAt);
 
     return resumedSession;
 }
@@ -906,3 +909,4 @@ async resumeSession(clientIP: string) {
 
 export const sessionService =
     new SessionService();
+
